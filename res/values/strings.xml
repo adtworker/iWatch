@@ -6,4 +6,5 @@
     <string name="btnStrHide">Hide Clock</string>
     <string name="btnStrFull">Full Screen</string>
     <string name="picContentDesc">Missing Picture</string>
+    <string name="btnStrExit">Exit</string>
 </resources>

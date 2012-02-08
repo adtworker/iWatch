@@ -5,4 +5,6 @@
     <string name="btnStrNext">下一幅</string>
     <string name="btnStrHide">隐藏时钟</string>
     <string name="btnStrFull">全屏显示</string>
+    <string name="btnStrExit">退出</string>
+    <string name="picContentDesc">图片缺失</string>
 </resources>

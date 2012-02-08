@@ -1,20 +1,18 @@
 package com.norman.apps;
 
 import java.util.Random;
-
 import com.mt.airad.AirAD;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.Window;
 import android.view.View.OnClickListener;
-import android.widget.AnalogClock;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 
 public class WatchActivity extends Activity {
 	static {
@@ -22,7 +20,11 @@ public class WatchActivity extends Activity {
     }
 	private AirAD ad;
     private boolean bLayoutHidden = false;
-    private boolean bFirstLaunch  = true;
+    final String TAG = "iWatch";
+    
+    final int INVALID_PIC_INDEX= -1;
+    final int iPicIndex = INVALID_PIC_INDEX;
+    
     
     final static int[] PICS = {
     	R.drawable.rosimm001,
@@ -42,13 +44,15 @@ public class WatchActivity extends Activity {
     	R.drawable.rosimm015,
     	R.drawable.rosimm016,
     	R.drawable.rosimm017,
-    	R.drawable.rosimm018	
+    	R.drawable.rosimm018
     };
 	
 	/** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {	
+    	Log.d(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
+        
         requestWindowFeature(Window.FEATURE_NO_TITLE);     
         setContentView(R.layout.main);
         
@@ -56,43 +60,67 @@ public class WatchActivity extends Activity {
         LinearLayout layout= (LinearLayout) findViewById(R.id.adLayout);
         ad = new AirAD(this);
         layout.addView(ad);
+        
+        setupButtons();
     }
     
     @Override
     public void onStart() {
+    	Log.d(TAG, "onStart()");
     	super.onStart();
+    }
+    
+    @Override
+    public void onResume() {
+    	Log.d(TAG, "onResume()");
+    	super.onResume();
+    }
+    
+    @Override
+    public void onPause() {
+    	Log.d(TAG, "onPause()");
+    	super.onPause();
+    }
+    
+    @Override
+    public void onStop() {
+    	Log.d(TAG, "onStop()");
+    	super.onStop();
+    }
+    
+    @Override
+    public void onDestroy() {
+    	Log.d(TAG, "onDestroy()");
+    	super.onDestroy();
+    }
+    
+    private void setupButtons() {
     	
     	// Navigation buttons
         TextView buttonPrev = (TextView) findViewById(R.id.btnPrev);
         TextView buttonNext = (TextView) findViewById(R.id.btnNext);
         TextView buttonDisp = (TextView) findViewById(R.id.btnDisp);
-        ImageView buttonImg = (ImageView)findViewById(R.id.picView);
+        final ImageView buttonImg = (ImageView)findViewById(R.id.picView);
         
         buttonPrev.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				ImageView img = (ImageView)findViewById(R.id.picView);
-				Random r = new Random();
-				int iPicRes = (r.nextInt(PICS.length));
-        		Log.d("iWatch", "Showing previous picture id " + iPicRes);      		
-        		img.setImageResource(PICS[iPicRes]);
+				finish();
 			}
         });
         
         buttonNext.setOnClickListener(new OnClickListener() {
         	@Override
         	public void onClick(View arg0) {
-        		if (bFirstLaunch) {
-        			((AnalogClock)findViewById(R.id.analogClock)).setVisibility(View.GONE);
-        			((TextView)findViewById(R.id.btnPrev)).setEnabled(true);
-        			bFirstLaunch = false;
+        		if (iPicIndex == INVALID_PIC_INDEX) {
+        			((LinearLayout)findViewById(R.id.clockLayout)).setVisibility(View.GONE);
         		}
         		
         		ImageView img = (ImageView)findViewById(R.id.picView);
         		Random r = new Random();
-        		int iPicRes = (r.nextInt(PICS.length));
-        		Log.d("iWatch", "Showing next picture id " + iPicRes);        		
-        		img.setImageResource(PICS[iPicRes]);
+        		int iPicIndex = (r.nextInt(PICS.length));
+        		Log.d("iWatch", "Showing next picture id " + iPicIndex);
+        		img.setImageResource(PICS[iPicIndex]);
 			}
         });
         
@@ -117,6 +145,19 @@ public class WatchActivity extends Activity {
 					mainLayout.setVisibility(View.VISIBLE);
 				}
 			}
+        });
+        
+        buttonImg.setOnLongClickListener(new OnLongClickListener() {
+        	@Override
+        	public boolean onLongClick(View arg0) {
+        		if (buttonImg.getScaleType() == ScaleType.CENTER_CROP) {
+        			buttonImg.setScaleType(ScaleType.FIT_CENTER);
+        		} else {
+        			buttonImg.setScaleType(ScaleType.CENTER_CROP);
+        		}
+
+        		return true;
+        	}
         });
     }
     
