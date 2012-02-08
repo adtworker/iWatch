@@ -16,14 +16,14 @@ import android.widget.TextView;
 
 public class WatchActivity extends Activity {
 	static {
-        AirAD.setGlobalParameter("APPID", true);
+        AirAD.setGlobalParameter("d7198ef2-3ec8-4713-a4c0-64cb738bdd6a", true);
     }
 	private AirAD ad;
     private boolean bLayoutHidden = false;
     final String TAG = "iWatch";
     
     final int INVALID_PIC_INDEX= -1;
-    final int iPicIndex = INVALID_PIC_INDEX;
+    private int iPicIndex = INVALID_PIC_INDEX;
     
     
     final static int[] PICS = {
