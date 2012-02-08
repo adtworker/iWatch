@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="app_name">iWatch</string>
+    <string name="btnStrPrev">上一幅</string>
+    <string name="btnStrNext">下一幅</string>
+    <string name="btnStrHide">隐藏时钟</string>
+    <string name="btnStrFull">全屏显示</string>
+</resources>

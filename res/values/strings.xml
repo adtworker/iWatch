@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="app_name">iWatch</string>
+    <string name="btnStrPrev">Previous</string>
+    <string name="btnStrNext">Next</string>
+    <string name="btnStrHide">Hide Clock</string>
+    <string name="btnStrFull">Full Screen</string>
+    <string name="picContentDesc">Missing Picture</string>
+</resources>
