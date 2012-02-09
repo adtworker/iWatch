@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
     <string name="app_name">iWatch</string>
-    <string name="btnStrPrev">Previous</string>
-    <string name="btnStrNext">Next</string>
-    <string name="btnStrHide">Hide Clock</string>
-    <string name="btnStrFull">Full Screen</string>
-    <string name="picContentDesc">Missing Picture</string>
-    <string name="btnStrExit">Exit</string>
+    <string name="strPrev">Previous</string>
+    <string name="strNext">Next</string>
+    <string name="hide_clock">Hide clock</string>
+    <string name="show_clock">Show clock</string>
+    <string name="full_screen">Full screen</string>
+    <string name="ContentDesc">Missing Picture</string>
+    <string name="strExit">Exit</string>
+    <string name="settings">Settings</string>
+    <string name="set_wallpaper">Set as wallpaper</string>
+    <string name="set_wallpaper_ok">Wallpaper is successfully set.</string>
+    <string name="set_wallpaper_fail">Wallpaper is not properly set.</string>
 </resources>

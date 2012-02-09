@@ -1,30 +1,47 @@
 package com.norman.apps;
 
+import java.io.IOException;
 import java.util.Random;
 import com.mt.airad.AirAD;
 import android.app.Activity;
+import android.app.WallpaperManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnLongClickListener;
+import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class WatchActivity extends Activity {
 	static {
         AirAD.setGlobalParameter("d7198ef2-3ec8-4713-a4c0-64cb738bdd6a", true);
     }
+	
 	private AirAD ad;
-    private boolean bLayoutHidden = false;
-    final String TAG = "iWatch";
+	private ImageView mImageView;
+	
+    private final String TAG = "iWatch";
+    private final int INVALID_PIC_INDEX= -1;
+    private final Random mRandom = new Random(System.currentTimeMillis());
     
-    final int INVALID_PIC_INDEX= -1;
     private int iPicIndex = INVALID_PIC_INDEX;
-    
+    GestureDetector mGestureDetector;
     
     final static int[] PICS = {
     	R.drawable.rosimm001,
@@ -55,6 +72,7 @@ public class WatchActivity extends Activity {
         
         requestWindowFeature(Window.FEATURE_NO_TITLE);     
         setContentView(R.layout.main);
+        mImageView = (ImageView)findViewById(R.id.picView);
         
         // Adding airAD
         LinearLayout layout= (LinearLayout) findViewById(R.id.adLayout);
@@ -62,6 +80,15 @@ public class WatchActivity extends Activity {
         layout.addView(ad);
         
         setupButtons();
+        
+        mGestureDetector = new GestureDetector(this, new MyGestureListener());
+        OnTouchListener rootListener = new OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                mGestureDetector.onTouchEvent(event);
+                return true;
+            }
+        };
+        mImageView.setOnTouchListener(rootListener);
     }
     
     @Override
@@ -97,12 +124,11 @@ public class WatchActivity extends Activity {
     private void setupButtons() {
     	
     	// Navigation buttons
-        TextView buttonPrev = (TextView) findViewById(R.id.btnPrev);
+        TextView buttonExit = (TextView) findViewById(R.id.btnExit);
         TextView buttonNext = (TextView) findViewById(R.id.btnNext);
         TextView buttonDisp = (TextView) findViewById(R.id.btnDisp);
-        final ImageView buttonImg = (ImageView)findViewById(R.id.picView);
         
-        buttonPrev.setOnClickListener(new OnClickListener() {
+        buttonExit.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
 				finish();
@@ -113,14 +139,18 @@ public class WatchActivity extends Activity {
         	@Override
         	public void onClick(View arg0) {
         		if (iPicIndex == INVALID_PIC_INDEX) {
-        			((LinearLayout)findViewById(R.id.clockLayout)).setVisibility(View.GONE);
+        			setClockVisibility(false);
         		}
         		
-        		ImageView img = (ImageView)findViewById(R.id.picView);
-        		Random r = new Random();
-        		int iPicIndex = (r.nextInt(PICS.length));
-        		Log.d("iWatch", "Showing next picture id " + iPicIndex);
-        		img.setImageResource(PICS[iPicIndex]);
+        		int tmpIndex = INVALID_PIC_INDEX;
+        		do {
+        			tmpIndex = mRandom.nextInt(PICS.length);
+        		} while (tmpIndex == iPicIndex);
+        		
+        		iPicIndex = tmpIndex;
+        		Log.d("iWatch", "Showing picture id " + iPicIndex);
+
+        		mImageView.setImageResource(PICS[iPicIndex]);
 			}
         });
         
@@ -128,37 +158,143 @@ public class WatchActivity extends Activity {
         	@Override
         	public void onClick(View arg0) {
         		// hide mainLayout only leave background image
-        		LinearLayout mainLayout = (LinearLayout)findViewById(R.id.mainLayout);
-        		bLayoutHidden = mainLayout.getVisibility() != View.VISIBLE;
-				if (!bLayoutHidden) {
-					mainLayout.setVisibility(View.GONE);
-				}
-			}
-        });
-        
-        buttonImg.setOnClickListener(new OnClickListener() {
-        	@Override
-        	public void onClick(View arg0) {
-        		LinearLayout mainLayout = (LinearLayout)findViewById(R.id.mainLayout);
-        		bLayoutHidden = mainLayout.getVisibility() != View.VISIBLE;
-				if (bLayoutHidden) {
-					mainLayout.setVisibility(View.VISIBLE);
-				}
-			}
-        });
-        
-        buttonImg.setOnLongClickListener(new OnLongClickListener() {
-        	@Override
-        	public boolean onLongClick(View arg0) {
-        		if (buttonImg.getScaleType() == ScaleType.CENTER_CROP) {
-        			buttonImg.setScaleType(ScaleType.FIT_CENTER);
-        		} else {
-        			buttonImg.setScaleType(ScaleType.CENTER_CROP);
+        		if (getMLVisibility()) {
+        			setMLVisibility(false);
         		}
-
-        		return true;
-        	}
+			}
         });
     }
     
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	getMenuInflater().inflate(R.menu.main_menu, menu);
+    	return super.onCreateOptionsMenu(menu);
+    }
+    
+    @Override 
+    public boolean onPrepareOptionsMenu(Menu menu) {
+    	menu.findItem(R.id.menu_toggle_clock).setTitle(
+    			getClockVisibility() ? R.string.hide_clock : R.string.show_clock);
+    	menu.findItem(R.id.menu_settings).setEnabled(false);
+    	
+    	if (iPicIndex == INVALID_PIC_INDEX) {
+    		menu.findItem(R.id.menu_set_wallpaper).setEnabled(false);
+    	} else {
+    		menu.findItem(R.id.menu_set_wallpaper).setEnabled(true);
+    	}
+    	
+    	return super.onPrepareOptionsMenu(menu);
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	switch (item.getItemId()) {
+    	case R.id.menu_toggle_clock:
+    		setClockVisibility(!getClockVisibility());
+    		break;
+    	
+    	case R.id.menu_settings:
+    		//startActivity(new Intent(this, SettingsActivity.class));
+    		break;
+
+    	case R.id.menu_set_wallpaper:
+    		Thread thd = new Thread(new Runnable() {
+    			public void run() {
+    				setWallpaper();
+    			}
+    		});
+    		thd.start();
+
+    		Toast tst = Toast.makeText(this, "", Toast.LENGTH_LONG);
+    		ImageView view = new ImageView(this);
+    		view.setImageResource(R.drawable.ic_launcher_alarmclock);
+    		tst.setView(view);
+    		tst.setGravity(Gravity.CENTER, tst.getXOffset()/2, tst.getYOffset()/2);
+    		tst.show();
+
+			break;
+    		
+    	default:
+    		
+    	}
+    	return super.onOptionsItemSelected(item);
+    }
+   
+    private boolean getLayoutVisibility(int id) {
+    	LinearLayout layout = (LinearLayout) findViewById(id);
+    	return layout.getVisibility() == View.VISIBLE;
+    }
+    
+    private void setLayoutVisibility(int id, boolean bVisibility) {
+    	LinearLayout layout = (LinearLayout) findViewById(id);
+    	layout.setVisibility(bVisibility ? View.VISIBLE : View.GONE);
+    }
+    
+    private boolean getClockVisibility() {
+    	return getLayoutVisibility(R.id.clockLayout);
+    }  
+    private void setClockVisibility(boolean bVisibility) {
+    	setLayoutVisibility(R.id.clockLayout, bVisibility);
+    }
+    
+    private boolean getMLVisibility() {
+    	return getLayoutVisibility(R.id.mainLayout);
+    }
+    private void setMLVisibility(boolean bVisibility) {
+    	setLayoutVisibility(R.id.mainLayout, bVisibility);
+    }
+    
+    private void setWallpaper() {
+    	try {
+    		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+    		Bitmap bitmap = BitmapFactory.decodeResource(getResources(), PICS[iPicIndex]);
+    		Bitmap corppedBitmap = Bitmap.createBitmap(displayMetrics.widthPixels * 2,
+    				displayMetrics.heightPixels, Bitmap.Config.RGB_565);
+    		
+    		Canvas canvas = new Canvas(corppedBitmap);
+    		Rect srcRect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+    		Rect dstRect = new Rect(0, 0, displayMetrics.widthPixels * 2, displayMetrics.heightPixels);
+    		int dx = (srcRect.width()  - dstRect.width())  / 2;
+    		int dy = (srcRect.height() - dstRect.height()) / 2;
+    		srcRect.inset(Math.max(0, dx),  Math.max(0,  dy));
+    		srcRect.inset(Math.max(0, -dx), Math.max(0, -dy));
+    		canvas.drawBitmap(bitmap, srcRect, dstRect, null);
+    		
+    		WallpaperManager.getInstance(this).setBitmap(corppedBitmap);
+    		Log.d(TAG, "Set picture " + iPicIndex + " as wallpaper.");
+    	
+    	} catch (IOException e) {
+    		Log.e(TAG, "Failed to set wallpaper!");
+    	}
+    }
+    
+    private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+    	@Override
+    	public boolean onScroll(MotionEvent e1, MotionEvent e2,
+    			float distanceX, float distanceY) {
+    		if (mImageView.getScaleType() == ScaleType.CENTER_CROP) {
+    			mImageView.scrollBy((int)distanceX, (int)distanceY);
+    		}
+    		return true;
+    	}
+    	
+    	@Override
+    	public boolean onDoubleTap(MotionEvent e) {
+    		if (mImageView.getScaleType() == ScaleType.CENTER_CROP) {
+    			mImageView.setScaleType(ScaleType.FIT_CENTER);
+    			mImageView.scrollTo(0, 0);
+    		} else {
+    			mImageView.setScaleType(ScaleType.CENTER_CROP);
+    		}
+    		return true;
+    	}
+    	
+    	@Override
+    	public boolean onSingleTapConfirmed(MotionEvent e) {
+    		if (!getMLVisibility()) {
+    			setMLVisibility(true);
+    		}
+            return true;
+        }
+    }
 }

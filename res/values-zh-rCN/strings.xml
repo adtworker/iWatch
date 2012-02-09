@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
     <string name="app_name">iWatch</string>
-    <string name="btnStrPrev">上一幅</string>
-    <string name="btnStrNext">下一幅</string>
-    <string name="btnStrHide">隐藏时钟</string>
-    <string name="btnStrFull">全屏显示</string>
-    <string name="btnStrExit">退出</string>
-    <string name="picContentDesc">图片缺失</string>
+    <string name="strExit">退出</string>
+    <string name="ContentDesc">图片缺失</string>
+    <string name="hide_clock">隐藏时钟</string>
+    <string name="show_clock">显示时钟</string>
+    <string name="full_screen">全屏显示</string>
+    <string name="settings">设置</string>
+    <string name="strNext">下一幅</string>
+    <string name="strPrev">上一幅</string>
+    <string name="set_wallpaper">设为壁纸</string>
+    <string name="set_wallpaper_ok">壁纸设置成功</string>
+    <string name="set_wallpaper_fail">壁纸设置失败</string>
 </resources>
