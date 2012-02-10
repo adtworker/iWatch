@@ -17,18 +17,6 @@ import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
 
-/***
- * PreferenceActivity is a built-in Activity for preferences management
- * 
- * To retrieve the values stored by this activity in other activities use the
- * following snippet:
- * 
- * SharedPreferences sharedPreferences =
- * PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
- * <Preference Type> preferenceValue = sharedPreferences.get<Preference
- * Type>("<Preference Key>",<default value>);
- */
-
 public class Settings extends PreferenceActivity {
 
 	private CheckBoxPreference mOrientation;
