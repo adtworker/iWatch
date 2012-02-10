@@ -13,4 +13,6 @@
     <string name="set_wallpaper_ok">Wallpaper is successfully set.</string>
     <string name="set_wallpaper_fail">Wallpaper is not properly set.</string>
     <string name="start">Start</string>
+    <string name="pref_orientation">Orientation</string>
+    <string name="pref_orientation_sum">Enable/Disable orientation</string>
 </resources>

@@ -5,15 +5,18 @@ import java.util.Random;
 import java.util.Stack;
 
 import com.mt.airad.AirAD;
+import com.mt.airad.AirAD.AirADListener;
 
-import android.R.integer;
 import android.app.Activity;
 import android.app.WallpaperManager;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -25,6 +28,9 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
@@ -32,23 +38,23 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class WatchActivity extends Activity {
-	static {
-        AirAD.setGlobalParameter("d7198ef2-3ec8-4713-a4c0-64cb738bdd6a", true);
-    }
 	
-	private AirAD ad;
+	private AirAD airAD;
+	private Handler adHandler;
+	private final int PERIOD = 10;
+
 	private ImageView mImageView;
 	private TextView  mBtnPrev;
 	private TextView  mBtnNext;
 	private TextView  mBtnDisp;
 	
-    private final String TAG = "iWatch";
+    private final String TAG = "WatchActivity";
     private final int INVALID_PIC_INDEX= -1;
     private final Random mRandom = new Random(System.currentTimeMillis());
     
     private int iPicIndex = INVALID_PIC_INDEX;
     private Stack<Integer> sPicHistory = new Stack<Integer>();
-    GestureDetector mGestureDetector;
+    private GestureDetector mGestureDetector;
     
     final static int[] PICS = {
     	R.drawable.rosimm001,
@@ -88,10 +94,7 @@ public class WatchActivity extends Activity {
         	mBtnPrev.setEnabled(false);
         }
         
-        // Adding airAD
-        LinearLayout layout= (LinearLayout) findViewById(R.id.adLayout);
-        ad = new AirAD(this);
-        layout.addView(ad);
+        initAirAD();
         
         setupButtons();
         
@@ -134,6 +137,99 @@ public class WatchActivity extends Activity {
     	Log.d(TAG, "onDestroy()");
     	super.onDestroy();
     }
+    
+    private void initAirAD() {
+    	AirAD.setGlobalParameter("d7198ef2-3ec8-4713-a4c0-64cb738bdd6a", true);
+    	
+    	LinearLayout layout= (LinearLayout) findViewById(R.id.adLayout);
+        airAD = new AirAD(WatchActivity.this);
+        airAD.setBackgroundAutoHidden(true);
+        layout.addView(airAD);
+		
+		airAD.setAirADListener(new AirADListener() {
+			@Override
+			public void onAirADFailed() {
+			}
+			@Override
+			public void onAdReceivedFailed() {
+			}
+			@Override
+			public void onAdReceived() {
+			}
+			@Override
+			public void onAdContentWillShow() {
+			}
+			@Override
+			public void onAdContentWillDismiss() {
+			}
+			@Override
+			public void onAdContentLoadFinished() {
+			}
+			@Override
+			public void onAdContentDidShow() {
+			}
+			@Override
+			public void onAdContentDidDismiss() {
+			}
+			@Override
+			public void onAdBannerWillShow() {
+				showAirAD();
+			}
+			@Override
+			public void onAdBannerWillDismiss() {
+			}
+			@Override
+			public void onAdBannerDidShow() {
+			}
+			@Override
+			public void onAdBannerDidDismiss() {
+			}
+			@Override
+			public void onAdBannerClicked() {
+			}
+		});
+		
+		adHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+				hideAirAD();
+			}
+		};
+	}
+    
+	private void showAirAD() {
+		if (airAD.getVisibility() != View.VISIBLE) {
+			airAD.setVisibility(View.VISIBLE);
+		}
+		adHandler.sendEmptyMessageDelayed(0, PERIOD * 1000);
+	}
+
+	private void hideAirAD() {
+		if (airAD.getVisibility() == View.VISIBLE) {
+			Animation hideAction = new TranslateAnimation(
+					Animation.RELATIVE_TO_SELF, 0.0f, 
+					Animation.RELATIVE_TO_SELF, 0.0f, 
+					Animation.RELATIVE_TO_SELF, 0.0f, 
+					Animation.RELATIVE_TO_SELF, 1.0f);
+			hideAction.setDuration(1000);
+			hideAction.setAnimationListener(new AnimationListener() {
+				@Override
+				public void onAnimationStart(Animation animation) {
+				}
+
+				@Override
+				public void onAnimationRepeat(Animation animation) {
+				}
+
+				@Override
+				public void onAnimationEnd(Animation animation) {
+					airAD.setVisibility(View.GONE);
+				}
+			});
+			airAD.startAnimation(hideAction);
+		}
+	}
     
     private void setupButtons() {
         
@@ -178,7 +274,7 @@ public class WatchActivity extends Activity {
         			mBtnPrev.setEnabled(true);
         		}
         		
-			}
+        	}
         });
         
         mBtnDisp.setOnClickListener(new OnClickListener() {
@@ -188,7 +284,7 @@ public class WatchActivity extends Activity {
         		if (getMLVisibility()) {
         			setMLVisibility(false);
         		}
-			}
+        	}
         });
     }
     
@@ -202,8 +298,10 @@ public class WatchActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
     	menu.findItem(R.id.menu_toggle_clock).setTitle(
     			getClockVisibility() ? R.string.hide_clock : R.string.show_clock);
-    	menu.findItem(R.id.menu_settings).setEnabled(false);
     	
+		// Disable settings in current version
+		menu.findItem(R.id.menu_settings).setEnabled(false);
+
     	if (iPicIndex == INVALID_PIC_INDEX) {
     		menu.findItem(R.id.menu_set_wallpaper).setEnabled(false);
     	} else {
@@ -221,7 +319,7 @@ public class WatchActivity extends Activity {
     		break;
     	
     	case R.id.menu_settings:
-    		//startActivity(new Intent(this, SettingsActivity.class));
+    		startActivity(new Intent(this, Settings.class));
     		break;
 
     	case R.id.menu_set_wallpaper:
