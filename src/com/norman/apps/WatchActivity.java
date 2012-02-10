@@ -2,7 +2,11 @@ package com.norman.apps;
 
 import java.io.IOException;
 import java.util.Random;
+import java.util.Stack;
+
 import com.mt.airad.AirAD;
+
+import android.R.integer;
 import android.app.Activity;
 import android.app.WallpaperManager;
 import android.graphics.Bitmap;
@@ -18,7 +22,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.View.OnClickListener;
@@ -35,12 +38,16 @@ public class WatchActivity extends Activity {
 	
 	private AirAD ad;
 	private ImageView mImageView;
+	private TextView  mBtnPrev;
+	private TextView  mBtnNext;
+	private TextView  mBtnDisp;
 	
     private final String TAG = "iWatch";
     private final int INVALID_PIC_INDEX= -1;
     private final Random mRandom = new Random(System.currentTimeMillis());
     
     private int iPicIndex = INVALID_PIC_INDEX;
+    private Stack<Integer> sPicHistory = new Stack<Integer>();
     GestureDetector mGestureDetector;
     
     final static int[] PICS = {
@@ -73,6 +80,13 @@ public class WatchActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);     
         setContentView(R.layout.main);
         mImageView = (ImageView)findViewById(R.id.picView);
+        mBtnPrev = (TextView)findViewById(R.id.btnPrev);
+        mBtnNext = (TextView)findViewById(R.id.btnNext);
+        mBtnDisp = (TextView)findViewById(R.id.btnDisp);
+        
+        if (sPicHistory.empty()) {
+        	mBtnPrev.setEnabled(false);
+        }
         
         // Adding airAD
         LinearLayout layout= (LinearLayout) findViewById(R.id.adLayout);
@@ -122,24 +136,31 @@ public class WatchActivity extends Activity {
     }
     
     private void setupButtons() {
-    	
-    	// Navigation buttons
-        TextView buttonExit = (TextView) findViewById(R.id.btnExit);
-        TextView buttonNext = (TextView) findViewById(R.id.btnNext);
-        TextView buttonDisp = (TextView) findViewById(R.id.btnDisp);
         
-        buttonExit.setOnClickListener(new OnClickListener() {
+        mBtnPrev.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				finish();
+				
+				iPicIndex = sPicHistory.pop();
+				Log.d(TAG, "Showing previous picture id " + iPicIndex);
+				
+				mImageView.setImageResource(PICS[iPicIndex]);
+				
+				if (sPicHistory.empty()) {
+					mBtnPrev.setEnabled(false);
+					mBtnNext.setText(getResources().getString(R.string.start));
+				}
 			}
         });
         
-        buttonNext.setOnClickListener(new OnClickListener() {
+        mBtnNext.setOnClickListener(new OnClickListener() {
         	@Override
         	public void onClick(View arg0) {
         		if (iPicIndex == INVALID_PIC_INDEX) {
         			setClockVisibility(false);
+        			mBtnNext.setText(getResources().getString(R.string.strNext));
+        		} else {
+        			sPicHistory.push(iPicIndex);
         		}
         		
         		int tmpIndex = INVALID_PIC_INDEX;
@@ -148,13 +169,19 @@ public class WatchActivity extends Activity {
         		} while (tmpIndex == iPicIndex);
         		
         		iPicIndex = tmpIndex;
-        		Log.d("iWatch", "Showing picture id " + iPicIndex);
+        		Log.d(TAG, "Showing new picture id " + iPicIndex);
 
         		mImageView.setImageResource(PICS[iPicIndex]);
+
+        		if (!sPicHistory.empty()) {
+        			Log.d(TAG, "Picture stack: " + sPicHistory);
+        			mBtnPrev.setEnabled(true);
+        		}
+        		
 			}
         });
         
-        buttonDisp.setOnClickListener(new OnClickListener() {
+        mBtnDisp.setOnClickListener(new OnClickListener() {
         	@Override
         	public void onClick(View arg0) {
         		// hide mainLayout only leave background image

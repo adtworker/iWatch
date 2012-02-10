@@ -12,4 +12,5 @@
     <string name="set_wallpaper">Set as wallpaper</string>
     <string name="set_wallpaper_ok">Wallpaper is successfully set.</string>
     <string name="set_wallpaper_fail">Wallpaper is not properly set.</string>
+    <string name="start">Start</string>
 </resources>

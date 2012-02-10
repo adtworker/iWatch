@@ -7,6 +7,7 @@
     <string name="show_clock">显示时钟</string>
     <string name="full_screen">全屏显示</string>
     <string name="settings">设置</string>
+    <string name="start">开始</string>
     <string name="strNext">下一幅</string>
     <string name="strPrev">上一幅</string>
     <string name="set_wallpaper">设为壁纸</string>
