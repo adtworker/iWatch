@@ -4,6 +4,6 @@
         android:title="@string/pref_orientation"
         android:summary="@string/pref_orientation_sum"
         android:defaultValue="true"
-    />    
+    />
 
 </PreferenceScreen>

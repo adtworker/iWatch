@@ -17,8 +17,6 @@ import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
 
-import com.norman.apps.R;
-
 /***
  * PreferenceActivity is a built-in Activity for preferences management
  * 
@@ -32,7 +30,7 @@ import com.norman.apps.R;
  */
 
 public class Settings extends PreferenceActivity {
-	
+
 	private CheckBoxPreference mOrientation;
 
 	@Override
