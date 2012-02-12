@@ -34,10 +34,15 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.adview.AdViewInterface;
+import com.adview.AdViewLayout;
+import com.adview.AdViewTargeting;
+import com.adview.AdViewTargeting.RunMode;
+import com.adview.AdViewTargeting.UpdateMode;
 import com.mt.airad.AirAD;
 import com.mt.airad.AirAD.AirADListener;
 
-public class WatchActivity extends Activity {
+public class WatchActivity extends Activity implements AdViewInterface {
 
 	private AirAD airAD;
 	private Handler adHandler;
@@ -56,13 +61,8 @@ public class WatchActivity extends Activity {
 	private final Stack<Integer> sPicHistory = new Stack<Integer>();
 	private GestureDetector mGestureDetector;
 
-	final static int[] PICS = {R.drawable.rosimm001, R.drawable.rosimm002,
-			R.drawable.rosimm003, R.drawable.rosimm004, R.drawable.rosimm005,
-			R.drawable.rosimm006, R.drawable.rosimm007, R.drawable.rosimm008,
-			R.drawable.rosimm009, R.drawable.rosimm010, R.drawable.rosimm011,
-			R.drawable.rosimm012, R.drawable.rosimm013, R.drawable.rosimm014,
-			R.drawable.rosimm015, R.drawable.rosimm016, R.drawable.rosimm017,
-			R.drawable.rosimm018};
+	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
+	final static String[] PICS = {"m1", "m2", "m3", "m4", "m5", "m6"};
 
 	/** Called when the activity is first created. */
 	@Override
@@ -81,13 +81,26 @@ public class WatchActivity extends Activity {
 			mBtnPrev.setEnabled(false);
 		}
 
-		initAirAD();
+		LinearLayout layout = (LinearLayout) findViewById(R.id.adLayout);
+		if (layout == null) {
+			return;
+		}
 
+		// initAirAD();
+		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
+		AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); // 保证每次都从服务器取配置
+		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
+		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
+		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
+		AdViewLayout adViewLayout = new AdViewLayout(this,
+				"SDK20122309480217x9sp4og4fxrj2ur");
+		adViewLayout.setAdViewInterface(this);
+		layout.addView(adViewLayout);
+		layout.invalidate();
 		setupButtons();
 
 		mGestureDetector = new GestureDetector(this, new MyGestureListener());
 		OnTouchListener rootListener = new OnTouchListener() {
-			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				mGestureDetector.onTouchEvent(event);
 				return true;
@@ -138,40 +151,52 @@ public class WatchActivity extends Activity {
 			@Override
 			public void onAirADFailed() {
 			}
+
 			@Override
 			public void onAdReceivedFailed() {
 			}
+
 			@Override
 			public void onAdReceived() {
 			}
+
 			@Override
 			public void onAdContentWillShow() {
 			}
+
 			@Override
 			public void onAdContentWillDismiss() {
 			}
+
 			@Override
 			public void onAdContentLoadFinished() {
 			}
+
 			@Override
 			public void onAdContentDidShow() {
 			}
+
 			@Override
 			public void onAdContentDidDismiss() {
 			}
+
 			@Override
 			public void onAdBannerWillShow() {
 				showAirAD();
 			}
+
 			@Override
 			public void onAdBannerWillDismiss() {
 			}
+
 			@Override
 			public void onAdBannerDidShow() {
 			}
+
 			@Override
 			public void onAdBannerDidDismiss() {
 			}
+
 			@Override
 			public void onAdBannerClicked() {
 			}
@@ -228,7 +253,7 @@ public class WatchActivity extends Activity {
 				iPicIndex = sPicHistory.pop();
 				Log.d(TAG, "Showing previous picture id " + iPicIndex);
 
-				mImageView.setImageResource(PICS[iPicIndex]);
+				mImageView.setImageResource(ImageUtil.getImage(PICS[iPicIndex]));
 
 				if (sPicHistory.empty()) {
 					mBtnPrev.setEnabled(false);
@@ -255,7 +280,7 @@ public class WatchActivity extends Activity {
 				iPicIndex = tmpIndex;
 				Log.d(TAG, "Showing new picture id " + iPicIndex);
 
-				mImageView.setImageResource(PICS[iPicIndex]);
+				mImageView.setImageResource(ImageUtil.getImage(PICS[iPicIndex]));
 
 				if (!sPicHistory.empty()) {
 					Log.d(TAG, "Picture stack: " + sPicHistory);
@@ -350,6 +375,7 @@ public class WatchActivity extends Activity {
 	private boolean getClockVisibility() {
 		return getLayoutVisibility(R.id.clockLayout);
 	}
+
 	private void setClockVisibility(boolean bVisibility) {
 		setLayoutVisibility(R.id.clockLayout, bVisibility);
 	}
@@ -357,6 +383,7 @@ public class WatchActivity extends Activity {
 	private boolean getMLVisibility() {
 		return getLayoutVisibility(R.id.mainLayout);
 	}
+
 	private void setMLVisibility(boolean bVisibility) {
 		setLayoutVisibility(R.id.mainLayout, bVisibility);
 	}
@@ -365,7 +392,7 @@ public class WatchActivity extends Activity {
 		try {
 			DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
 			Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
-					PICS[iPicIndex]);
+					ImageUtil.getImage(PICS[iPicIndex]));
 			Bitmap corppedBitmap = Bitmap.createBitmap(
 					displayMetrics.widthPixels * 2,
 					displayMetrics.heightPixels, Bitmap.Config.RGB_565);
@@ -418,5 +445,17 @@ public class WatchActivity extends Activity {
 			}
 			return true;
 		}
+	}
+
+	@Override
+	public void onClickAd() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onDisplayAd() {
+		// TODO Auto-generated method stub
+
 	}
 }

@@ -4,82 +4,78 @@
     android:layout_height="fill_parent"
     android:background="#000000"
     android:gravity="center"
-    android:orientation="vertical">
-    		    
-	<ImageView android:id="@+id/picView"
-	    android:contentDescription="@string/ContentDesc"
-		android:scaleType="fitCenter"
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"/>
-   	
-  	<LinearLayout
- 		android:id="@+id/clockLayout"
-	   	android:layout_width="fill_parent"
-	    android:layout_height="fill_parent"
-	    android:orientation="vertical"
-	    android:gravity="center">
-   	
-      	<AnalogClock 
-      	    android:id="@+id/analogClock" 
-          	android:layout_width="fill_parent"
-          	android:layout_height="fill_parent"
-          	android:dial="@drawable/clock_dial"
-          	android:hand_hour="@drawable/clockdroids_hour"
-          	android:hand_minute="@drawable/clockdroids_minute"
-          	android:visibility="visible"
-          	android:layout_gravity="center"/> 
-          		  
-  	</LinearLayout>
-	
-	<LinearLayout
-	    android:id="@+id/mainLayout"
- 		android:layout_width="fill_parent"
+    android:orientation="vertical" >
+
+    <ImageView
+        android:id="@+id/picView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:contentDescription="@string/ContentDesc"
+        android:scaleType="fitCenter" />
+
+    <LinearLayout
+        android:id="@+id/clockLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center"
+        android:orientation="vertical" >
+
+        <AnalogClock
+            android:id="@+id/analogClock"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_gravity="center"
+            android:dial="@drawable/clock_dial"
+            android:hand_hour="@drawable/clockdroids_hour"
+            android:hand_minute="@drawable/clockdroids_minute"
+            android:visibility="visible" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/mainLayout"
+        android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:gravity="bottom"
-        android:orientation="vertical">
-           
-    	<LinearLayout 
-    	    android:id="@+id/btnLayout"
-		    android:layout_width="fill_parent"
-		    android:layout_height="48sp"
-		    android:gravity="center"
-		    android:orientation="horizontal">
-        
-	    	<TextView 
-	    	    android:id="@+id/btnPrev"
-	    	    android:layout_width="107dp"
-	    	    android:layout_height="fill_parent"
-	    	    android:gravity="center"
-				android:layout_marginRight="1sp"
-	    	    android:background="#000000"
-	    	    android:text="@string/strPrev"/>
-    	
-	    	<TextView 
-	    	    android:id="@+id/btnDisp"
-	    	    android:layout_width="106sp"
-	    	    android:layout_height="fill_parent"
-	    	    android:gravity="center"
-				android:layout_marginRight="1sp"
-				android:background="#000000"
-	    	    android:text="@string/full_screen"/>
-    	    	
-	    	<TextView 
-	    	    android:id="@+id/btnNext"
-	    	    android:layout_width="106sp"
-	    	    android:layout_height="fill_parent"	    	  
-	    	    android:gravity="center"
-	    	    android:background="#000000"
-	        	android:text="@string/start"/>   	
-    	
-    	</LinearLayout>    
-    
-    	<LinearLayout 
-			   android:id="@+id/adLayout"
-			   android:layout_width="fill_parent"
-			   android:layout_height="wrap_content"
-			   android:gravity="center"/>
-    
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:id="@+id/btnLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="48sp"
+            android:gravity="center"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:id="@+id/btnPrev"
+                android:layout_width="107dp"
+                android:layout_height="fill_parent"
+                android:layout_marginRight="1sp"
+                android:background="#000000"
+                android:gravity="center"
+                android:text="@string/strPrev" />
+
+            <TextView
+                android:id="@+id/btnDisp"
+                android:layout_width="106sp"
+                android:layout_height="fill_parent"
+                android:layout_marginRight="1sp"
+                android:background="#000000"
+                android:gravity="center"
+                android:text="@string/full_screen" />
+
+            <TextView
+                android:id="@+id/btnNext"
+                android:layout_width="106sp"
+                android:layout_height="fill_parent"
+                android:background="#000000"
+                android:gravity="center"
+                android:text="@string/start" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/adLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
     </LinearLayout>
-        
+
 </FrameLayout>
-    
