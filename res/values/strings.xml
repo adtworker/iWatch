@@ -15,4 +15,9 @@
     <string name="start">Start</string>
     <string name="pref_orientation">Orientation</string>
     <string name="pref_orientation_sum">Enable/Disable orientation</string>
+    <string name="cancel">Cancel</string>
+    <string name="exit_msg">Are you sure to exit?</string>
+    <string name="ok">OK</string>
+    <string name="set_wallpaper_msg">Now settings...</string>
+    <string name="set_wallpaper_title">Wallpaper</string>
 </resources>

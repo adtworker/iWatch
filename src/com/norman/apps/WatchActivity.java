@@ -5,19 +5,20 @@ import java.util.Random;
 import java.util.Stack;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.app.WallpaperManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
-import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -32,7 +33,6 @@ import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.adview.AdViewInterface;
 import com.adview.AdViewLayout;
@@ -60,9 +60,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private int iPicIndex = INVALID_PIC_INDEX;
 	private final Stack<Integer> sPicHistory = new Stack<Integer>();
 	private GestureDetector mGestureDetector;
+	private ProgressDialog mProcessDialog;
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
-	final static String[] PICS = {"m1", "m2", "m3", "m4", "m5", "m6"};
+	final static String[] PICS = {"m1", "m2", "m3"};
 
 	/** Called when the activity is first created. */
 	@Override
@@ -101,6 +102,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		mGestureDetector = new GestureDetector(this, new MyGestureListener());
 		OnTouchListener rootListener = new OnTouchListener() {
+			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				mGestureDetector.onTouchEvent(event);
 				return true;
@@ -257,7 +259,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				if (sPicHistory.empty()) {
 					mBtnPrev.setEnabled(false);
-					mBtnNext.setText(getResources().getString(R.string.start));
 				}
 			}
 		});
@@ -338,21 +339,21 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				break;
 
 			case R.id.menu_set_wallpaper :
-				Thread thd = new Thread(new Runnable() {
+				mProcessDialog = ProgressDialog.show(this,
+						getString(R.string.set_wallpaper_title),
+						getString(R.string.set_wallpaper_msg), true);
+				new Thread() {
 					@Override
 					public void run() {
-						setWallpaper();
+						try {
+							setWallpaper();
+						} catch (Exception e) {
+							e.printStackTrace();
+						} finally {
+							mProcessDialog.dismiss();
+						}
 					}
-				});
-				thd.start();
-
-				Toast tst = Toast.makeText(this, "", Toast.LENGTH_LONG);
-				ImageView view = new ImageView(this);
-				view.setImageResource(R.drawable.ic_launcher_alarmclock);
-				tst.setView(view);
-				tst.setGravity(Gravity.CENTER, tst.getXOffset() / 2,
-						tst.getYOffset() / 2);
-				tst.show();
+				}.start();
 
 				break;
 
@@ -361,7 +362,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-
 	private boolean getLayoutVisibility(int id) {
 		LinearLayout layout = (LinearLayout) findViewById(id);
 		return layout.getVisibility() == View.VISIBLE;
@@ -393,21 +393,24 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
 			Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
 					ImageUtil.getImage(PICS[iPicIndex]));
-			Bitmap corppedBitmap = Bitmap.createBitmap(
-					displayMetrics.widthPixels * 2,
-					displayMetrics.heightPixels, Bitmap.Config.RGB_565);
+			/*
+			 * Bitmap corppedBitmap = Bitmap.createBitmap(
+			 * displayMetrics.widthPixels * 2, displayMetrics.heightPixels,
+			 * Bitmap.Config.RGB_565);
+			 * 
+			 * Canvas canvas = new Canvas(corppedBitmap); Rect srcRect = new
+			 * Rect(0, 0, bitmap.getWidth(), bitmap.getHeight()); Rect dstRect =
+			 * new Rect(0, 0, displayMetrics.widthPixels * 2,
+			 * displayMetrics.heightPixels); int dx = (srcRect.width() -
+			 * dstRect.width()) / 2; int dy = (srcRect.height() -
+			 * dstRect.height()) / 2; srcRect.inset(Math.max(0, dx), Math.max(0,
+			 * dy)); srcRect.inset(Math.max(0, -dx), Math.max(0, -dy));
+			 * canvas.drawBitmap(bitmap, srcRect, dstRect, null);
+			 * 
+			 * WallpaperManager.getInstance(this).setBitmap(corppedBitmap);
+			 */
 
-			Canvas canvas = new Canvas(corppedBitmap);
-			Rect srcRect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-			Rect dstRect = new Rect(0, 0, displayMetrics.widthPixels * 2,
-					displayMetrics.heightPixels);
-			int dx = (srcRect.width() - dstRect.width()) / 2;
-			int dy = (srcRect.height() - dstRect.height()) / 2;
-			srcRect.inset(Math.max(0, dx), Math.max(0, dy));
-			srcRect.inset(Math.max(0, -dx), Math.max(0, -dy));
-			canvas.drawBitmap(bitmap, srcRect, dstRect, null);
-
-			WallpaperManager.getInstance(this).setBitmap(corppedBitmap);
+			WallpaperManager.getInstance(this).setBitmap(bitmap);
 			Log.d(TAG, "Set picture " + iPicIndex + " as wallpaper.");
 
 		} catch (IOException e) {
@@ -457,5 +460,36 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public void onDisplayAd() {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public boolean onKeyUp(int keycode, KeyEvent event) {
+		switch (keycode) {
+
+			case KeyEvent.KEYCODE_BACK :
+				// alert user when key_back is pressed
+				new AlertDialog.Builder(this)
+						.setMessage(getString(R.string.exit_msg))
+						.setPositiveButton(getString(R.string.ok),
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog,
+											int whichButton) {
+										finish();
+									}
+								})
+						.setNegativeButton(getString(R.string.cancel),
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog,
+											int whichButton) {
+
+									}
+								}).create().show();
+
+				return false;
+		}
+
+		return super.onKeyUp(keycode, event);
 	}
 }

@@ -13,4 +13,11 @@
     <string name="set_wallpaper">设为壁纸</string>
     <string name="set_wallpaper_ok">壁纸设置成功</string>
     <string name="set_wallpaper_fail">壁纸设置失败</string>
+    <string name="pref_orientation">自动旋转屏幕</string>
+    <string name="cancel">取消</string>
+    <string name="exit_msg">确认退出？</string>
+    <string name="pref_orientation_sum">是否启用自动旋转屏幕</string>
+    <string name="ok">确定</string>
+    <string name="set_wallpaper_msg">正在设置中……</string>
+    <string name="set_wallpaper_title">壁纸设置</string>
 </resources>
