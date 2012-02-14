@@ -15,7 +15,6 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -26,6 +25,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
@@ -297,6 +297,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				// hide mainLayout only leave background image
 				if (getMLVisibility()) {
 					setMLVisibility(false);
+					getWindow().setFlags(
+							WindowManager.LayoutParams.FLAG_FULLSCREEN,
+							WindowManager.LayoutParams.FLAG_FULLSCREEN);
 				}
 			}
 		});
@@ -390,13 +393,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void setWallpaper() {
 		try {
-			DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
 			Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
 					ImageUtil.getImage(PICS[iPicIndex]));
 			/*
-			 * Bitmap corppedBitmap = Bitmap.createBitmap(
-			 * displayMetrics.widthPixels * 2, displayMetrics.heightPixels,
-			 * Bitmap.Config.RGB_565);
+			 * DisplayMetrics displayMetrics =
+			 * getResources().getDisplayMetrics(); Bitmap corppedBitmap =
+			 * Bitmap.createBitmap( displayMetrics.widthPixels * 2,
+			 * displayMetrics.heightPixels, Bitmap.Config.RGB_565);
 			 * 
 			 * Canvas canvas = new Canvas(corppedBitmap); Rect srcRect = new
 			 * Rect(0, 0, bitmap.getWidth(), bitmap.getHeight()); Rect dstRect =
@@ -445,6 +448,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		public boolean onSingleTapConfirmed(MotionEvent e) {
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
+				getWindow().clearFlags(
+						WindowManager.LayoutParams.FLAG_FULLSCREEN);
 			}
 			return true;
 		}
