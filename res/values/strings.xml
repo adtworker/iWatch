@@ -20,4 +20,6 @@
     <string name="ok">OK</string>
     <string name="set_wallpaper_msg">Now settings...</string>
     <string name="set_wallpaper_title">Wallpaper</string>
+    <string name="livewallpaper_desc">iWatch Live Wallpaper</string>
+    <string name="exit_toast">Press BACK again to exit</string>
 </resources>
