@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent" 
+	android:id="@+id/uyun_web_main"
+	android:background="#ffff">
+	
+	
+	<WebView android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:layout_marginBottom="36dp"
+		android:layout_alignParentTop="true" android:id="@+id/webView" />
+		
+	<RelativeLayout
+		android:id="@+id/uyun_loading_view"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:layout_marginBottom="36dp"
+		android:layout_alignParentTop="true"
+		android:background="#99444444"
+	>
+	<ProgressBar
+		android:id="@+id/uyun_loading"
+		android:layout_width="40dp"
+		android:layout_height="40dp"
+		android:layout_centerInParent="true"
+		android:indeterminateDrawable="@drawable/uyun_progressbar"
+	/>
+	
+	<SeekBar android:id="@+id/uyun_loading_progress"
+		android:layout_marginTop="10dp"
+		android:layout_below="@id/uyun_loading"
+		android:layout_centerHorizontal="true"
+		android:layout_width="186dp" android:layout_height="10dp"
+		android:max="100" android:thumb="@null"
+		android:progressDrawable="@drawable/uyun_loading_seek"
+	/>
+	</RelativeLayout>
+	
+	<LinearLayout
+		android:layout_width="fill_parent"
+		android:layout_height="36dp"
+		android:layout_alignParentBottom="true"
+		android:orientation="horizontal"
+		android:gravity="center_vertical"
+		android:background="@drawable/uyun_detail_bg"
+	>
+	<ImageView
+		android:id="@+id/uyun_pre"
+		android:layout_width="25dp"
+		android:layout_height="25dp"
+		android:src="@drawable/uyun_pre_no"
+		android:layout_weight="1"
+	/>
+	<ImageView
+		android:id="@+id/uyun_next"
+		android:layout_width="25dp"
+		android:layout_height="25dp"
+		android:src="@drawable/uyun_next_no"
+		android:layout_weight="1"
+	/>
+	<ImageView
+		android:id="@+id/uyun_reflesh"
+		android:layout_width="25dp"
+		android:layout_height="25dp"
+		android:src="@drawable/uyun_jump"
+		android:layout_weight="1"
+	/>
+	<ImageView
+		android:id="@+id/uyun_cancel"
+		android:layout_width="25dp"
+		android:layout_height="25dp"
+		android:src="@drawable/uyun_cancel"
+		android:layout_weight="1"
+	/>
+	
+	</LinearLayout>
+	
+	
+</RelativeLayout>

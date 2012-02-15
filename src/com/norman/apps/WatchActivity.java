@@ -12,8 +12,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -25,9 +23,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.Window;
-import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
-import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
@@ -38,15 +33,8 @@ import com.adview.AdViewInterface;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
 import com.adview.AdViewTargeting.RunMode;
-import com.adview.AdViewTargeting.UpdateMode;
-import com.mt.airad.AirAD;
-import com.mt.airad.AirAD.AirADListener;
 
 public class WatchActivity extends Activity implements AdViewInterface {
-
-	private AirAD airAD;
-	private Handler adHandler;
-	private final int PERIOD = 10;
 
 	private ImageView mImageView;
 	private TextView mBtnPrev;
@@ -86,9 +74,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			return;
 		}
 
-		// initAirAD();
 		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
-		AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); // 保证每次都从服务器取配置
+		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); // 保证每次都从服务器取配置
 		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
 		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
 		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
@@ -137,111 +124,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public void onDestroy() {
 		Log.d(TAG, "onDestroy()");
 		super.onDestroy();
-	}
-
-	private void initAirAD() {
-		AirAD.setGlobalParameter("d7198ef2-3ec8-4713-a4c0-64cb738bdd6a", true);
-
-		LinearLayout layout = (LinearLayout) findViewById(R.id.adLayout);
-		airAD = new AirAD(WatchActivity.this);
-		airAD.setBackgroundAutoHidden(true);
-		layout.addView(airAD);
-
-		airAD.setAirADListener(new AirADListener() {
-			@Override
-			public void onAirADFailed() {
-			}
-
-			@Override
-			public void onAdReceivedFailed() {
-			}
-
-			@Override
-			public void onAdReceived() {
-			}
-
-			@Override
-			public void onAdContentWillShow() {
-			}
-
-			@Override
-			public void onAdContentWillDismiss() {
-			}
-
-			@Override
-			public void onAdContentLoadFinished() {
-			}
-
-			@Override
-			public void onAdContentDidShow() {
-			}
-
-			@Override
-			public void onAdContentDidDismiss() {
-			}
-
-			@Override
-			public void onAdBannerWillShow() {
-				showAirAD();
-			}
-
-			@Override
-			public void onAdBannerWillDismiss() {
-			}
-
-			@Override
-			public void onAdBannerDidShow() {
-			}
-
-			@Override
-			public void onAdBannerDidDismiss() {
-			}
-
-			@Override
-			public void onAdBannerClicked() {
-			}
-		});
-
-		adHandler = new Handler() {
-			@Override
-			public void handleMessage(Message msg) {
-				super.handleMessage(msg);
-				hideAirAD();
-			}
-		};
-	}
-
-	private void showAirAD() {
-		if (airAD.getVisibility() != View.VISIBLE) {
-			airAD.setVisibility(View.VISIBLE);
-		}
-		adHandler.sendEmptyMessageDelayed(0, PERIOD * 1000);
-	}
-
-	private void hideAirAD() {
-		if (airAD.getVisibility() == View.VISIBLE) {
-			Animation hideAction = new TranslateAnimation(
-					Animation.RELATIVE_TO_SELF, 0.0f,
-					Animation.RELATIVE_TO_SELF, 0.0f,
-					Animation.RELATIVE_TO_SELF, 0.0f,
-					Animation.RELATIVE_TO_SELF, 1.0f);
-			hideAction.setDuration(1000);
-			hideAction.setAnimationListener(new AnimationListener() {
-				@Override
-				public void onAnimationStart(Animation animation) {
-				}
-
-				@Override
-				public void onAnimationRepeat(Animation animation) {
-				}
-
-				@Override
-				public void onAnimationEnd(Animation animation) {
-					airAD.setVisibility(View.GONE);
-				}
-			});
-			airAD.startAnimation(hideAction);
-		}
 	}
 
 	private void setupButtons() {

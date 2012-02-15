@@ -57,9 +57,9 @@
 	<activity android:name="com.baidu.AppActivity" 
 		android:configChanges="keyboard|keyboardHidden|orientation" />
 		<!-- get APP ID from http://munion.baidu.com/ -->  
-		<meta-data android:name="BaiduMobAd_APP_ID" android:value="13846ef4" />    
+		<meta-data android:name="BaiduMobAd_APP_ID" android:value="57e18587" />    
 		<!-- get APP SEC from http://munion.baidu.com/ --> 
-		<meta-data android:name="BaiduMobAd_APP_SEC" android:value="13846ef4_e498eab7" />
+		<meta-data android:name="BaiduMobAd_APP_SEC" android:value="57e18587_e498eab7" />
 
 	<!-- AdView SDK for Domob --> 
 	<activity android:name="cn.domob.android.ads.DomobActivity"
@@ -127,7 +127,7 @@
 	
 	<!-- AdView SDK for greystripe --> 
 	<provider android:name="com.greystripe.android.sdk.AdContentProvider"
-		android:authorities="com.adview.AdContentProvider"
+		android:authorities="com.norman.apps.AdContentProvider"
 		android:multiprocess="true" android:exported="false" />
 	<activity android:name="com.greystripe.android.sdk.AdView"
 		android:configChanges="keyboard|keyboardHidden|orientation">
