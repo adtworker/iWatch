@@ -25,6 +25,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
@@ -64,7 +65,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private ProgressDialog mProcessDialog;
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
-	final static String[] PICS = { "m1", "m2", "m3" };
+	final static String[] PICS = { "m1", "m2", "m3", "m4" };
 
 	/** Called when the activity is first created. */
 	@Override
@@ -132,7 +133,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				Bitmap bm = BitmapFactory.decodeResource(getResources(),
 						ImageUtil.getImage(PICS[iPicIndex]));
 				mImageView.setImageBitmap(bm);
-				bm.recycle();
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -327,6 +327,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				// hide mainLayout only leave background image
 				if (getMLVisibility()) {
 					setMLVisibility(false);
+					getWindow().setFlags(
+							WindowManager.LayoutParams.FLAG_FULLSCREEN,
+							WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
 				}
 			}
 		});
@@ -371,6 +375,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			mProcessDialog = ProgressDialog.show(this,
 					getString(R.string.set_wallpaper_title),
 					getString(R.string.set_wallpaper_msg), true);
+
 			new Thread() {
 				@Override
 				public void run() {
@@ -475,6 +480,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		public boolean onSingleTapConfirmed(MotionEvent e) {
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
+				getWindow().clearFlags(
+						WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
 			}
 			return true;
 		}

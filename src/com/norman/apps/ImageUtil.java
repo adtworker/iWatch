@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 
 import android.util.Log;
 
+import com.norman.apps.R.raw;
+
 /*
  * 图片工具类
  * res建立文件夹raw放入工程图片
@@ -13,7 +15,7 @@ public class ImageUtil {
 	// 获取图片
 	public static int getImage(String pic) {
 		try {
-			Class cl = R.raw.class;
+			Class<raw> cl = R.raw.class;
 			Field field = cl.getDeclaredField(pic);
 			return field.getInt(pic);
 		} catch (Exception e) {

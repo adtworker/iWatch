@@ -166,8 +166,10 @@ public class ClockLiveWallpaper extends WallpaperService {
 
 			float r = Math.min(mWidth, mHeight) / 3;
 
-			Bitmap bm = BitmapFactory.decodeResource(getResources(),
-					R.drawable.clockdroids_dial);
+			Bitmap bm = null;
+			bm = BitmapFactory.decodeResource(getResources(),
+					R.drawable.clock_dial);
+
 			if (bm != null) {
 				r = (Math.min(bm.getWidth(), bm.getHeight())) / 2;
 				mPaint.setColor(Color.GRAY);
@@ -177,20 +179,21 @@ public class ClockLiveWallpaper extends WallpaperService {
 			float x = (mWidth - r * 2) / 2;
 			float y = (mHeight - r * 2) / 2;
 
-			canvas.drawBitmap(bm, x, y, mPaint);
+			if (bm != null)
+				canvas.drawBitmap(bm, x, y, mPaint);
 
 			float x1 = x + r;
 			float y1 = y + r;
 			float x2 = 0;
 			float y2 = 0;
-			float r1 = r - 10; // radius in total
+			float r1 = r; // radius in total
 			float r0 = 5; // centre point
 			double rad = 0;
 
-			float rSec = r1 - 10;
-			float rMin = r1 - 60;
-			float rHour = r1 - 99;
-			float rSec2 = 40;
+			float rSec = r1 * 5 / 6;
+			float rMin = r1 * 2 / 3;
+			float rHour = r1 / 2;
+			float rSec2 = r1 / 6;
 			float rMk1 = 10;
 			float rMk2 = 4;
 
