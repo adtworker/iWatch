@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -142,7 +143,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final Runnable mUpdateImageView = new Runnable() {
 		@Override
 		public void run() {
-			// mImageView.setImageResource(ImageUtil.getImage(PICS[iPicIndex]));
 			try {
 				Bitmap bm = BitmapFactory.decodeResource(getResources(),
 						ImageUtil.getImage(PICS[iPicIndex]));
@@ -159,31 +159,31 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	@Override
 	public void onStart() {
-		Log.d(TAG, "onStart()");
+		// Log.d(TAG, "onStart()");
 		super.onStart();
 	}
 
 	@Override
 	public void onResume() {
-		Log.d(TAG, "onResume()");
+		// Log.d(TAG, "onResume()");
 		super.onResume();
 	}
 
 	@Override
 	public void onPause() {
-		Log.d(TAG, "onPause()");
+		// Log.d(TAG, "onPause()");
 		super.onPause();
 	}
 
 	@Override
 	public void onStop() {
-		Log.d(TAG, "onStop()");
+		// Log.d(TAG, "onStop()");
 		super.onStop();
 	}
 
 	@Override
 	public void onDestroy() {
-		Log.d(TAG, "onDestroy()");
+		// Log.d(TAG, "onDestroy()");
 		super.onDestroy();
 	}
 
@@ -394,10 +394,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				myEdit.putInt("CurPicIndex", iPicIndex).commit();
 
 				Toast.makeText(this, getString(R.string.help_livewallpaper),
-						Toast.LENGTH_LONG).show();
+						Toast.LENGTH_SHORT).show();
 				Intent intent = new Intent();
 				intent.setAction(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER);
 				startActivity(intent);
+				break;
 
 			case R.id.menu_set_wallpaper :
 				mProcessDialog = ProgressDialog.show(this,
@@ -453,25 +454,20 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void setWallpaper() {
 		try {
-
-			Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
-					ImageUtil.getImage(PICS[iPicIndex]));
-
-			WallpaperManager.getInstance(this).setBitmap(bitmap);
-			Log.d(TAG, "Set picture " + iPicIndex + " as wallpaper.");
+			WallpaperManager.getInstance(this).setBitmap(
+					((BitmapDrawable) mImageView.getDrawable()).getBitmap());
 
 		} catch (IOException e) {
 			Log.e(TAG, "Failed to set wallpaper!");
 		}
 	}
-
 	private class MyGestureListener
 			extends
 				GestureDetector.SimpleOnGestureListener {
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2,
 				float distanceX, float distanceY) {
-			if (mImageView.getScaleType() == ScaleType.CENTER_CROP) {
+			if (mImageView.getScaleType() == ScaleType.CENTER) {
 				mImageView.scrollBy((int) distanceX, (int) distanceY);
 			}
 			return true;
@@ -479,11 +475,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		@Override
 		public boolean onDoubleTap(MotionEvent e) {
-			if (mImageView.getScaleType() == ScaleType.CENTER_CROP) {
-				mImageView.setScaleType(ScaleType.FIT_CENTER);
+			if (mImageView.getScaleType() == ScaleType.CENTER) {
+				mImageView.setScaleType(ScaleType.CENTER_INSIDE);
 				mImageView.scrollTo(0, 0);
 			} else {
-				mImageView.setScaleType(ScaleType.CENTER_CROP);
+				mImageView.setScaleType(ScaleType.CENTER);
 			}
 			return true;
 		}

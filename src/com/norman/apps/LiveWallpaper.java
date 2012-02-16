@@ -11,7 +11,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
@@ -57,28 +56,32 @@ public class LiveWallpaper extends WallpaperService
 		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
 		int width = displayMetrics.widthPixels;
 		int height = displayMetrics.heightPixels;
-		bm = BitmapFactory.decodeResource(getResources(), iBitmapRes);
-		if (Math.max(bm.getWidth(), bm.getHeight()) > Math.min(width, height)) {
-			Bitmap corppedBitmap = Bitmap.createBitmap(
-					displayMetrics.widthPixels, displayMetrics.heightPixels,
-					Bitmap.Config.RGB_565);
-			Canvas canvas = new Canvas(corppedBitmap);
-			Paint paint = new Paint();
-			paint.setFilterBitmap(true);
-			Rect srcRect = new Rect(0, 0, bm.getWidth(), bm.getHeight());
-			Rect dstRect = new Rect(0, 0, Math.min(width, height), Math.min(
-					width, height));
-			Log.d(TAG, "density = " + bm.getDensity());
-			Log.d(TAG, "srcRect = " + srcRect);
-			Log.d(TAG, "dstRect = " + dstRect);
 
-			int dx = (srcRect.width() - dstRect.width()) / 2;
-			int dy = (srcRect.height() - dstRect.height()) / 2;
-			srcRect.inset(Math.max(0, dx), Math.max(0, dy));
-			srcRect.inset(Math.max(0, -dx), Math.max(0, -dy));
-			canvas.drawBitmap(bm, srcRect, dstRect, paint);
-			bm = corppedBitmap;
+		BitmapFactory.Options opt = new BitmapFactory.Options();
+		opt.inJustDecodeBounds = true;
+		bm = BitmapFactory.decodeResource(getResources(), iBitmapRes, opt);
+		int bm_w = opt.outWidth;
+		int bm_h = opt.outHeight;
+		Log.d(TAG, "origin: " + bm_w + "x" + bm_h);
+		if (bm_w > width || bm_h > height) {
+			float ratio_hw = (float) bm_h / bm_w;
+			Log.d(TAG, "bitmap original ratio height/width = " + ratio_hw);
+			if (height / ratio_hw <= width) {
+				opt.outHeight = height;
+				opt.outWidth = (int) (height / ratio_hw);
+			} else {
+				opt.outHeight = (int) (width * ratio_hw);
+				opt.outWidth = width;
+			}
+			Log.d(TAG, "scaled: " + opt.outWidth + "x" + opt.outHeight);
 		}
+		if (iPicIndex != WatchActivity.INVALID_PIC_INDEX)
+			opt.inScaled = false;
+
+		opt.inJustDecodeBounds = false;
+		opt.inSampleSize = 1;
+		Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
+		bm = BitmapFactory.decodeResource(getResources(), iBitmapRes, opt);
 	}
 	@Override
 	public void onDestroy() {
@@ -127,14 +130,13 @@ public class LiveWallpaper extends WallpaperService
 		@Override
 		public Bundle onCommand(String action, int x, int y, int z,
 				Bundle extras, boolean resultRequested) {
-			// TODO Auto-generated method stub
-			System.out.println("onCommand");
+			// System.out.println("onCommand");
 			return super.onCommand(action, x, y, z, extras, resultRequested);
 		}
 
 		@Override
 		public void onCreate(SurfaceHolder surfaceHolder) {
-			System.out.println("onCreate");
+			// System.out.println("onCreate");
 			super.onCreate(surfaceHolder);
 			// 作用是使壁纸能响应touch event，默认是false
 			setTouchEventsEnabled(true);
@@ -142,7 +144,7 @@ public class LiveWallpaper extends WallpaperService
 
 		@Override
 		public void onDestroy() {
-			System.out.println("onDestroy");
+			// System.out.println("onDestroy");
 			super.onDestroy();
 			handler.removeCallbacks(drawThread);
 		}
@@ -151,7 +153,6 @@ public class LiveWallpaper extends WallpaperService
 		public void onOffsetsChanged(float xOffset, float yOffset,
 				float xOffsetStep, float yOffsetStep, int xPixelOffset,
 				int yPixelOffset) {
-			// TODO Auto-generated method stub
 			System.out.println("onoffsetsChanged");
 			super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep,
 					xPixelOffset, yPixelOffset);
@@ -159,7 +160,7 @@ public class LiveWallpaper extends WallpaperService
 
 		@Override
 		public void onVisibilityChanged(boolean visible) {
-			System.out.println("onVisibilityChanged");
+			// System.out.println("onVisibilityChanged");
 			if (visible) {
 				// 开始
 				handler.postDelayed(drawThread, 100);
@@ -171,29 +172,26 @@ public class LiveWallpaper extends WallpaperService
 		@Override
 		public void onSurfaceChanged(SurfaceHolder holder, int format,
 				int width, int height) {
-			System.out.println("onSurfaceChanged");
-			// TODO Auto-generated method stub
+			// System.out.println("onSurfaceChanged");
 			super.onSurfaceChanged(holder, format, width, height);
 		}
 
 		@Override
 		public void onSurfaceCreated(SurfaceHolder holder) {
-			System.out.println("onSurfaceCreated");
+			// System.out.println("onSurfaceCreated");
 			super.onSurfaceCreated(holder);
 		}
 
 		@Override
 		public void onSurfaceDestroyed(SurfaceHolder holder) {
-			System.out.println("onSurfaceDestoryed");
-			// TODO Auto-generated method stub
+			// System.out.println("onSurfaceDestoryed");
 			super.onSurfaceDestroyed(holder);
 			handler.removeCallbacks(drawThread);
 		}
 
 		@Override
 		public void onTouchEvent(MotionEvent event) {
-			System.out.println("onTouchEvent");
-			// TODO Auto-generated method stub
+			// System.out.println("onTouchEvent");
 			super.onTouchEvent(event);
 
 		}
@@ -205,7 +203,6 @@ public class LiveWallpaper extends WallpaperService
 			drawTime(canvas);
 			holder.unlockCanvasAndPost(canvas);
 
-			// 循环执行
 			handler.postDelayed(drawThread, 100);
 		}
 
@@ -224,23 +221,36 @@ public class LiveWallpaper extends WallpaperService
 			int mHeight = displayMetrics.heightPixels;
 
 			float r = Math.min(mWidth, mHeight) / 3;
-
-			if (bm != null) {
-				r = (Math.min(bm.getWidth(), bm.getHeight())) / 2;
-				mPaint.setColor(Color.GRAY);
-				mPaintLine.setColor(Color.GRAY);
-			}
-
 			float x = (mWidth - r * 2) / 2;
 			float y = (mHeight - r * 2) / 2;
-
-			if (bm != null)
-				canvas.drawBitmap(bm, x, y, mPaint);
-
 			float x1 = x + r;
 			float y1 = y + r;
 			float x2 = 0;
 			float y2 = 0;
+
+			if (bm != null) {
+
+				int bm_w = bm.getWidth();
+				int bm_h = bm.getHeight();
+
+				if (iPicIndex != WatchActivity.INVALID_PIC_INDEX) {
+					BitmapFactory.Options opt = new BitmapFactory.Options();
+					opt.inJustDecodeBounds = true;
+					Bitmap tmp = BitmapFactory.decodeResource(getResources(),
+							ImageUtil.getImage(WatchActivity.PICS[iPicIndex]),
+							opt);
+					bm_w = opt.outWidth;
+					bm_h = opt.outHeight;
+				}
+
+				r = (Math.min(bm_w, bm_h)) / 2;
+				x = (mWidth - bm_w) / 2;
+				y = (mHeight - bm_h) / 2;
+				x1 = x + bm_w / 2;
+				y1 = y + bm_h / 2;
+				canvas.drawBitmap(bm, x, y, mPaint);
+			}
+
 			float r1 = r; // radius in total
 			float r0 = 6; // center point
 			double rad = 0;

@@ -3,15 +3,14 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="#000000"
-    android:gravity="center"
-    android:orientation="vertical" >
+    android:layout_gravity="center">
 
     <ImageView
         android:id="@+id/picView"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:contentDescription="@string/ContentDesc"
-        android:scaleType="fitCenter" />
+        android:scaleType="centerInside" />
 
     <LinearLayout
         android:id="@+id/clockLayout"

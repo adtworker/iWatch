@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wallpaper xmlns:android="http://schemas.android.com/apk/res/android"
            android:description="@string/livewallpaper_desc"
-           android:thumbnail="@drawable/ic_launcher_alarmclock" 
+           android:thumbnail="@drawable/ic_launcher_alarmclock" />
+<!--
            android:settingsActivity="com.norman.apps.WatchActivity" />
-
+-->
