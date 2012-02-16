@@ -16,8 +16,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -29,9 +27,6 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
-import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
@@ -45,16 +40,12 @@ import com.adview.AdViewTargeting.RunMode;
 
 public class WatchActivity extends Activity implements AdViewInterface {
 
-	private AirAD airAD;
-	private Handler adHandler;
-	private final int PERIOD = 10;
-
 	private final Handler mHandler = new Handler();
 	private ImageView mImageView;
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
 	private TextView mBtnDisp;
-	private LinearLayout mClockLayout;
+	// private LinearLayout mClockLayout;
 
 	private final String TAG = "WatchActivity";
 	public final static int INVALID_PIC_INDEX = -1;
@@ -82,7 +73,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
 		mBtnDisp = (TextView) findViewById(R.id.btnDisp);
-		mClockLayout = (LinearLayout) findViewById(R.id.clockLayout);
+		// mClockLayout = (LinearLayout) findViewById(R.id.clockLayout);
 		mSharedPref = getSharedPreferences("iWatch", Context.MODE_PRIVATE);
 		// Editor edit = mSharedPref.edit();
 		// edit.remove("CurPicIndex").commit();
@@ -121,13 +112,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mHandler.removeCallbacks(mUpdateImageView);
 	}
 
-	private final Runnable mUpdateTimeTask = new Runnable() {
-		@Override
-		public void run() {
-			mClockLayout.invalidate();
-			mHandler.postDelayed(mUpdateTimeTask, 100);
-		}
-	};
+	// private final Runnable mUpdateTimeTask = new Runnable() {
+	// @Override
+	// public void run() {
+	// mClockLayout.invalidate();
+	// mHandler.postDelayed(mUpdateTimeTask, 100);
+	// }
+	// };
 
 	private final Runnable mUpdateKeyBackState = new Runnable() {
 		@Override
