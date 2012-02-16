@@ -6,7 +6,10 @@
           android:icon="@drawable/ic_menu_clock_face"/>
     <item android:id="@+id/menu_settings"
           android:title="@string/settings"
-          android:icon="@android:drawable/ic_menu_preferences"/>    
+          android:icon="@android:drawable/ic_menu_preferences"/>
+    <item android:id="@+id/menu_set_livewallpaper"
+          android:title="@string/set_livewallpaper"
+          android:icon="@drawable/ic_launcher_alarmclock"/>
     <item android:id="@+id/menu_set_wallpaper"
           android:title="@string/set_wallpaper"
           android:icon="@android:drawable/ic_menu_gallery"/>

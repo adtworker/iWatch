@@ -5,11 +5,12 @@ import java.util.Random;
 import java.util.Stack;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.app.WallpaperManager;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.adview.AdViewInterface;
 import com.adview.AdViewLayout;
@@ -56,16 +58,18 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private LinearLayout mClockLayout;
 
 	private final String TAG = "WatchActivity";
-	private final int INVALID_PIC_INDEX = -1;
+	public final static int INVALID_PIC_INDEX = -1;
 	private final Random mRandom = new Random(System.currentTimeMillis());
 
 	private int iPicIndex = INVALID_PIC_INDEX;
+	private boolean bKeyBackIn2Sec = false;
 	private final Stack<Integer> sPicHistory = new Stack<Integer>();
 	private GestureDetector mGestureDetector;
 	private ProgressDialog mProcessDialog;
+	private SharedPreferences mSharedPref;
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
-	final static String[] PICS = { "m1", "m2", "m3", "m4" };
+	final static String[] PICS = {"m1", "m2", "m3", "m4"};
 
 	/** Called when the activity is first created. */
 	@Override
@@ -80,10 +84,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
 		mBtnDisp = (TextView) findViewById(R.id.btnDisp);
 		mClockLayout = (LinearLayout) findViewById(R.id.clockLayout);
+		mSharedPref = getSharedPreferences("iWatch", Context.MODE_PRIVATE);
+		// Editor edit = mSharedPref.edit();
+		// edit.remove("CurPicIndex").commit();
 
-		if (iPicIndex == INVALID_PIC_INDEX) {
-			mHandler.removeCallbacks(mUpdateImageView);
-		}
 		if (sPicHistory.empty()) {
 			mBtnPrev.setEnabled(false);
 		}
@@ -115,6 +119,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 		};
 		mImageView.setOnTouchListener(rootListener);
+
+		mHandler.removeCallbacks(mUpdateImageView);
 	}
 
 	private final Runnable mUpdateTimeTask = new Runnable() {
@@ -122,6 +128,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		public void run() {
 			mClockLayout.invalidate();
 			mHandler.postDelayed(mUpdateTimeTask, 100);
+		}
+	};
+
+	private final Runnable mUpdateKeyBackState = new Runnable() {
+		@Override
+		public void run() {
+			bKeyBackIn2Sec = false;
+			mHandler.removeCallbacks(mUpdateKeyBackState);
 		}
 	};
 
@@ -133,8 +147,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				Bitmap bm = BitmapFactory.decodeResource(getResources(),
 						ImageUtil.getImage(PICS[iPicIndex]));
 				mImageView.setImageBitmap(bm);
+
 			} catch (Exception e) {
 				e.printStackTrace();
+
 			} finally {
 				mHandler.removeCallbacks(mUpdateImageView);
 			}
@@ -289,6 +305,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				if (sPicHistory.empty()) {
 					mBtnPrev.setEnabled(false);
+					Editor edit = mSharedPref.edit();
+					edit.remove("CurPicIndex").commit();
 				}
 			}
 		});
@@ -345,11 +363,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		menu.findItem(R.id.menu_toggle_clock).setTitle(
-				getClockVisibility() ? R.string.hide_clock
+				getClockVisibility()
+						? R.string.hide_clock
 						: R.string.show_clock);
 
-		// Disable settings in current version
-		menu.findItem(R.id.menu_settings).setEnabled(false);
+		// Hide settings in current version
+		menu.findItem(R.id.menu_settings).setVisible(false);
 
 		if (iPicIndex == INVALID_PIC_INDEX) {
 			menu.findItem(R.id.menu_set_wallpaper).setEnabled(false);
@@ -359,39 +378,48 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		return super.onPrepareOptionsMenu(menu);
 	}
-
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.menu_toggle_clock:
-			setClockVisibility(!getClockVisibility());
-			break;
+			case R.id.menu_toggle_clock :
+				setClockVisibility(!getClockVisibility());
+				break;
 
-		case R.id.menu_settings:
-			startActivity(new Intent(this, Settings.class));
-			break;
+			case R.id.menu_settings :
+				startActivity(new Intent(this, Settings.class));
+				break;
 
-		case R.id.menu_set_wallpaper:
-			mProcessDialog = ProgressDialog.show(this,
-					getString(R.string.set_wallpaper_title),
-					getString(R.string.set_wallpaper_msg), true);
+			case R.id.menu_set_livewallpaper :
+				Editor myEdit = mSharedPref.edit();
+				myEdit.putInt("CurPicIndex", iPicIndex).commit();
 
-			new Thread() {
-				@Override
-				public void run() {
-					try {
-						setWallpaper();
-					} catch (Exception e) {
-						e.printStackTrace();
-					} finally {
-						mProcessDialog.dismiss();
+				Toast.makeText(this, getString(R.string.help_livewallpaper),
+						Toast.LENGTH_LONG).show();
+				Intent intent = new Intent();
+				intent.setAction(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER);
+				startActivity(intent);
+
+			case R.id.menu_set_wallpaper :
+				mProcessDialog = ProgressDialog.show(this,
+						getString(R.string.set_wallpaper_title),
+						getString(R.string.set_wallpaper_msg), true);
+
+				new Thread() {
+					@Override
+					public void run() {
+						try {
+							setWallpaper();
+						} catch (Exception e) {
+							e.printStackTrace();
+						} finally {
+							mProcessDialog.dismiss();
+						}
 					}
-				}
-			}.start();
+				}.start();
 
-			break;
+				break;
 
-		default:
+			default :
 
 		}
 		return super.onOptionsItemSelected(item);
@@ -429,23 +457,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
 					ImageUtil.getImage(PICS[iPicIndex]));
 
-			// DisplayMetrics displayMetrics =
-			// getResources().getDisplayMetrics();
-			// Bitmap corppedBitmap = Bitmap.createBitmap(
-			// displayMetrics.widthPixels * 2,
-			// displayMetrics.heightPixels, Bitmap.Config.RGB_565);
-			// Canvas canvas = new Canvas(corppedBitmap);
-			// Rect srcRect = new Rect(0, 0, bitmap.getWidth(),
-			// bitmap.getHeight());
-			// Rect dstRect = new Rect(0, 0, displayMetrics.widthPixels * 2,
-			// displayMetrics.heightPixels);
-			// int dx = (srcRect.width() - dstRect.width()) / 2;
-			// int dy = (srcRect.height() - dstRect.height()) / 2;
-			// srcRect.inset(Math.max(0, dx), Math.max(0, dy));
-			// srcRect.inset(Math.max(0, -dx), Math.max(0, -dy));
-			// canvas.drawBitmap(bitmap, srcRect, dstRect, null);
-			// WallpaperManager.getInstance(this).setBitmap(corppedBitmap);
-
 			WallpaperManager.getInstance(this).setBitmap(bitmap);
 			Log.d(TAG, "Set picture " + iPicIndex + " as wallpaper.");
 
@@ -454,8 +465,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 	}
 
-	private class MyGestureListener extends
-			GestureDetector.SimpleOnGestureListener {
+	private class MyGestureListener
+			extends
+				GestureDetector.SimpleOnGestureListener {
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2,
 				float distanceX, float distanceY) {
@@ -504,28 +516,37 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public boolean onKeyUp(int keycode, KeyEvent event) {
 		switch (keycode) {
 
-		case KeyEvent.KEYCODE_BACK:
-			// alert user when key_back is pressed
-			new AlertDialog.Builder(this)
-					.setMessage(getString(R.string.exit_msg))
-					.setPositiveButton(getString(R.string.ok),
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int whichButton) {
-									finish();
-								}
-							})
-					.setNegativeButton(getString(R.string.cancel),
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int whichButton) {
+			case KeyEvent.KEYCODE_BACK :
+				// alert user when key_back is pressed
+				// new AlertDialog.Builder(this)
+				// .setMessage(getString(R.string.exit_msg))
+				// .setPositiveButton(getString(R.string.ok),
+				// new DialogInterface.OnClickListener() {
+				// @Override
+				// public void onClick(DialogInterface dialog,
+				// int whichButton) {
+				// finish();
+				// }
+				// })
+				// .setNegativeButton(getString(R.string.cancel),
+				// new DialogInterface.OnClickListener() {
+				// @Override
+				// public void onClick(DialogInterface dialog,
+				// int whichButton) {
+				//
+				// }
+				// }).create().show();
 
-								}
-							}).create().show();
+				if (!bKeyBackIn2Sec) {
+					Toast.makeText(this, getString(R.string.exit_toast),
+							Toast.LENGTH_SHORT).show();
+					bKeyBackIn2Sec = true;
+					mHandler.postDelayed(mUpdateKeyBackState, 2000);
+				} else {
+					finish();
+				}
 
-			return false;
+				return false;
 		}
 
 		return super.onKeyUp(keycode, event);
