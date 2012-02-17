@@ -12,6 +12,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
 import android.util.DisplayMetrics;
@@ -26,7 +27,7 @@ public class LiveWallpaper extends WallpaperService
 	private final String TAG = "LiveWallpaper";
 	private final Handler handler = new Handler();
 	private SharedPreferences mSharedPref;
-	private int iPicIndex = WatchActivity.INVALID_PIC_INDEX;
+	private String strPicCode;
 	private Bitmap bm = null;
 
 	@Override
@@ -44,44 +45,51 @@ public class LiveWallpaper extends WallpaperService
 		makePrefChanges();
 	}
 
+	private String getPicPath() {
+		return Environment.getExternalStorageDirectory()
+				+ WatchActivity.PIC_FOLDER + strPicCode;
+	}
+
 	private void makePrefChanges() {
-		iPicIndex = mSharedPref.getInt("CurPicIndex",
-				WatchActivity.INVALID_PIC_INDEX);
-		Log.d(TAG, "iPicIndex is " + iPicIndex);
+		strPicCode = mSharedPref.getString("CurPicCode", "");
+		Log.d(TAG, "strPicCode is " + strPicCode);
 
-		int iBitmapRes = R.drawable.clock_dial;
-		if (iPicIndex != WatchActivity.INVALID_PIC_INDEX)
-			iBitmapRes = ImageUtil.getImage(WatchActivity.PICS[iPicIndex]);
+		if (strPicCode == "") {
+			bm = BitmapFactory.decodeResource(getResources(),
+					R.drawable.clock_dial);
 
-		DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-		int width = displayMetrics.widthPixels;
-		int height = displayMetrics.heightPixels;
+		} else {
 
-		BitmapFactory.Options opt = new BitmapFactory.Options();
-		opt.inJustDecodeBounds = true;
-		bm = BitmapFactory.decodeResource(getResources(), iBitmapRes, opt);
-		int bm_w = opt.outWidth;
-		int bm_h = opt.outHeight;
-		Log.d(TAG, "origin: " + bm_w + "x" + bm_h);
-		if (bm_w > width || bm_h > height) {
-			float ratio_hw = (float) bm_h / bm_w;
-			Log.d(TAG, "bitmap original ratio height/width = " + ratio_hw);
-			if (height / ratio_hw <= width) {
-				opt.outHeight = height;
-				opt.outWidth = (int) (height / ratio_hw);
-			} else {
-				opt.outHeight = (int) (width * ratio_hw);
-				opt.outWidth = width;
+			DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+			int width = displayMetrics.widthPixels;
+			int height = displayMetrics.heightPixels;
+
+			BitmapFactory.Options opt = new BitmapFactory.Options();
+			opt.inJustDecodeBounds = true;
+			bm = BitmapFactory.decodeFile(getPicPath(), opt);
+			int bm_w = opt.outWidth;
+			int bm_h = opt.outHeight;
+			Log.d(TAG, "origin: " + bm_w + "x" + bm_h);
+			if (bm_w > width || bm_h > height) {
+				float ratio_hw = (float) bm_h / bm_w;
+				Log.d(TAG, "bitmap original ratio height/width = " + ratio_hw);
+				if (height / ratio_hw <= width) {
+					opt.outHeight = height;
+					opt.outWidth = (int) (height / ratio_hw);
+				} else {
+					opt.outHeight = (int) (width * ratio_hw);
+					opt.outWidth = width;
+				}
+				Log.d(TAG, "scaled: " + opt.outWidth + "x" + opt.outHeight);
 			}
-			Log.d(TAG, "scaled: " + opt.outWidth + "x" + opt.outHeight);
-		}
-		if (iPicIndex != WatchActivity.INVALID_PIC_INDEX)
-			opt.inScaled = false;
 
-		opt.inJustDecodeBounds = false;
-		opt.inSampleSize = 1;
-		Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
-		bm = BitmapFactory.decodeResource(getResources(), iBitmapRes, opt);
+			opt.inJustDecodeBounds = false;
+			opt.inSampleSize = bm_w / width;
+			Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
+
+			bm = BitmapFactory.decodeFile(getPicPath(), opt);
+		}
+
 	}
 	@Override
 	public void onDestroy() {
@@ -232,17 +240,6 @@ public class LiveWallpaper extends WallpaperService
 
 				int bm_w = bm.getWidth();
 				int bm_h = bm.getHeight();
-
-				if (iPicIndex != WatchActivity.INVALID_PIC_INDEX) {
-					BitmapFactory.Options opt = new BitmapFactory.Options();
-					opt.inJustDecodeBounds = true;
-					Bitmap tmp = BitmapFactory.decodeResource(getResources(),
-							ImageUtil.getImage(WatchActivity.PICS[iPicIndex]),
-							opt);
-					bm_w = opt.outWidth;
-					bm_h = opt.outHeight;
-				}
-
 				r = (Math.min(bm_w, bm_h)) / 2;
 				x = (mWidth - bm_w) / 2;
 				y = (mHeight - bm_h) / 2;
@@ -255,7 +252,7 @@ public class LiveWallpaper extends WallpaperService
 			float r0 = 6; // center point
 			double rad = 0;
 
-			float rSec = r1 * 3 / 4;
+			float rSec = r1 * 4 / 5;
 			float rMin = r1 * 2 / 3;
 			float rHour = r1 / 2;
 

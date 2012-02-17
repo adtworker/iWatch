@@ -9,7 +9,7 @@
           android:icon="@android:drawable/ic_menu_preferences"/>
     <item android:id="@+id/menu_set_livewallpaper"
           android:title="@string/set_livewallpaper"
-          android:icon="@drawable/ic_launcher_alarmclock"/>
+          android:icon="@drawable/ic_menu_livewallpaper"/>
     <item android:id="@+id/menu_set_wallpaper"
           android:title="@string/set_wallpaper"
           android:icon="@android:drawable/ic_menu_gallery"/>

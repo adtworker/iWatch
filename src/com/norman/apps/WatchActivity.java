@@ -1,8 +1,16 @@
 package com.norman.apps;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -15,6 +23,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -48,7 +57,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	// private LinearLayout mClockLayout;
 
 	private final String TAG = "WatchActivity";
+	private final String ASSETS_NAME = "pics.zip";
+	private static final int ASSETS_SUFFIX_BEGIN = 001;
+	private static final int ASSETS_SUFFIX_END = 001;
 	public final static int INVALID_PIC_INDEX = -1;
+	public final static String PIC_FOLDER = "/iWatch/";
 	private final Random mRandom = new Random(System.currentTimeMillis());
 
 	private int iPicIndex = INVALID_PIC_INDEX;
@@ -59,7 +72,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private SharedPreferences mSharedPref;
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
-	final static String[] PICS = {"m1", "m2", "m3", "m4"};
+	public final static ArrayList<String> PICS = new ArrayList<String>();
 
 	/** Called when the activity is first created. */
 	@Override
@@ -77,6 +90,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mSharedPref = getSharedPreferences("iWatch", Context.MODE_PRIVATE);
 		// Editor edit = mSharedPref.edit();
 		// edit.remove("CurPicIndex").commit();
+
+		PICS.add("m1.png");
+		PICS.add("m2.png");
+		PICS.add("m3.png");
+		PICS.add("m4.jpg");
+		PICS.add("a34.jpg");
+		PICS.add("a38.jpg");
 
 		if (sPicHistory.empty()) {
 			mBtnPrev.setEnabled(false);
@@ -110,6 +130,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mImageView.setOnTouchListener(rootListener);
 
 		mHandler.removeCallbacks(mUpdateImageView);
+
+		if (!new File(getPicPath()).exists()) {
+			mHandler.post(mUnzipTask);
+		}
 	}
 
 	// private final Runnable mUpdateTimeTask = new Runnable() {
@@ -128,12 +152,27 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 	};
 
+	private final Runnable mUnzipTask = new Runnable() {
+		@Override
+		public void run() {
+			try {
+				copyBigPicFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			unzipFile(getPicPath(), getPicPath() + ASSETS_NAME);
+
+			mHandler.removeCallbacks(mUnzipTask);
+		}
+
+	};
+
 	private final Runnable mUpdateImageView = new Runnable() {
 		@Override
 		public void run() {
 			try {
-				Bitmap bm = BitmapFactory.decodeResource(getResources(),
-						ImageUtil.getImage(PICS[iPicIndex]));
+				Bitmap bm = BitmapFactory.decodeFile(getPicPath()
+						+ PICS.get(iPicIndex));
 				mImageView.setImageBitmap(bm);
 
 			} catch (Exception e) {
@@ -144,6 +183,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 		}
 	};
+
+	private String getPicPath() {
+		Log.d(TAG, "data folder: " + Environment.getDataDirectory());
+		return Environment.getExternalStorageDirectory() + PIC_FOLDER;
+	}
 
 	@Override
 	public void onStart() {
@@ -184,7 +228,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				iPicIndex = sPicHistory.pop();
 				Log.d(TAG, "Showing previous picture id " + iPicIndex);
 
-				mHandler.postDelayed(mUpdateImageView, 100);
+				mHandler.post(mUpdateImageView);
 
 				if (sPicHistory.empty()) {
 					mBtnPrev.setEnabled(false);
@@ -206,7 +250,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				int tmpIndex = INVALID_PIC_INDEX;
 				do {
-					tmpIndex = mRandom.nextInt(PICS.length);
+					tmpIndex = mRandom.nextInt(PICS.size());
 				} while (tmpIndex == iPicIndex);
 
 				iPicIndex = tmpIndex;
@@ -274,7 +318,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			case R.id.menu_set_livewallpaper :
 				Editor myEdit = mSharedPref.edit();
-				myEdit.putInt("CurPicIndex", iPicIndex).commit();
+				if (iPicIndex != INVALID_PIC_INDEX
+						&& new File(getPicPath() + PICS.get(iPicIndex))
+								.exists()) {
+					myEdit.putString("CurPicCode", PICS.get(iPicIndex));
+				} else {
+					myEdit.remove("CurPicCode");
+				}
+				myEdit.commit();
 
 				Toast.makeText(this, getString(R.string.help_livewallpaper),
 						Toast.LENGTH_SHORT).show();
@@ -429,5 +480,69 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		return super.onKeyUp(keycode, event);
+	}
+
+	private void copyBigPicFile() throws IOException {
+		InputStream myInput;
+		String outFileName = getPicPath() + ASSETS_NAME;
+		OutputStream myOutput = new FileOutputStream(outFileName);
+		for (int i = ASSETS_SUFFIX_BEGIN; i < ASSETS_SUFFIX_END + 1; i++) {
+			myInput = this.getAssets().open(ASSETS_NAME + "." + i);
+			byte[] buffer = new byte[1024];
+			int length;
+			while ((length = myInput.read(buffer)) > 0) {
+				myOutput.write(buffer, 0, length);
+			}
+			myOutput.flush();
+			myInput.close();
+		}
+		myOutput.close();
+	}
+
+	public void unzipFile(String targetPath, String zipFilePath) {
+
+		try {
+			File zipFile = new File(zipFilePath);
+			InputStream is = new FileInputStream(zipFile);
+			ZipInputStream zis = new ZipInputStream(is);
+			ZipEntry entry = null;
+			while ((entry = zis.getNextEntry()) != null) {
+				String zipPath = entry.getName();
+				try {
+
+					if (entry.isDirectory()) {
+						File zipFolder = new File(targetPath + File.separator
+								+ zipPath);
+						if (!zipFolder.exists()) {
+							zipFolder.mkdirs();
+						}
+					} else {
+						File file = new File(targetPath + File.separator
+								+ zipPath);
+						if (!file.exists()) {
+							File pathDir = file.getParentFile();
+							pathDir.mkdirs();
+							file.createNewFile();
+						}
+
+						FileOutputStream fos = new FileOutputStream(file);
+						int bread;
+						while ((bread = zis.read()) != -1) {
+							fos.write(bread);
+						}
+						fos.close();
+
+					}
+
+				} catch (Exception e) {
+					continue;
+				}
+			}
+			zis.close();
+			is.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 }
