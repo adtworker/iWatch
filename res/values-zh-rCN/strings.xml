@@ -24,4 +24,5 @@
     <string name="exit_toast">再按一次退出程序</string>
     <string name="set_livewallpaper">设置动态壁纸</string>
     <string name="help_livewallpaper">从列表中选择 iWatch动感壁纸 进行设置。</string>
+    <string name="loading">加载中⋯⋯</string>
 </resources>

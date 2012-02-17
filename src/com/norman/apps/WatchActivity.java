@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
@@ -58,10 +57,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private final String TAG = "WatchActivity";
 	private final String ASSETS_NAME = "pics.zip";
-	private static final int ASSETS_SUFFIX_BEGIN = 001;
-	private static final int ASSETS_SUFFIX_END = 001;
+	private static final int ASSETS_SUFFIX_BEGIN = 101;
+	private static final int ASSETS_SUFFIX_END = 101;
 	public final static int INVALID_PIC_INDEX = -1;
-	public final static String PIC_FOLDER = "/iWatch/";
+	public final static String APP_FOLDER = "/data/com.norman.apps";
+	public final static String PIC_FOLDER = "/iWatch";
 	private final Random mRandom = new Random(System.currentTimeMillis());
 
 	private int iPicIndex = INVALID_PIC_INDEX;
@@ -72,35 +72,24 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private SharedPreferences mSharedPref;
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
-	public final static ArrayList<String> PICS = new ArrayList<String>();
+	private final static ArrayList<String> PICS = new ArrayList<String>();
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
-
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.main);
+
+		mHandler.post(mUnzipTask);
+
 		mImageView = (ImageView) findViewById(R.id.picView);
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
 		mBtnDisp = (TextView) findViewById(R.id.btnDisp);
 		// mClockLayout = (LinearLayout) findViewById(R.id.clockLayout);
 		mSharedPref = getSharedPreferences("iWatch", Context.MODE_PRIVATE);
-		// Editor edit = mSharedPref.edit();
-		// edit.remove("CurPicIndex").commit();
-
-		PICS.add("m1.png");
-		PICS.add("m2.png");
-		PICS.add("m3.png");
-		PICS.add("m4.jpg");
-		PICS.add("a34.jpg");
-		PICS.add("a38.jpg");
-
-		if (sPicHistory.empty()) {
-			mBtnPrev.setEnabled(false);
-		}
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.adLayout);
 		if (layout == null) {
@@ -108,7 +97,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
-		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); // 保证每次都从服务器取配置
+		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
+		// 保证每次都从服务器取配置
 		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
 		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
 		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
@@ -117,6 +107,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		adViewLayout.setAdViewInterface(this);
 		layout.addView(adViewLayout);
 		layout.invalidate();
+
 		setupButtons();
 
 		mGestureDetector = new GestureDetector(this, new MyGestureListener());
@@ -129,10 +120,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		};
 		mImageView.setOnTouchListener(rootListener);
 
-		mHandler.removeCallbacks(mUpdateImageView);
-
-		if (!new File(getPicPath()).exists()) {
-			mHandler.post(mUnzipTask);
+		if (sPicHistory.empty()) {
+			mBtnPrev.setEnabled(false);
 		}
 	}
 
@@ -155,12 +144,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final Runnable mUnzipTask = new Runnable() {
 		@Override
 		public void run() {
-			try {
-				copyBigPicFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			unzipFile(getPicPath(), getPicPath() + ASSETS_NAME);
+
+			if (!new File(getPicPath()).exists())
+				unzipFile(getPicPath(), ASSETS_NAME, true);
+
+			initPicsList();
 
 			mHandler.removeCallbacks(mUnzipTask);
 		}
@@ -172,8 +160,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		public void run() {
 			try {
 				Bitmap bm = BitmapFactory.decodeFile(getPicPath()
-						+ PICS.get(iPicIndex));
+						+ File.separator + PICS.get(iPicIndex));
 				mImageView.setImageBitmap(bm);
+				Log.d(TAG,
+						"Show image [" + iPicIndex + "]: "
+								+ PICS.get(iPicIndex));
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -184,9 +175,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 	};
 
-	private String getPicPath() {
-		Log.d(TAG, "data folder: " + Environment.getDataDirectory());
-		return Environment.getExternalStorageDirectory() + PIC_FOLDER;
+	public String getPicPath() {
+		return Environment.getDataDirectory() + APP_FOLDER + PIC_FOLDER;
+		// return Environment.getExternalStorageDirectory() + PIC_FOLDER;
 	}
 
 	@Override
@@ -226,8 +217,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			public void onClick(View arg0) {
 
 				iPicIndex = sPicHistory.pop();
-				Log.d(TAG, "Showing previous picture id " + iPicIndex);
-
 				mHandler.post(mUpdateImageView);
 
 				if (sPicHistory.empty()) {
@@ -254,12 +243,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} while (tmpIndex == iPicIndex);
 
 				iPicIndex = tmpIndex;
-				Log.d(TAG, "Showing new picture id " + iPicIndex);
 
-				mHandler.postDelayed(mUpdateImageView, 100);
+				mHandler.post(mUpdateImageView);
 
 				if (!sPicHistory.empty()) {
-					Log.d(TAG, "Picture stack: " + sPicHistory);
 					mBtnPrev.setEnabled(true);
 				}
 
@@ -319,8 +306,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case R.id.menu_set_livewallpaper :
 				Editor myEdit = mSharedPref.edit();
 				if (iPicIndex != INVALID_PIC_INDEX
-						&& new File(getPicPath() + PICS.get(iPicIndex))
-								.exists()) {
+						&& new File(getPicPath() + File.separator
+								+ PICS.get(iPicIndex)).exists()) {
 					myEdit.putString("CurPicCode", PICS.get(iPicIndex));
 				} else {
 					myEdit.remove("CurPicCode");
@@ -412,12 +399,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			if (mImageView.getScaleType() == ScaleType.CENTER) {
 				mImageView.setScaleType(ScaleType.CENTER_INSIDE);
 				mImageView.scrollTo(0, 0);
-			} else {
+			} else if (mImageView.getScaleType() == ScaleType.CENTER_INSIDE) {
+				mImageView.setScaleType(ScaleType.FIT_CENTER);
+			} else if (mImageView.getScaleType() == ScaleType.FIT_CENTER) {
 				mImageView.setScaleType(ScaleType.CENTER);
 			}
+
 			return true;
 		}
-
 		@Override
 		public boolean onSingleTapConfirmed(MotionEvent e) {
 			if (!getMLVisibility()) {
@@ -482,28 +471,35 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		return super.onKeyUp(keycode, event);
 	}
 
-	private void copyBigPicFile() throws IOException {
-		InputStream myInput;
-		String outFileName = getPicPath() + ASSETS_NAME;
-		OutputStream myOutput = new FileOutputStream(outFileName);
-		for (int i = ASSETS_SUFFIX_BEGIN; i < ASSETS_SUFFIX_END + 1; i++) {
-			myInput = this.getAssets().open(ASSETS_NAME + "." + i);
-			byte[] buffer = new byte[1024];
-			int length;
-			while ((length = myInput.read(buffer)) > 0) {
-				myOutput.write(buffer, 0, length);
-			}
-			myOutput.flush();
-			myInput.close();
-		}
-		myOutput.close();
-	}
+	// private void copyBigPicFile() throws IOException {
+	// InputStream myInput;
+	// String outFileName = getPicPath() + ASSETS_NAME;
+	// OutputStream myOutput = new FileOutputStream(outFileName);
+	//
+	// for (int i = ASSETS_SUFFIX_BEGIN; i < ASSETS_SUFFIX_END + 1; i++) {
+	// myInput = this.getAssets().open(ASSETS_NAME + "." + i);
+	// byte[] buffer = new byte[1024];
+	// int length;
+	// while ((length = myInput.read(buffer)) > 0) {
+	// myOutput.write(buffer, 0, length);
+	// }
+	// myOutput.flush();
+	// myInput.close();
+	// }
+	// myOutput.close();
+	// }
 
-	public void unzipFile(String targetPath, String zipFilePath) {
+	private void unzipFile(String targetPath, String zipFilePath,
+			boolean isAssets) {
 
 		try {
 			File zipFile = new File(zipFilePath);
-			InputStream is = new FileInputStream(zipFile);
+			InputStream is;
+			if (isAssets) {
+				is = getAssets().open(zipFilePath);
+			} else {
+				is = new FileInputStream(zipFile);
+			}
 			ZipInputStream zis = new ZipInputStream(is);
 			ZipEntry entry = null;
 			while ((entry = zis.getNextEntry()) != null) {
@@ -544,5 +540,41 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			e.printStackTrace();
 		}
 
+	}
+
+	private boolean isValidPic(File file) {
+		if (file.isFile()) {
+			String fileName = file.getName().toLowerCase();
+			if (fileName.endsWith(".jpg") || fileName.endsWith(".png")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void initPicsList() {
+		ArrayList<String> arrayList = getPicsList(getPicPath());
+		for (int i = 0; i < arrayList.size(); i++)
+			PICS.add(arrayList.get(i));
+		Log.d(TAG, "PICS[]: " + PICS);
+	}
+
+	private ArrayList<String> getPicsList(String path) {
+		ArrayList<String> arrayList = new ArrayList<String>();
+		File[] files = new File(path).listFiles();
+		for (File file : files) {
+			if (file.isDirectory()) {
+				ArrayList<String> tmpArrayList = getPicsList(path
+						+ File.separator + file.getName());
+				for (int i = 0; i < tmpArrayList.size(); i++) {
+					arrayList.add(file.getName() + File.separator
+							+ tmpArrayList.get(i));
+				}
+			}
+			if (isValidPic(file)) {
+				arrayList.add(file.getName());
+			}
+		}
+		return arrayList;
 	}
 }

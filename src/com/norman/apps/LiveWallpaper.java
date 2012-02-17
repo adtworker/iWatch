@@ -1,5 +1,6 @@
 package com.norman.apps;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -46,8 +47,8 @@ public class LiveWallpaper extends WallpaperService
 	}
 
 	private String getPicPath() {
-		return Environment.getExternalStorageDirectory()
-				+ WatchActivity.PIC_FOLDER + strPicCode;
+		return Environment.getDataDirectory() + WatchActivity.APP_FOLDER
+				+ WatchActivity.PIC_FOLDER + File.separator + strPicCode;
 	}
 
 	private void makePrefChanges() {

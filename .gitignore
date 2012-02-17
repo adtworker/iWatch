@@ -1,5 +1,5 @@
 bin/*
 gen/*
+assets/*
 *.jpg
 .DS_Store
-/bin
