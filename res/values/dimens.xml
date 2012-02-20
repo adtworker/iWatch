@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="AlarmEventVspacing">3dp</dimen>
+    <dimen name="SliderTxt">16sp</dimen>
+    <dimen name="ReadScreenTxtBig">105sp</dimen>
+    <dimen name="ReadScreenTxtMedium">80sp</dimen>
+    <dimen name="TimePickerDigit">80sp</dimen>
+</resources>

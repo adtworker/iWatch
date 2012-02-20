@@ -1,6 +1,7 @@
 package com.norman.apps;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -52,7 +53,7 @@ public class LiveWallpaper extends WallpaperService
 	}
 
 	private void makePrefChanges() {
-		strPicCode = mSharedPref.getString("CurPicCode", "");
+		strPicCode = mSharedPref.getString("pic_code", "");
 		Log.d(TAG, "strPicCode is " + strPicCode);
 
 		if (strPicCode == "") {
@@ -60,35 +61,47 @@ public class LiveWallpaper extends WallpaperService
 					R.drawable.clock_dial);
 
 		} else {
+			try {
 
-			DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-			int width = displayMetrics.widthPixels;
-			int height = displayMetrics.heightPixels;
+				DisplayMetrics displayMetrics = getResources()
+						.getDisplayMetrics();
+				int width = displayMetrics.widthPixels;
+				int height = displayMetrics.heightPixels;
 
-			BitmapFactory.Options opt = new BitmapFactory.Options();
-			opt.inJustDecodeBounds = true;
-			bm = BitmapFactory.decodeFile(getPicPath(), opt);
-			int bm_w = opt.outWidth;
-			int bm_h = opt.outHeight;
-			Log.d(TAG, "origin: " + bm_w + "x" + bm_h);
-			if (bm_w > width || bm_h > height) {
-				float ratio_hw = (float) bm_h / bm_w;
-				Log.d(TAG, "bitmap original ratio height/width = " + ratio_hw);
-				if (height / ratio_hw <= width) {
-					opt.outHeight = height;
-					opt.outWidth = (int) (height / ratio_hw);
-				} else {
-					opt.outHeight = (int) (width * ratio_hw);
-					opt.outWidth = width;
+				BitmapFactory.Options opt = new BitmapFactory.Options();
+				opt.inJustDecodeBounds = true;
+				// bm = BitmapFactory.decodeFile(getPicPath(), opt);
+				bm = BitmapFactory.decodeStream(getAssets().open(strPicCode),
+						null, opt);
+
+				int bm_w = opt.outWidth;
+				int bm_h = opt.outHeight;
+				Log.d(TAG, "origin: " + bm_w + "x" + bm_h);
+				if (bm_w > width || bm_h > height) {
+					float ratio_hw = (float) bm_h / bm_w;
+					Log.d(TAG, "bitmap original ratio height/width = "
+							+ ratio_hw);
+					if (height / ratio_hw <= width) {
+						opt.outHeight = height;
+						opt.outWidth = (int) (height / ratio_hw);
+					} else {
+						opt.outHeight = (int) (width * ratio_hw);
+						opt.outWidth = width;
+					}
+					Log.d(TAG, "scaled: " + opt.outWidth + "x" + opt.outHeight);
 				}
-				Log.d(TAG, "scaled: " + opt.outWidth + "x" + opt.outHeight);
+
+				opt.inJustDecodeBounds = false;
+				opt.inSampleSize = bm_w / width;
+				Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
+
+				// bm = BitmapFactory.decodeFile(getPicPath(), opt);
+				bm = BitmapFactory.decodeStream(getAssets().open(strPicCode),
+						null, opt);
+
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-
-			opt.inJustDecodeBounds = false;
-			opt.inSampleSize = bm_w / width;
-			Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
-
-			bm = BitmapFactory.decodeFile(getPicPath(), opt);
 		}
 
 	}

@@ -24,15 +24,18 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -53,26 +56,43 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
 	private TextView mBtnDisp;
-	// private LinearLayout mClockLayout;
+	private ViewGroup mClockLayout;
+	private View mClock = null;
 
 	private final String TAG = "WatchActivity";
 	private final String ASSETS_NAME = "pics.zip";
-	private static final int ASSETS_SUFFIX_BEGIN = 101;
-	private static final int ASSETS_SUFFIX_END = 101;
 	public final static int INVALID_PIC_INDEX = -1;
 	public final static String APP_FOLDER = "/data/com.norman.apps";
 	public final static String PIC_FOLDER = "/iWatch";
 	private final Random mRandom = new Random(System.currentTimeMillis());
 
 	private int iPicIndex = INVALID_PIC_INDEX;
+	private int mFace = -1;
 	private boolean bKeyBackIn2Sec = false;
+	private boolean bLargePicLoaded = false;
 	private final Stack<Integer> sPicHistory = new Stack<Integer>();
 	private GestureDetector mGestureDetector;
 	private ProgressDialog mProcessDialog;
 	private SharedPreferences mSharedPref;
 
+	final static String PREFERENCES = "iWatch";
+	final static String PREF_CLOCK_FACE = "face";
+	final static String PREF_PIC_CODE = "pic_code";
+
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
 	private final static ArrayList<String> PICS = new ArrayList<String>();
+	private final static int[] CLOCKS = {R.layout.clock_basic_bw,
+			R.layout.clock_basic_bw1, R.layout.clock_basic_bw3,
+			R.layout.clock_googly, R.layout.clock_googly1,
+			R.layout.clock_googly2, R.layout.clock_googly3,
+			R.layout.clock_googly4, R.layout.clock_droid2,
+			R.layout.clock_droid2_1, R.layout.clock_droid2_2,
+			R.layout.clock_droid2_3, R.layout.clock_droid2_4,
+			R.layout.clock_droids, R.layout.clock_droids1,
+			R.layout.clock_droids2, R.layout.clock_droids3,
+			R.layout.clock_droids4, R.layout.clock_appwidget,
+			R.layout.clock_appwidget1, R.layout.clock_appwidget2,
+			R.layout.clock_appwidget3, R.layout.clock_appwidget4};
 
 	/** Called when the activity is first created. */
 	@Override
@@ -82,14 +102,28 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.main);
 
-		mHandler.post(mUnzipTask);
-
 		mImageView = (ImageView) findViewById(R.id.picView);
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
 		mBtnDisp = (TextView) findViewById(R.id.btnDisp);
-		// mClockLayout = (LinearLayout) findViewById(R.id.clockLayout);
-		mSharedPref = getSharedPreferences("iWatch", Context.MODE_PRIVATE);
+		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+		mClockLayout = (ViewGroup) findViewById(R.id.clockLayout);
+		mClockLayout.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				int face = (mFace + 1) % CLOCKS.length;
+				if (mFace != face) {
+					Log.d(TAG, "clock face ID is " + face);
+					if (face < 0 || face >= CLOCKS.length)
+						mFace = 0;
+					else
+						mFace = face;
+					inflateClock();
+					Editor edit = mSharedPref.edit();
+					edit.putInt(PREF_CLOCK_FACE, mFace).commit();
+				}
+			}
+		});
 
 		LinearLayout layout = (LinearLayout) findViewById(R.id.adLayout);
 		if (layout == null) {
@@ -109,6 +143,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		layout.invalidate();
 
 		setupButtons();
+		initPicsList();
 
 		mGestureDetector = new GestureDetector(this, new MyGestureListener());
 		OnTouchListener rootListener = new OnTouchListener() {
@@ -124,15 +159,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			mBtnPrev.setEnabled(false);
 		}
 	}
-
-	// private final Runnable mUpdateTimeTask = new Runnable() {
-	// @Override
-	// public void run() {
-	// mClockLayout.invalidate();
-	// mHandler.postDelayed(mUpdateTimeTask, 100);
-	// }
-	// };
-
 	private final Runnable mUpdateKeyBackState = new Runnable() {
 		@Override
 		public void run() {
@@ -159,12 +185,19 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		@Override
 		public void run() {
 			try {
-				Bitmap bm = BitmapFactory.decodeFile(getPicPath()
-						+ File.separator + PICS.get(iPicIndex));
+				InputStream is = getAssets().open(PICS.get(iPicIndex));
+				Bitmap bm = BitmapFactory.decodeStream(is);
 				mImageView.setImageBitmap(bm);
-				Log.d(TAG,
-						"Show image [" + iPicIndex + "]: "
-								+ PICS.get(iPicIndex));
+
+				DisplayMetrics displayMetrics = getResources()
+						.getDisplayMetrics();
+				int width = displayMetrics.widthPixels;
+				int height = displayMetrics.heightPixels;
+				if (bm.getWidth() > displayMetrics.widthPixels
+						|| bm.getHeight() > displayMetrics.heightPixels)
+					bLargePicLoaded = true;
+				else
+					bLargePicLoaded = false;
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -190,6 +223,15 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public void onResume() {
 		// Log.d(TAG, "onResume()");
 		super.onResume();
+
+		int face = mSharedPref.getInt(PREF_CLOCK_FACE, 0);
+		if (mFace != face) {
+			if (face < 0 || face >= CLOCKS.length)
+				mFace = 0;
+			else
+				mFace = face;
+			inflateClock();
+		}
 	}
 
 	@Override
@@ -396,13 +438,15 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		@Override
 		public boolean onDoubleTap(MotionEvent e) {
-			if (mImageView.getScaleType() == ScaleType.CENTER) {
+			if (mImageView.getScaleType() != ScaleType.CENTER_INSIDE) {
 				mImageView.setScaleType(ScaleType.CENTER_INSIDE);
 				mImageView.scrollTo(0, 0);
 			} else if (mImageView.getScaleType() == ScaleType.CENTER_INSIDE) {
-				mImageView.setScaleType(ScaleType.FIT_CENTER);
-			} else if (mImageView.getScaleType() == ScaleType.FIT_CENTER) {
-				mImageView.setScaleType(ScaleType.CENTER);
+				if (bLargePicLoaded)
+					mImageView.setScaleType(ScaleType.CENTER);
+				else
+					mImageView.setScaleType(ScaleType.FIT_CENTER);
+
 			}
 
 			return true;
@@ -471,24 +515,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		return super.onKeyUp(keycode, event);
 	}
 
-	// private void copyBigPicFile() throws IOException {
-	// InputStream myInput;
-	// String outFileName = getPicPath() + ASSETS_NAME;
-	// OutputStream myOutput = new FileOutputStream(outFileName);
-	//
-	// for (int i = ASSETS_SUFFIX_BEGIN; i < ASSETS_SUFFIX_END + 1; i++) {
-	// myInput = this.getAssets().open(ASSETS_NAME + "." + i);
-	// byte[] buffer = new byte[1024];
-	// int length;
-	// while ((length = myInput.read(buffer)) > 0) {
-	// myOutput.write(buffer, 0, length);
-	// }
-	// myOutput.flush();
-	// myInput.close();
-	// }
-	// myOutput.close();
-	// }
-
 	private void unzipFile(String targetPath, String zipFilePath,
 			boolean isAssets) {
 
@@ -545,15 +571,21 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private boolean isValidPic(File file) {
 		if (file.isFile()) {
 			String fileName = file.getName().toLowerCase();
-			if (fileName.endsWith(".jpg") || fileName.endsWith(".png")) {
-				return true;
-			}
+			return isValidPic(fileName);
+		}
+		return false;
+	}
+
+	private boolean isValidPic(String filename) {
+		if (filename.endsWith(".jpg") || filename.endsWith(".png")
+				|| filename.endsWith(".bmp")) {
+			return true;
 		}
 		return false;
 	}
 
 	private void initPicsList() {
-		ArrayList<String> arrayList = getPicsList(getPicPath());
+		ArrayList<String> arrayList = getAssetsPicsList("pics");
 		for (int i = 0; i < arrayList.size(); i++)
 			PICS.add(arrayList.get(i));
 		Log.d(TAG, "PICS[]: " + PICS);
@@ -576,5 +608,39 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 		}
 		return arrayList;
+	}
+
+	private ArrayList<String> getAssetsPicsList(String path) {
+		if (path == null)
+			path = "";
+
+		ArrayList<String> arrayList = new ArrayList<String>();
+		try {
+			String[] filenames = getAssets().list(path);
+			for (int i = 0; i < filenames.length; i++) {
+				String filepath = path + File.separator + filenames[i];
+				if (isValidPic(filepath))
+					arrayList.add(filepath);
+				else {
+					ArrayList<String> tmp = getAssetsPicsList(filepath);
+					for (int j = 0; j < tmp.size(); j++)
+						arrayList.add(tmp.get(j));
+				}
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return arrayList;
+	}
+
+	protected void inflateClock() {
+		if (mClock != null) {
+			mClockLayout.removeView(mClock);
+		}
+
+		LayoutInflater.from(this).inflate(CLOCKS[mFace], mClockLayout);
+		mClock = findViewById(R.id.clock);
 	}
 }

@@ -19,6 +19,7 @@
         android:gravity="center"
         android:orientation="vertical" >
 
+<!--
         <AnalogClock
             android:id="@+id/analogClock"
             android:layout_width="fill_parent"
@@ -28,6 +29,8 @@
             android:hand_hour="@drawable/clockdroids_hour"
             android:hand_minute="@drawable/clockdroids_minute"
             android:visibility="visible" />
+-->
+
     </LinearLayout>
 
     <LinearLayout
