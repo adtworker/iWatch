@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">iWatch</string>
+    <string name="app_name">酷邮</string>
     <string name="strExit">退出</string>
     <string name="ContentDesc">图片缺失</string>
     <string name="hide_clock">隐藏时钟</string>

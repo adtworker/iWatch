@@ -81,18 +81,18 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
 	private final static ArrayList<String> PICS = new ArrayList<String>();
-	private final static int[] CLOCKS = {R.layout.clock_basic_bw,
-			R.layout.clock_basic_bw1, R.layout.clock_basic_bw3,
-			R.layout.clock_googly, R.layout.clock_googly1,
-			R.layout.clock_googly2, R.layout.clock_googly3,
-			R.layout.clock_googly4, R.layout.clock_droid2,
-			R.layout.clock_droid2_1, R.layout.clock_droid2_2,
-			R.layout.clock_droid2_3, R.layout.clock_droid2_4,
+	private final static int[] CLOCKS = {R.layout.clock_no_dial,
+			R.layout.clock_no_dial2, R.layout.clock_no_dial3,
+			R.layout.clock_no_dial4, R.layout.clock_appwidget,
+			R.layout.clock_appwidget1, R.layout.clock_appwidget3,
+			R.layout.clock_basic_bw, R.layout.clock_basic_bw1,
+			R.layout.clock_basic_bw3, R.layout.clock_googly,
+			R.layout.clock_googly1, R.layout.clock_googly3,
+			R.layout.clock_droid2, R.layout.clock_droid2_1,
+			R.layout.clock_droid2_2, R.layout.clock_droid2_3,
 			R.layout.clock_droids, R.layout.clock_droids1,
 			R.layout.clock_droids2, R.layout.clock_droids3,
-			R.layout.clock_droids4, R.layout.clock_appwidget,
-			R.layout.clock_appwidget1, R.layout.clock_appwidget2,
-			R.layout.clock_appwidget3, R.layout.clock_appwidget4};
+			R.layout.digital_clock};
 
 	/** Called when the activity is first created. */
 	@Override
@@ -347,12 +347,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			case R.id.menu_set_livewallpaper :
 				Editor myEdit = mSharedPref.edit();
-				if (iPicIndex != INVALID_PIC_INDEX
-						&& new File(getPicPath() + File.separator
-								+ PICS.get(iPicIndex)).exists()) {
-					myEdit.putString("CurPicCode", PICS.get(iPicIndex));
+				if (iPicIndex != INVALID_PIC_INDEX) {
+					myEdit.putString(PREF_PIC_CODE, PICS.get(iPicIndex));
 				} else {
-					myEdit.remove("CurPicCode");
+					myEdit.remove(PREF_PIC_CODE);
 				}
 				myEdit.commit();
 
@@ -588,7 +586,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		ArrayList<String> arrayList = getAssetsPicsList("pics");
 		for (int i = 0; i < arrayList.size(); i++)
 			PICS.add(arrayList.get(i));
-		Log.d(TAG, "PICS[]: " + PICS);
+		// Log.d(TAG, "PICS: " + PICS);
 	}
 
 	private ArrayList<String> getPicsList(String path) {

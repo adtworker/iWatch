@@ -34,9 +34,10 @@ public class LiveWallpaper extends WallpaperService
 
 	@Override
 	public void onCreate() {
-		System.out.println("service onCreate");
+		// System.out.println("service onCreate");
 		super.onCreate();
-		mSharedPref = getSharedPreferences("iWatch", Context.MODE_PRIVATE);
+		mSharedPref = getSharedPreferences(WatchActivity.PREFERENCES,
+				Context.MODE_PRIVATE);
 		mSharedPref.registerOnSharedPreferenceChangeListener(this);
 		makePrefChanges();
 	}
@@ -53,7 +54,7 @@ public class LiveWallpaper extends WallpaperService
 	}
 
 	private void makePrefChanges() {
-		strPicCode = mSharedPref.getString("pic_code", "");
+		strPicCode = mSharedPref.getString(WatchActivity.PREF_PIC_CODE, "");
 		Log.d(TAG, "strPicCode is " + strPicCode);
 
 		if (strPicCode == "") {
@@ -107,7 +108,7 @@ public class LiveWallpaper extends WallpaperService
 	}
 	@Override
 	public void onDestroy() {
-		System.out.println("service onDestory");
+		// System.out.println("service onDestory");
 		super.onDestroy();
 		mSharedPref.unregisterOnSharedPreferenceChangeListener(this);
 
@@ -117,7 +118,7 @@ public class LiveWallpaper extends WallpaperService
 
 	@Override
 	public Engine onCreateEngine() {
-		System.out.println("service onCreateEngine");
+		// System.out.println("service onCreateEngine");
 		return new MyEngine();
 	}
 
@@ -137,7 +138,7 @@ public class LiveWallpaper extends WallpaperService
 			System.out.println("MyEngine");
 			mPaint = new Paint();
 			mPaint.setColor(Color.WHITE);
-			mPaint.setAntiAlias(true);
+			mPaint.setAntiAlias(false);
 			mPaint.setStrokeWidth(2);
 			mPaint.setStyle(Paint.Style.FILL);
 			mPaint.setTextSize(60);
@@ -175,7 +176,7 @@ public class LiveWallpaper extends WallpaperService
 		public void onOffsetsChanged(float xOffset, float yOffset,
 				float xOffsetStep, float yOffsetStep, int xPixelOffset,
 				int yPixelOffset) {
-			System.out.println("onoffsetsChanged");
+			// System.out.println("onoffsetsChanged");
 			super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep,
 					xPixelOffset, yPixelOffset);
 		}

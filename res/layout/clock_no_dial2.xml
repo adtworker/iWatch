@@ -2,6 +2,5 @@
 <AnalogClock xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/clock"
         style="@style/clock"
-        android:dial="@drawable/clockdroids_dial"
         android:hand_hour="@drawable/appwidget_clock_hour"
         android:hand_minute="@drawable/appwidget_clock_minute"/>
