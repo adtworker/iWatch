@@ -188,6 +188,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				InputStream is = getAssets().open(PICS.get(iPicIndex));
 				Bitmap bm = BitmapFactory.decodeStream(is);
 				mImageView.setImageBitmap(bm);
+				mImageView.setScaleType(ScaleType.CENTER_INSIDE);
+				mImageView.scrollTo(0, 0);
 
 				DisplayMetrics displayMetrics = getResources()
 						.getDisplayMetrics();
