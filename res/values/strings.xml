@@ -13,8 +13,6 @@
     <string name="set_wallpaper_ok">Wallpaper is successfully set.</string>
     <string name="set_wallpaper_fail">Wallpaper is not properly set.</string>
     <string name="start">Start</string>
-    <string name="pref_orientation">Orientation</string>
-    <string name="pref_orientation_sum">Enable/Disable orientation</string>
     <string name="cancel">Cancel</string>
     <string name="exit_msg">Are you sure to exit?</string>
     <string name="ok">OK</string>
@@ -25,4 +23,12 @@
     <string name="set_livewallpaper">Set live wallpaper</string>
     <string name="help_livewallpaper">Select iWatch from the live wallpaper list.</string>
     <string name="loading">Loading...</string>
+
+    <string name="pref_orientation">Orientation</string>
+    <string name="pref_orientation_sum">Enable/Disable orientation</string>
+    <string name="pref_autohide_clock">Auto hide watch</string>
+    <string name="pref_autohide_clock_sum">The watch will be auto hidden when using the App.</string>
+    <string name="pref_autohide_ad">Auto hide AD</string>
+    <string name="pref_autohide_ad_sum">If user clicks AD, AD will be auto hidden for the next hour.</string>
+    <string name="last_click_time">. Last click time: </string>
 </resources>

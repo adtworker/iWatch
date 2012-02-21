@@ -49,15 +49,23 @@
 
             <TextView
                 android:id="@+id/btnPrev"
-                android:layout_width="107dp"
+                android:layout_width="80dp"
                 android:layout_height="fill_parent"
                 android:layout_marginRight="1sp"
                 android:gravity="center"
                 android:text="@string/strPrev" />
 
             <TextView
+                android:id="@+id/btnClock"
+                android:layout_width="80sp"
+                android:layout_height="fill_parent"
+                android:layout_marginRight="1sp"
+                android:gravity="center"
+                android:text="@string/hide_clock" />
+
+            <TextView
                 android:id="@+id/btnDisp"
-                android:layout_width="106sp"
+                android:layout_width="80sp"
                 android:layout_height="fill_parent"
                 android:layout_marginRight="1sp"
                 android:gravity="center"
@@ -65,7 +73,7 @@
 
             <TextView
                 android:id="@+id/btnNext"
-                android:layout_width="106sp"
+                android:layout_width="80sp"
                 android:layout_height="fill_parent"
                 android:gravity="center"
                 android:text="@string/start" />

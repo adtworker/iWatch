@@ -1,10 +1,11 @@
-package com.norman.apps;
+package com.adtworker.mail;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
@@ -56,6 +57,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
 	private TextView mBtnDisp;
+	private TextView mBtnClock;
+	private LinearLayout mAdLayout;
 	private ViewGroup mClockLayout;
 	private View mClock = null;
 
@@ -68,6 +71,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private int iPicIndex = INVALID_PIC_INDEX;
 	private int mFace = -1;
+	private int iAdClick = 0;
 	private boolean bKeyBackIn2Sec = false;
 	private boolean bLargePicLoaded = false;
 	private final Stack<Integer> sPicHistory = new Stack<Integer>();
@@ -78,6 +82,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREFERENCES = "iWatch";
 	final static String PREF_CLOCK_FACE = "face";
 	final static String PREF_PIC_CODE = "pic_code";
+	final static String PREF_FULL_SCR = "full_screen";
+	final static String PREF_AUTOHIDE_CLOCK = "autohide_clock";
+	final static String PREF_AUTOHIDE_AD = "autohide_ad";
+	final static String PREF_AD_CLICK_TIME = "ad_click_time";
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
 	private final static ArrayList<String> PICS = new ArrayList<String>();
@@ -106,44 +114,32 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
 		mBtnDisp = (TextView) findViewById(R.id.btnDisp);
+		mBtnClock = (TextView) findViewById(R.id.btnClock);
 		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+		mAdLayout = (LinearLayout) findViewById(R.id.adLayout);
 		mClockLayout = (ViewGroup) findViewById(R.id.clockLayout);
 		mClockLayout.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				if (!getMLVisibility()) {
+					setMLVisibility(true);
+					return;
+				}
+
 				int face = (mFace + 1) % CLOCKS.length;
 				if (mFace != face) {
-					Log.d(TAG, "clock face ID is " + face);
-					if (face < 0 || face >= CLOCKS.length)
+					if (face < 0 || face >= CLOCKS.length) {
 						mFace = 0;
-					else
+					} else {
 						mFace = face;
+					}
 					inflateClock();
+
 					Editor edit = mSharedPref.edit();
 					edit.putInt(PREF_CLOCK_FACE, mFace).commit();
 				}
 			}
 		});
-
-		LinearLayout layout = (LinearLayout) findViewById(R.id.adLayout);
-		if (layout == null) {
-			return;
-		}
-
-		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
-		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
-		// 保证每次都从服务器取配置
-		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
-		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
-		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
-		AdViewLayout adViewLayout = new AdViewLayout(this,
-				"SDK20122309480217x9sp4og4fxrj2ur");
-		adViewLayout.setAdViewInterface(this);
-		layout.addView(adViewLayout);
-		layout.invalidate();
-
-		setupButtons();
-		initPicsList();
 
 		mGestureDetector = new GestureDetector(this, new MyGestureListener());
 		OnTouchListener rootListener = new OnTouchListener() {
@@ -155,15 +151,21 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		};
 		mImageView.setOnTouchListener(rootListener);
 
+		setupAdLayout();
+		setupButtons();
+		initPicsList();
+
+		mHandler.post(mCheck2ShowAD);
 		if (sPicHistory.empty()) {
 			mBtnPrev.setEnabled(false);
 		}
 	}
-	private final Runnable mUpdateKeyBackState = new Runnable() {
+
+	private final Runnable mCheck2ShowAD = new Runnable() {
 		@Override
 		public void run() {
-			bKeyBackIn2Sec = false;
-			mHandler.removeCallbacks(mUpdateKeyBackState);
+			check2showAD();
+			mHandler.postDelayed(mCheck2ShowAD, 30000); // check every 30sec
 		}
 	};
 
@@ -193,8 +195,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				DisplayMetrics displayMetrics = getResources()
 						.getDisplayMetrics();
-				int width = displayMetrics.widthPixels;
-				int height = displayMetrics.heightPixels;
 				if (bm.getWidth() > displayMetrics.widthPixels
 						|| bm.getHeight() > displayMetrics.heightPixels)
 					bLargePicLoaded = true;
@@ -254,6 +254,78 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		super.onDestroy();
 	}
 
+	@Override
+	public void onClickAd() {
+		if (mSharedPref.getBoolean(PREF_AUTOHIDE_AD, false)) {
+			mHandler.postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					iAdClick = 0;
+				}
+			}, 5000);
+
+			if (++iAdClick >= 2) {
+				Log.d(TAG, "User just clicked AD.");
+				mHandler.postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						setAdVisibility(false);
+						Time time = new Time(System.currentTimeMillis());
+						Editor ed = mSharedPref.edit();
+						ed.putString(PREF_AD_CLICK_TIME, time.toString())
+								.commit();
+					}
+				}, 2000);
+			}
+		}
+	}
+	@Override
+	public void onDisplayAd() {
+		check2showAD();
+	}
+	protected void check2showAD() {
+		// autohide_ad is checked and within an hour, do hide AD
+		if (mSharedPref.getBoolean(PREF_AUTOHIDE_AD, false)) {
+			String timeStr = mSharedPref.getString(PREF_AD_CLICK_TIME, "");
+			if (timeStr.length() != 0) {
+				Time time = new Time(System.currentTimeMillis());
+				Time time2Cmp = new Time(time.getHours() - 1,
+						time.getMinutes(), time.getSeconds());
+				time.setHours(time.getHours() - 1);
+				Time timeClick = Time.valueOf(timeStr);
+
+				if (timeClick.after(time2Cmp)) {
+					Log.d(TAG, "Hiding AD Layout.");
+					setAdVisibility(false);
+					return;
+				} else if (timeClick.before(time2Cmp)) {
+					Log.d(TAG, "Showing AD Layout.");
+					Editor ed = mSharedPref.edit();
+					ed.remove(PREF_AD_CLICK_TIME).commit();
+
+				} else {
+					Log.w(TAG, "unknown time comparison.");
+				}
+			}
+		}
+
+		setAdVisibility(true);
+	}
+
+	private void setupAdLayout() {
+		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
+		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
+		// 保证每次都从服务器取配置
+		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
+		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
+		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
+		AdViewLayout adViewLayout = new AdViewLayout(this,
+				"SDK20122309480217x9sp4og4fxrj2ur");
+		adViewLayout.setAdViewInterface(this);
+		mAdLayout.addView(adViewLayout);
+		mAdLayout.invalidate();
+	}
+
 	private void setupButtons() {
 
 		mBtnPrev.setOnClickListener(new OnClickListener() {
@@ -275,7 +347,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			@Override
 			public void onClick(View arg0) {
 				if (iPicIndex == INVALID_PIC_INDEX) {
-					setClockVisibility(false);
+					if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
+						setClockVisibility(false);
+					}
 					mBtnNext.setText(getResources().getString(R.string.strNext));
 				} else {
 					sPicHistory.push(iPicIndex);
@@ -310,8 +384,18 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				}
 			}
 		});
-	}
 
+		mBtnClock.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				boolean bClockVisible = getClockVisibility();
+				setClockVisibility(!bClockVisible);
+				mBtnClock.setText(bClockVisible
+						? R.string.show_clock
+						: R.string.hide_clock);
+			}
+		});
+	}
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main_menu, menu);
@@ -326,7 +410,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						: R.string.show_clock);
 
 		// Hide settings in current version
-		menu.findItem(R.id.menu_settings).setVisible(false);
+		// menu.findItem(R.id.menu_settings).setVisible(false);
 
 		if (iPicIndex == INVALID_PIC_INDEX) {
 			menu.findItem(R.id.menu_set_wallpaper).setEnabled(false);
@@ -345,6 +429,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			case R.id.menu_settings :
 				startActivity(new Intent(this, Settings.class));
+				check2showAD();
 				break;
 
 			case R.id.menu_set_livewallpaper :
@@ -415,6 +500,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		setLayoutVisibility(R.id.mainLayout, bVisibility);
 	}
 
+	private boolean getAdVisibility() {
+		return getLayoutVisibility(R.id.adLayout);
+	}
+
+	private void setAdVisibility(boolean bVisibility) {
+		setLayoutVisibility(R.id.adLayout, bVisibility);
+	}
+
 	private void setWallpaper() {
 		try {
 			WallpaperManager.getInstance(this).setBitmap(
@@ -464,18 +557,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	}
 
 	@Override
-	public void onClickAd() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void onDisplayAd() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public boolean onKeyUp(int keycode, KeyEvent event) {
 		switch (keycode) {
 
@@ -504,7 +585,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					Toast.makeText(this, getString(R.string.exit_toast),
 							Toast.LENGTH_SHORT).show();
 					bKeyBackIn2Sec = true;
-					mHandler.postDelayed(mUpdateKeyBackState, 2000);
+					mHandler.postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							bKeyBackIn2Sec = false;
+						}
+
+					}, 2000); // reset BACK status in 2 seconds
+
 				} else {
 					finish();
 				}

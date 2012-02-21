@@ -1,4 +1,4 @@
-package com.norman.apps;
+package com.adtworker.mail;
 
 import java.io.File;
 import java.io.IOException;

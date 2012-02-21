@@ -1,9 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-    <CheckBoxPreference android:key="orientation" 
+<!--
+    <CheckBoxPreference android:key="orientation"
         android:title="@string/pref_orientation"
         android:summary="@string/pref_orientation_sum"
         android:defaultValue="true"
+    />
+-->
+
+    <CheckBoxPreference android:key="autohide_clock"
+        android:title="@string/pref_autohide_clock"
+        android:summary="@string/pref_autohide_clock_sum"
+        android:defaultValue="true"
+    />
+
+    <CheckBoxPreference android:key="autohide_ad"
+        android:title="@string/pref_autohide_ad"
+        android:summary="@string/pref_autohide_ad_sum"
+        android:defaultValue="false"
     />
 
 </PreferenceScreen>
