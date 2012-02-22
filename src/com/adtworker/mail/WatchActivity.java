@@ -65,7 +65,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final String TAG = "WatchActivity";
 	private final String ASSETS_NAME = "pics.zip";
 	public final static int INVALID_PIC_INDEX = -1;
-	public final static String APP_FOLDER = "/data/com.norman.apps";
+	public final static String APP_FOLDER = "/data/com.adtworker.mail";
 	public final static String PIC_FOLDER = "/iWatch";
 	private final Random mRandom = new Random(System.currentTimeMillis());
 	private final ScaleType DEFAULT_SCALETYPE = ScaleType.CENTER_INSIDE;
@@ -203,6 +203,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} else {
 					bLargePicLoaded = false;
 				}
+
+				if (!mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true))
+					getPicStackInfo();
+
 			} catch (Exception e) {
 				e.printStackTrace();
 
@@ -211,6 +215,20 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 		}
 	};
+
+	private void getPicStackInfo() {
+		String szPicName = "";
+		for (int i = 0; i < sPicHistory.size(); i++) {
+			String tmpString = String.format("[%d/%d]", sPicHistory.get(i),
+					PICS.size()) + PICS.get(sPicHistory.get(i));
+			szPicName = tmpString + "\n" + szPicName;
+		}
+		if (iPicIndex != INVALID_PIC_INDEX) {
+			szPicName = String.format("[%d/%d]", iPicIndex, PICS.size())
+					+ PICS.get(iPicIndex) + "\n" + szPicName;
+		}
+		((TextView) findViewById(R.id.picName)).setText(szPicName);
+	}
 
 	public String getPicPath() {
 		return Environment.getDataDirectory() + APP_FOLDER + PIC_FOLDER;
@@ -363,7 +381,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				int tmpIndex = INVALID_PIC_INDEX;
 				do {
 					tmpIndex = mRandom.nextInt(PICS.size());
-				} while (tmpIndex == iPicIndex);
+				} while (tmpIndex == iPicIndex
+						|| (sPicHistory.size() < PICS.size() && sPicHistory
+								.contains(tmpIndex)));
 
 				iPicIndex = tmpIndex;
 
