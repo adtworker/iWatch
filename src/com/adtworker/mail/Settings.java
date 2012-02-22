@@ -10,6 +10,7 @@ import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.util.Log;
 
 public class Settings extends PreferenceActivity
 		implements
@@ -75,12 +76,22 @@ public class Settings extends PreferenceActivity
 			String timeStr = mSharedPref.getString(
 					WatchActivity.PREF_AD_CLICK_TIME, "");
 			if (timeStr.length() != 0) {
-				Time time = Time.valueOf(timeStr);
-				mAutoHideAD
-						.setSummary(getString(R.string.pref_autohide_ad_sum)
-								+ getString(R.string.last_click_time)
-								+ time.toString());
-				return;
+				Time time = new Time(System.currentTimeMillis());
+				Time time2Cmp = new Time(time.getHours() - 1,
+						time.getMinutes(), time.getSeconds());
+				Time timeClick = Time.valueOf(timeStr);
+
+				if (timeClick.after(time2Cmp)) {
+					mAutoHideAD
+							.setSummary(getString(R.string.pref_autohide_ad_sum)
+									+ getString(R.string.last_click_time)
+									+ timeClick.toString());
+					return;
+				} else {
+					Log.v(TAG, "Removing click time tag.");
+					Editor editor = mSharedPref.edit();
+					editor.remove(WatchActivity.PREF_AD_CLICK_TIME).commit();
+				}
 			}
 		}
 		mAutoHideAD.setSummary(getString(R.string.pref_autohide_ad_sum));

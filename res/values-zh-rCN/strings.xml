@@ -23,12 +23,11 @@
     <string name="set_livewallpaper">设置动态壁纸</string>
     <string name="help_livewallpaper">从列表中选择 iWatch动感壁纸 进行设置。</string>
     <string name="loading">加载中⋯⋯</string>
-
     <string name="pref_orientation">自动旋转屏幕</string>
     <string name="pref_orientation_sum">是否启用自动旋转屏幕</string>
     <string name="pref_autohide_clock">自动隐藏时钟</string>
     <string name="pref_autohide_clock_sum">当点击开始后，自动隐藏时钟</string>
     <string name="pref_autohide_ad">自动隐藏广告</string>
-    <string name="pref_autohide_ad_sum">当用户点击广告后的一小时内自动隐藏广告</string>
+    <string name="pref_autohide_ad_sum">当点击广告后，一小时内自动隐藏广告</string>
     <string name="last_click_time">，最近点击时间：</string>
 </resources>

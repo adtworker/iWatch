@@ -68,6 +68,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public final static String APP_FOLDER = "/data/com.norman.apps";
 	public final static String PIC_FOLDER = "/iWatch";
 	private final Random mRandom = new Random(System.currentTimeMillis());
+	private final ScaleType DEFAULT_SCALETYPE = ScaleType.CENTER_INSIDE;
+	// private final ScaleType DEFAULT_SCALETYPE = ScaleType.FIT_CENTER;
 
 	private int iPicIndex = INVALID_PIC_INDEX;
 	private int mFace = -1;
@@ -105,7 +107,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.d(TAG, "onCreate()");
+		Log.v(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.main);
@@ -155,7 +157,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		setupButtons();
 		initPicsList();
 
-		mHandler.post(mCheck2ShowAD);
+		// mHandler.post(mCheck2ShowAD);
 		if (sPicHistory.empty()) {
 			mBtnPrev.setEnabled(false);
 		}
@@ -165,7 +167,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		@Override
 		public void run() {
 			check2showAD();
-			mHandler.postDelayed(mCheck2ShowAD, 30000); // check every 30sec
+			mHandler.postDelayed(mCheck2ShowAD, 60000); // check every 60sec
 		}
 	};
 
@@ -190,17 +192,17 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				InputStream is = getAssets().open(PICS.get(iPicIndex));
 				Bitmap bm = BitmapFactory.decodeStream(is);
 				mImageView.setImageBitmap(bm);
-				mImageView.setScaleType(ScaleType.CENTER_INSIDE);
+				mImageView.setScaleType(DEFAULT_SCALETYPE);
 				mImageView.scrollTo(0, 0);
 
 				DisplayMetrics displayMetrics = getResources()
 						.getDisplayMetrics();
 				if (bm.getWidth() > displayMetrics.widthPixels
-						|| bm.getHeight() > displayMetrics.heightPixels)
+						|| bm.getHeight() > displayMetrics.heightPixels) {
 					bLargePicLoaded = true;
-				else
+				} else {
 					bLargePicLoaded = false;
-
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 
@@ -217,13 +219,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	@Override
 	public void onStart() {
-		// Log.d(TAG, "onStart()");
+		// Log.v(TAG, "onStart()");
 		super.onStart();
 	}
 
 	@Override
 	public void onResume() {
-		// Log.d(TAG, "onResume()");
+		// Log.v(TAG, "onResume()");
 		super.onResume();
 
 		int face = mSharedPref.getInt(PREF_CLOCK_FACE, 0);
@@ -234,28 +236,32 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				mFace = face;
 			inflateClock();
 		}
+
+		check2showAD();
 	}
 
 	@Override
 	public void onPause() {
-		// Log.d(TAG, "onPause()");
+		// Log.v(TAG, "onPause()");
 		super.onPause();
 	}
 
 	@Override
 	public void onStop() {
-		// Log.d(TAG, "onStop()");
+		// Log.v(TAG, "onStop()");
 		super.onStop();
 	}
 
 	@Override
 	public void onDestroy() {
-		// Log.d(TAG, "onDestroy()");
+		// Log.v(TAG, "onDestroy()");
 		super.onDestroy();
+		PICS.clear();
 	}
 
 	@Override
 	public void onClickAd() {
+		Log.v(TAG, "onClickAd()");
 		if (mSharedPref.getBoolean(PREF_AUTOHIDE_AD, false)) {
 			mHandler.postDelayed(new Runnable() {
 				@Override
@@ -279,11 +285,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 		}
 	}
+
 	@Override
 	public void onDisplayAd() {
+		// Log.v(TAG, "onDisplayAd()");
 		check2showAD();
 	}
-	protected void check2showAD() {
+
+	private void check2showAD() {
 		// autohide_ad is checked and within an hour, do hide AD
 		if (mSharedPref.getBoolean(PREF_AUTOHIDE_AD, false)) {
 			String timeStr = mSharedPref.getString(PREF_AD_CLICK_TIME, "");
@@ -291,24 +300,20 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				Time time = new Time(System.currentTimeMillis());
 				Time time2Cmp = new Time(time.getHours() - 1,
 						time.getMinutes(), time.getSeconds());
-				time.setHours(time.getHours() - 1);
 				Time timeClick = Time.valueOf(timeStr);
 
 				if (timeClick.after(time2Cmp)) {
-					Log.d(TAG, "Hiding AD Layout.");
+					// Log.v(TAG, "Hiding AD Layout.");
 					setAdVisibility(false);
 					return;
-				} else if (timeClick.before(time2Cmp)) {
-					Log.d(TAG, "Showing AD Layout.");
+				} else {
+					Log.v(TAG, "Removing click time tag.");
 					Editor ed = mSharedPref.edit();
 					ed.remove(PREF_AD_CLICK_TIME).commit();
-
-				} else {
-					Log.w(TAG, "unknown time comparison.");
 				}
 			}
 		}
-
+		// Log.v(TAG, "Showing AD Layout.");
 		setAdVisibility(true);
 	}
 
@@ -429,7 +434,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			case R.id.menu_settings :
 				startActivity(new Intent(this, Settings.class));
-				check2showAD();
 				break;
 
 			case R.id.menu_set_livewallpaper :
