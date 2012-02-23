@@ -402,10 +402,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				// hide mainLayout only leave background image
 				if (getMLVisibility()) {
 					setMLVisibility(false);
-					getWindow().setFlags(
-							WindowManager.LayoutParams.FLAG_FULLSCREEN,
-							WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
 				}
 			}
 		});
@@ -415,9 +411,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			public void onClick(View arg0) {
 				boolean bClockVisible = getClockVisibility();
 				setClockVisibility(!bClockVisible);
-				mBtnClock.setText(bClockVisible
-						? R.string.show_clock
-						: R.string.hide_clock);
 			}
 		});
 	}
@@ -514,6 +507,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void setClockVisibility(boolean bVisibility) {
 		setLayoutVisibility(R.id.clockLayout, bVisibility);
+		mBtnClock.setText(!bVisibility
+				? R.string.show_clock
+				: R.string.hide_clock);
 	}
 
 	private boolean getMLVisibility() {
@@ -522,6 +518,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void setMLVisibility(boolean bVisibility) {
 		setLayoutVisibility(R.id.mainLayout, bVisibility);
+		if (bVisibility) {
+			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		} else {
+			getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+					WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		}
 	}
 
 	private boolean getAdVisibility() {
@@ -572,9 +574,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		public boolean onSingleTapConfirmed(MotionEvent e) {
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
-				getWindow().clearFlags(
-						WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
 			}
 			return true;
 		}
