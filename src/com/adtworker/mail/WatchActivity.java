@@ -92,22 +92,19 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
 	private final static ArrayList<String> PICS = new ArrayList<String>();
 	private final static int[] CLOCKS = {R.layout.clock_no_dial,
-			R.layout.clock_no_dial2, R.layout.clock_no_dial3,
-			R.layout.clock_no_dial4, R.layout.clock_appwidget,
-			R.layout.clock_appwidget1, R.layout.clock_appwidget3,
-			R.layout.clock_basic_bw, R.layout.clock_basic_bw1,
-			R.layout.clock_basic_bw3, R.layout.clock_googly,
-			R.layout.clock_googly1, R.layout.clock_googly3,
-			R.layout.clock_droid2, R.layout.clock_droid2_1,
-			R.layout.clock_droid2_2, R.layout.clock_droid2_3,
-			R.layout.clock_droids, R.layout.clock_droids1,
-			R.layout.clock_droids2, R.layout.clock_droids3,
-			R.layout.digital_clock};
+			R.layout.clock_appwidget, R.layout.clock_basic_bw,
+			R.layout.clock_basic_bw1, R.layout.clock_basic_bw3,
+			R.layout.clock_googly, R.layout.clock_googly1,
+			R.layout.clock_googly3, R.layout.clock_droid2,
+			R.layout.clock_droid2_1, R.layout.clock_droid2_2,
+			R.layout.clock_droid2_3, R.layout.clock_droids,
+			R.layout.clock_droids1, R.layout.clock_droids2,
+			R.layout.clock_droids3, R.layout.digital_clock};
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.v(TAG, "onCreate()");
+		// Log.v(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.main);
