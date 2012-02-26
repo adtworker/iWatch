@@ -46,9 +46,26 @@
         android:orientation="vertical" >
 
         <LinearLayout
+            android:id="@+id/prgLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal" >
+
+            <ProgressBar
+                android:id="@+id/prgbar"
+                android:layout_width="240dp"
+                android:layout_height="wrap_content"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                 />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/btnLayout"
             android:layout_width="fill_parent"
-            android:layout_height="48sp"
+            android:layout_height="48dp"
+            android:background="@color/black"
             android:gravity="center"
             android:orientation="horizontal" >
 
@@ -87,7 +104,8 @@
         <LinearLayout
             android:id="@+id/adLayout"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content" 
+            android:background="@color/black" />
     </LinearLayout>
 
 </FrameLayout>

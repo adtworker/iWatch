@@ -7,7 +7,7 @@
     <string name="show_clock">显示时钟</string>
     <string name="full_screen">全屏显示</string>
     <string name="settings">设置</string>
-    <string name="start">开始</string>
+    <string name="start"><B>开始</B></string>
     <string name="strNext">下一幅</string>
     <string name="strPrev">上一幅</string>
     <string name="set_wallpaper">设为壁纸</string>
@@ -30,4 +30,8 @@
     <string name="pref_autohide_ad">自动隐藏广告</string>
     <string name="pref_autohide_ad_sum">当点击广告后，一小时内自动隐藏广告</string>
     <string name="last_click_time">，最近点击时间：</string>
+    <string name="pref_boss_key">老板键模式</string>
+    <string name="pref_wp_fullfill_sum">设置壁纸时是否全屏填满</string>
+    <string name="pref_boss_key_sum">是否使用老板键，显示时钟时隐藏图片</string>
+    <string name="pref_wp_fullfill">壁纸拉伸</string>
 </resources>

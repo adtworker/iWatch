@@ -21,6 +21,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Environment;
@@ -42,6 +43,7 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -68,8 +70,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public final static String APP_FOLDER = "/data/com.adtworker.mail";
 	public final static String PIC_FOLDER = "/iWatch";
 	private final Random mRandom = new Random(System.currentTimeMillis());
-	private final ScaleType DEFAULT_SCALETYPE = ScaleType.FIT_START;
-	// private final ScaleType DEFAULT_SCALETYPE = ScaleType.FIT_CENTER;
+	private final ScaleType DEFAULT_SCALETYPE = ScaleType.FIT_CENTER;
+	private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_INSIDE;
+	// private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_CROP;
 
 	private int iPicIndex = INVALID_PIC_INDEX;
 	private int mFace = -1;
@@ -79,6 +82,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final Stack<Integer> sPicHistory = new Stack<Integer>();
 	private GestureDetector mGestureDetector;
 	private ProgressDialog mProcessDialog;
+	private ProgressBar mProgressBar;
 	private SharedPreferences mSharedPref;
 
 	final static String PREFERENCES = "iWatch";
@@ -88,6 +92,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREF_AUTOHIDE_CLOCK = "autohide_clock";
 	final static String PREF_AUTOHIDE_AD = "autohide_ad";
 	final static String PREF_AD_CLICK_TIME = "ad_click_time";
+	final static String PREF_BOSS_KEY = "boss_key";
+	final static String PREF_FULL_FILL = "full_fill";
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
 	private final static ArrayList<String> PICS = new ArrayList<String>();
@@ -117,6 +123,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
 		mAdLayout = (LinearLayout) findViewById(R.id.adLayout);
 		mClockLayout = (ViewGroup) findViewById(R.id.clockLayout);
+		mProgressBar = (ProgressBar) findViewById(R.id.prgbar);
+		mProgressBar.setVisibility(View.GONE);
 		mClockLayout.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -201,8 +209,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					bLargePicLoaded = false;
 				}
 
-				if (!mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true))
-					getPicStackInfo();
+				// if (!mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true))
+				// getPicStackInfo();
 
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage());
@@ -371,19 +379,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
 						setClockVisibility(false);
 					}
+
 					mBtnNext.setText(getResources().getString(R.string.strNext));
+
+					iPicIndex = mRandom.nextInt(PICS.size());
+
 				} else {
 					sPicHistory.push(iPicIndex);
+
+					iPicIndex = (iPicIndex + 1) % PICS.size();
 				}
-
-				int tmpIndex = INVALID_PIC_INDEX;
-				do {
-					tmpIndex = mRandom.nextInt(PICS.size());
-				} while (tmpIndex == iPicIndex
-						|| (sPicHistory.size() < PICS.size() && sPicHistory
-								.contains(tmpIndex)));
-
-				iPicIndex = tmpIndex;
 
 				mHandler.post(mUpdateImageView);
 
@@ -409,6 +414,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			public void onClick(View arg0) {
 				boolean bClockVisible = getClockVisibility();
 				setClockVisibility(!bClockVisible);
+				if (mSharedPref.getBoolean(PREF_BOSS_KEY, false)) {
+					mImageView.setVisibility(bClockVisible
+							? View.VISIBLE
+							: View.GONE);
+				}
 			}
 		});
 	}
@@ -424,6 +434,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				getClockVisibility()
 						? R.string.hide_clock
 						: R.string.show_clock);
+		menu.findItem(R.id.menu_toggle_clock).setVisible(false);
 
 		// Hide settings in current version
 		// menu.findItem(R.id.menu_settings).setVisible(false);
@@ -534,8 +545,68 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void setWallpaper() {
 		try {
-			WallpaperManager.getInstance(this).setBitmap(
-					((BitmapDrawable) mImageView.getDrawable()).getBitmap());
+
+			if (mSharedPref.getBoolean(PREF_FULL_FILL, false)) {
+				WallpaperManager.getInstance(this)
+						.setBitmap(
+								((BitmapDrawable) mImageView.getDrawable())
+										.getBitmap());
+
+			} else {
+
+				DisplayMetrics displayMetrics = getResources()
+						.getDisplayMetrics();
+				int width = displayMetrics.widthPixels * 2;
+				int height = displayMetrics.heightPixels;
+
+				BitmapFactory.Options opt = new BitmapFactory.Options();
+				opt.inJustDecodeBounds = true;
+
+				Bitmap bm = BitmapFactory.decodeStream(
+						getAssets().open(PICS.get(iPicIndex)), null, opt);
+
+				int bm_w = opt.outWidth;
+				int bm_h = opt.outHeight;
+				Log.d(TAG, "origin: " + bm_w + "x" + bm_h);
+
+				float ratio_hw = (float) bm_h / bm_w;
+				Log.d(TAG, "bitmap original ratio height/width = " + ratio_hw);
+				if (bm_w > width || bm_h > height) {
+					if (height / ratio_hw <= width) {
+						opt.outHeight = height;
+						opt.outWidth = (int) (height / ratio_hw);
+					} else {
+						opt.outWidth = width;
+						opt.outHeight = (int) (width * ratio_hw);
+					}
+				} else {
+					if (height / ratio_hw <= width) {
+						opt.outWidth = width;
+						opt.outHeight = (int) (width * ratio_hw);
+					} else {
+						opt.outHeight = height;
+						opt.outWidth = (int) (height / ratio_hw);
+					}
+				}
+				Log.d(TAG, "scaled: " + opt.outWidth + "x" + opt.outHeight);
+
+				opt.inJustDecodeBounds = false;
+				opt.inSampleSize = bm_w / width;
+				Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
+
+				bm = BitmapFactory.decodeStream(
+						getAssets().open(PICS.get(iPicIndex)), null, opt);
+
+				Bitmap bm_wp = Bitmap.createBitmap(width, height,
+						Bitmap.Config.ARGB_8888);
+				Canvas canvas = new Canvas(bm_wp);
+
+				canvas.drawBitmap(bm, (width - opt.outWidth) / 2,
+						(height - opt.outHeight) / 2, null);
+				bm.recycle();
+
+				WallpaperManager.getInstance(this).setBitmap(bm_wp);
+			}
 
 		} catch (IOException e) {
 			Log.e(TAG, "Failed to set wallpaper!");
@@ -555,14 +626,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		@Override
 		public boolean onDoubleTap(MotionEvent e) {
-			if (mImageView.getScaleType() != ScaleType.CENTER_INSIDE) {
-				mImageView.setScaleType(ScaleType.CENTER_INSIDE);
+			if (mImageView.getScaleType() != DEFAULT_SCALETYPE) {
+				mImageView.setScaleType(DEFAULT_SCALETYPE);
 				mImageView.scrollTo(0, 0);
-			} else if (mImageView.getScaleType() == ScaleType.CENTER_INSIDE) {
+			} else if (mImageView.getScaleType() == DEFAULT_SCALETYPE) {
 				if (bLargePicLoaded)
 					mImageView.setScaleType(ScaleType.CENTER);
 				else
-					mImageView.setScaleType(ScaleType.FIT_CENTER);
+					mImageView.setScaleType(ALTER_SCALETYPE);
 
 			}
 
@@ -696,10 +767,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void initPicsList() {
 		ArrayList<String> arrayList = getAssetsPicsList("pics");
+		mProgressBar.setMax(arrayList.size());
+		mProgressBar.setVisibility(View.VISIBLE);
 		for (int i = 0; i < arrayList.size(); i++) {
 			PICS.add(arrayList.get(i));
+			mProgressBar.setProgress(PICS.size());
 		}
-		Log.d(TAG, "PICS: " + PICS.size());
+		mProgressBar.setVisibility(View.GONE);
 	}
 
 	private ArrayList<String> getPicsList(String path) {

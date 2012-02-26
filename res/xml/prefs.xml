@@ -20,4 +20,16 @@
         android:defaultValue="false"
     />
 
+    <CheckBoxPreference android:key="full_fill"
+        android:title="@string/pref_wp_fullfill"
+        android:summary="@string/pref_wp_fullfill_sum"
+        android:defaultValue="false"
+    />
+
+    <CheckBoxPreference android:key="boss_key"
+        android:title="@string/pref_boss_key"
+        android:summary="@string/pref_boss_key_sum"
+        android:defaultValue="false"
+    />
+
 </PreferenceScreen>

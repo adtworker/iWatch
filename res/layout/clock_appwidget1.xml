@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<AnalogClock xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/clock"
-        style="@style/clock"
-        android:dial="@drawable/appwidget_clock_dial"
-        android:hand_hour="@drawable/clock_hour"
-        android:hand_minute="@drawable/clock_minute"/>
