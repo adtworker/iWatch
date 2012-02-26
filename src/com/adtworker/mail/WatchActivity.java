@@ -194,6 +194,15 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		@Override
 		public void run() {
 			try {
+				if (!mSharedPref.getBoolean(PREF_BOSS_KEY, false)
+						&& mImageView.getVisibility() == View.GONE) {
+					mImageView.setVisibility(View.VISIBLE);
+					if (getClockVisibility()) {
+						setClockVisibility(false);
+					}
+
+				}
+
 				InputStream is = getAssets().open(PICS.get(iPicIndex));
 				Bitmap bm = BitmapFactory.decodeStream(is);
 				mImageView.setImageBitmap(bm);
@@ -375,6 +384,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnNext.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
+				if (PICS.size() == 0)
+					return;
+
 				if (iPicIndex == INVALID_PIC_INDEX) {
 					if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
 						setClockVisibility(false);
