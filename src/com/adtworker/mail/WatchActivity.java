@@ -68,7 +68,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public final static String APP_FOLDER = "/data/com.adtworker.mail";
 	public final static String PIC_FOLDER = "/iWatch";
 	private final Random mRandom = new Random(System.currentTimeMillis());
-	private final ScaleType DEFAULT_SCALETYPE = ScaleType.CENTER_INSIDE;
+	private final ScaleType DEFAULT_SCALETYPE = ScaleType.FIT_START;
 	// private final ScaleType DEFAULT_SCALETYPE = ScaleType.FIT_CENTER;
 
 	private int iPicIndex = INVALID_PIC_INDEX;
@@ -205,6 +205,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					getPicStackInfo();
 
 			} catch (Exception e) {
+				Log.e(TAG, e.getMessage());
 				e.printStackTrace();
 
 			} finally {
@@ -685,8 +686,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	}
 
 	private boolean isValidPic(String filename) {
-		if (filename.endsWith(".jpg") || filename.endsWith(".png")
-				|| filename.endsWith(".bmp")) {
+		if (filename.toLowerCase().endsWith(".jpg")
+				|| filename.toLowerCase().endsWith(".png")
+				|| filename.toLowerCase().endsWith(".bmp")) {
 			return true;
 		}
 		return false;
@@ -694,9 +696,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void initPicsList() {
 		ArrayList<String> arrayList = getAssetsPicsList("pics");
-		for (int i = 0; i < arrayList.size(); i++)
+		for (int i = 0; i < arrayList.size(); i++) {
 			PICS.add(arrayList.get(i));
-		// Log.d(TAG, "PICS: " + PICS);
+		}
+		Log.d(TAG, "PICS: " + PICS.size());
 	}
 
 	private ArrayList<String> getPicsList(String path) {
