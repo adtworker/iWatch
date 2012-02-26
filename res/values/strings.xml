@@ -23,7 +23,6 @@
     <string name="set_livewallpaper">Set live wallpaper</string>
     <string name="help_livewallpaper">Select iWatch from the live wallpaper list.</string>
     <string name="loading">Loading...</string>
-
     <string name="pref_orientation">Orientation</string>
     <string name="pref_orientation_sum">Enable/Disable orientation</string>
     <string name="pref_autohide_clock">Auto hide watch</string>
@@ -31,4 +30,8 @@
     <string name="pref_autohide_ad">Auto hide AD</string>
     <string name="pref_autohide_ad_sum">If user clicks AD, AD will be auto hidden for the next hour.</string>
     <string name="last_click_time">. Last click time: </string>
+    <string name="pref_boss_key">Enable Boss Key</string>
+    <string name="pref_boss_key_sum">In Boss mode, show clock will hide picture frame.</string>
+    <string name="pref_wp_fullfill">Wallpaper to full fill</string>
+    <string name="pref_wp_fullfill_sum">Set as wallpaper will full fill the picture.</string>
 </resources>

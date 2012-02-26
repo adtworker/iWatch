@@ -27,6 +27,8 @@ public class Settings extends PreferenceActivity
 	// private CheckBoxPreference mOrientation;
 	private CheckBoxPreference mAutoHideClock;
 	private CheckBoxPreference mAutoHideAD;
+	private CheckBoxPreference mBossKey;
+	private CheckBoxPreference mFullFill;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -39,8 +41,11 @@ public class Settings extends PreferenceActivity
 				Context.MODE_PRIVATE);
 		mAutoHideClock = (CheckBoxPreference) findPreference(WatchActivity.PREF_AUTOHIDE_CLOCK);
 		mAutoHideAD = (CheckBoxPreference) findPreference(WatchActivity.PREF_AUTOHIDE_AD);
-	}
+		mAutoHideAD.setEnabled(false);
 
+		mBossKey = (CheckBoxPreference) findPreference(WatchActivity.PREF_BOSS_KEY);
+		mFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_FULL_FILL);
+	}
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -56,12 +61,25 @@ public class Settings extends PreferenceActivity
 					mAutoHideClock.isChecked()).commit();
 			return true;
 		}
+
 		if (WatchActivity.PREF_AUTOHIDE_AD.equals(preference.getKey())) {
 			ed.putBoolean(WatchActivity.PREF_AUTOHIDE_AD,
 					mAutoHideAD.isChecked()).commit();
 
 			update_ad_sum();
 
+			return true;
+		}
+
+		if (WatchActivity.PREF_BOSS_KEY.equals(preference.getKey())) {
+			ed.putBoolean(WatchActivity.PREF_BOSS_KEY, mBossKey.isChecked())
+					.commit();
+			return true;
+		}
+
+		if (WatchActivity.PREF_FULL_FILL.equals(preference.getKey())) {
+			ed.putBoolean(WatchActivity.PREF_FULL_FILL, mFullFill.isChecked())
+					.commit();
 			return true;
 		}
 
@@ -74,6 +92,12 @@ public class Settings extends PreferenceActivity
 
 		mAutoHideAD.setChecked(mSharedPref.getBoolean(
 				WatchActivity.PREF_AUTOHIDE_AD, false));
+
+		mBossKey.setChecked(mSharedPref.getBoolean(WatchActivity.PREF_BOSS_KEY,
+				false));
+
+		mFullFill.setChecked(mSharedPref.getBoolean(
+				WatchActivity.PREF_FULL_FILL, false));
 
 		update_ad_sum();
 	}
