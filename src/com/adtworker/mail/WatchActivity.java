@@ -91,6 +91,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREF_FULL_SCR = "full_screen";
 	final static String PREF_AUTOHIDE_CLOCK = "autohide_clock";
 	final static String PREF_AUTOHIDE_AD = "autohide_ad";
+	final static String PREF_AUTOHIDE_SB = "autohide_sb";
 	final static String PREF_AD_CLICK_TIME = "ad_click_time";
 	final static String PREF_BOSS_KEY = "boss_key";
 	final static String PREF_FULL_FILL = "full_fill";
@@ -271,6 +272,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		check2showAD();
+		if (mSharedPref.getBoolean(PREF_AUTOHIDE_SB, false)) {
+			setSBVisibility(false);
+		} else {
+			setSBVisibility(getMLVisibility());
+		}
 	}
 
 	@Override
@@ -539,6 +545,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void setMLVisibility(boolean bVisibility) {
 		setLayoutVisibility(R.id.mainLayout, bVisibility);
+		if (mSharedPref.getBoolean(PREF_AUTOHIDE_SB, true)) {
+			bVisibility = false;
+		}
+		setSBVisibility(bVisibility);
+	}
+
+	private void setSBVisibility(boolean bVisibility) {
 		if (bVisibility) {
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		} else {

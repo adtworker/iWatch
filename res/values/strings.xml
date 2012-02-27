@@ -29,6 +29,8 @@
     <string name="pref_autohide_clock_sum">The watch will be auto hidden when using the App.</string>
     <string name="pref_autohide_ad">Auto hide AD</string>
     <string name="pref_autohide_ad_sum">If user clicks AD, AD will be auto hidden for the next hour.</string>
+    <string name="pref_autohide_sb">Auto hide system bar</string>
+    <string name="pref_autohide_sb_sum">System bar will be  always hidden.</string>
     <string name="last_click_time">. Last click time: </string>
     <string name="pref_boss_key">Enable Boss Key</string>
     <string name="pref_boss_key_sum">In Boss mode, show clock will hide picture frame.</string>
