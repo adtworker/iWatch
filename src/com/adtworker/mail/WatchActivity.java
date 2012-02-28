@@ -88,6 +88,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREFERENCES = "iWatch";
 	final static String PREF_CLOCK_FACE = "face";
 	final static String PREF_PIC_CODE = "pic_code";
+	final static String PREF_LAST_CODE = "last_code";
 	final static String PREF_FULL_SCR = "full_screen";
 	final static String PREF_AUTOHIDE_CLOCK = "autohide_clock";
 	final static String PREF_AUTOHIDE_AD = "autohide_ad";
@@ -296,6 +297,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		// Log.v(TAG, "onDestroy()");
 		super.onDestroy();
 		PICS.clear();
+
+		Editor editor = mSharedPref.edit();
+		if (iPicIndex != INVALID_PIC_INDEX) {
+			editor.putInt(PREF_LAST_CODE, iPicIndex).commit();
+		}
 	}
 
 	@Override
@@ -375,45 +381,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnPrev.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-
-				iPicIndex = sPicHistory.pop();
-				mHandler.post(mUpdateImageView);
-
-				if (sPicHistory.empty()) {
-					mBtnPrev.setEnabled(false);
-					Editor edit = mSharedPref.edit();
-					edit.remove("CurPicIndex").commit();
-				}
+				goPrev();
 			}
 		});
 
 		mBtnNext.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				if (PICS.size() == 0)
-					return;
-
-				if (iPicIndex == INVALID_PIC_INDEX) {
-					if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
-						setClockVisibility(false);
-					}
-
-					mBtnNext.setText(getResources().getString(R.string.strNext));
-
-					iPicIndex = mRandom.nextInt(PICS.size());
-
-				} else {
-					sPicHistory.push(iPicIndex);
-
-					iPicIndex = (iPicIndex + 1) % PICS.size();
-				}
-
-				mHandler.post(mUpdateImageView);
-
-				if (!sPicHistory.empty()) {
-					mBtnPrev.setEnabled(true);
-				}
-
+				goNext();
 			}
 		});
 
@@ -440,6 +415,44 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 		});
 	}
+
+	private void goNext() {
+		if (PICS.size() == 0)
+			return;
+
+		if (iPicIndex == INVALID_PIC_INDEX) {
+			if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
+				setClockVisibility(false);
+			}
+
+			mBtnNext.setText(getResources().getString(R.string.strNext));
+
+			if ((iPicIndex = mSharedPref.getInt(PREF_LAST_CODE,
+					INVALID_PIC_INDEX)) == INVALID_PIC_INDEX) {
+				iPicIndex = mRandom.nextInt(PICS.size());
+			}
+
+		} else {
+			sPicHistory.push(iPicIndex);
+			iPicIndex = (iPicIndex + 1) % PICS.size();
+		}
+
+		mHandler.post(mUpdateImageView);
+
+		if (!sPicHistory.empty()) {
+			mBtnPrev.setEnabled(true);
+		}
+	}
+
+	private void goPrev() {
+		iPicIndex = sPicHistory.pop();
+		mHandler.post(mUpdateImageView);
+
+		if (sPicHistory.empty()) {
+			mBtnPrev.setEnabled(false);
+		}
+	}
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main_menu, menu);
@@ -640,6 +653,35 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private class MyGestureListener
 			extends
 				GestureDetector.SimpleOnGestureListener {
+		private final int LARGE_MOVE = 60;
+
+		@Override
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+				float velocityY) {
+			if (mImageView.getScaleType() == ScaleType.CENTER) {
+				return false;
+			}
+
+			if (e1.getY() - e2.getY() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Up with velocity " + velocityY);
+				// goNext();
+				return true;
+			} else if (e2.getY() - e1.getY() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Down with velocity " + velocityY);
+				// goPrev();
+				return true;
+			} else if (e1.getX() - e2.getX() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Left with velocity " + velocityX);
+				goNext();
+				return true;
+			} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Right with velocity " + velocityX);
+				goPrev();
+				return true;
+			}
+			return false;
+		}
+
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2,
 				float distanceX, float distanceY) {
@@ -659,11 +701,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mImageView.setScaleType(ScaleType.CENTER);
 				else
 					mImageView.setScaleType(ALTER_SCALETYPE);
-
 			}
-
 			return true;
 		}
+
 		@Override
 		public boolean onSingleTapConfirmed(MotionEvent e) {
 			if (!getMLVisibility()) {
