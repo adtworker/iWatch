@@ -447,6 +447,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	}
 
 	private void goPrev() {
+		if (sPicHistory.size() == 0)
+			return;
+
 		iPicIndex = sPicHistory.pop();
 		mHandler.post(mUpdateImageView);
 
@@ -655,7 +658,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private class MyGestureListener
 			extends
 				GestureDetector.SimpleOnGestureListener {
-		private final int LARGE_MOVE = 60;
+		private final int LARGE_MOVE = 80;
 
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
@@ -664,22 +667,22 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				return false;
 			}
 
-			if (e1.getY() - e2.getY() > LARGE_MOVE) {
-				Log.d(TAG, "Fling Up with velocity " + velocityY);
+			if (e1.getX() - e2.getX() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Left with velocity " + velocityX);
 				// goNext();
+				// return true;
+			} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Right with velocity " + velocityX);
+				// goPrev();
+				// return true;
+			} else if (e1.getY() - e2.getY() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Up with velocity " + velocityY);
+				goNext();
 				return true;
 			} else if (e2.getY() - e1.getY() > LARGE_MOVE) {
 				Log.d(TAG, "Fling Down with velocity " + velocityY);
 				// goPrev();
-				return true;
-			} else if (e1.getX() - e2.getX() > LARGE_MOVE) {
-				Log.d(TAG, "Fling Left with velocity " + velocityX);
-				goNext();
-				return true;
-			} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
-				Log.d(TAG, "Fling Right with velocity " + velocityX);
-				goPrev();
-				return true;
+				// return true;
 			}
 			return false;
 		}
