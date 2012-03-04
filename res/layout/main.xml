@@ -69,35 +69,36 @@
             android:gravity="center"
             android:orientation="horizontal" >
 
-            <TextView
+            <com.adtworker.mail.ColorButton
                 android:id="@+id/btnPrev"
                 android:layout_width="80dp"
                 android:layout_height="fill_parent"
-                android:layout_marginRight="1sp"
                 android:gravity="center"
+                style="@style/button_style"
                 android:text="@string/strPrev" />
 
-            <TextView
+            <com.adtworker.mail.ColorButton
                 android:id="@+id/btnClock"
-                android:layout_width="80sp"
+                android:layout_width="80dp"
                 android:layout_height="fill_parent"
-                android:layout_marginRight="1sp"
                 android:gravity="center"
+                style="@style/button_style"
                 android:text="@string/hide_clock" />
 
-            <TextView
+            <com.adtworker.mail.ColorButton
                 android:id="@+id/btnDisp"
-                android:layout_width="80sp"
+                android:layout_width="80dp"
                 android:layout_height="fill_parent"
-                android:layout_marginRight="1sp"
                 android:gravity="center"
+                style="@style/button_style"
                 android:text="@string/full_screen" />
 
-            <TextView
+            <com.adtworker.mail.ColorButton
                 android:id="@+id/btnNext"
-                android:layout_width="80sp"
+                android:layout_width="80dp"
                 android:layout_height="fill_parent"
                 android:gravity="center"
+                style="@style/button_style"
                 android:text="@string/start" />
         </LinearLayout>
 

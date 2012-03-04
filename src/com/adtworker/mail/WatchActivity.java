@@ -63,6 +63,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private LinearLayout mAdLayout;
 	private ViewGroup mClockLayout;
 	private View mClock = null;
+	private BitmapCache mCache;
 
 	private final String TAG = "WatchActivity";
 	private final String ASSETS_NAME = "pics.zip";
@@ -88,9 +89,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREFERENCES = "iWatch";
 	final static String PREF_CLOCK_FACE = "face";
 	final static String PREF_PIC_CODE = "pic_code";
+	final static String PREF_LAST_CODE = "last_code";
 	final static String PREF_FULL_SCR = "full_screen";
 	final static String PREF_AUTOHIDE_CLOCK = "autohide_clock";
 	final static String PREF_AUTOHIDE_AD = "autohide_ad";
+	final static String PREF_AUTOHIDE_SB = "autohide_sb";
 	final static String PREF_AD_CLICK_TIME = "ad_click_time";
 	final static String PREF_BOSS_KEY = "boss_key";
 	final static String PREF_FULL_FILL = "full_fill";
@@ -162,10 +165,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		setupButtons();
 		initPicsList();
 
-		// mHandler.post(mCheck2ShowAD);
 		if (sPicHistory.empty()) {
 			mBtnPrev.setEnabled(false);
 		}
+		mCache = new BitmapCache(3);
 	}
 
 	private final Runnable mCheck2ShowAD = new Runnable() {
@@ -271,6 +274,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		check2showAD();
+		if (mSharedPref.getBoolean(PREF_AUTOHIDE_SB, false)) {
+			setSBVisibility(false);
+		} else {
+			setSBVisibility(getMLVisibility());
+		}
 	}
 
 	@Override
@@ -290,6 +298,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		// Log.v(TAG, "onDestroy()");
 		super.onDestroy();
 		PICS.clear();
+		mCache.clear();
+
+		Editor editor = mSharedPref.edit();
+		if (iPicIndex != INVALID_PIC_INDEX) {
+			editor.putInt(PREF_LAST_CODE, iPicIndex).commit();
+		}
 	}
 
 	@Override
@@ -369,45 +383,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnPrev.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-
-				iPicIndex = sPicHistory.pop();
-				mHandler.post(mUpdateImageView);
-
-				if (sPicHistory.empty()) {
-					mBtnPrev.setEnabled(false);
-					Editor edit = mSharedPref.edit();
-					edit.remove("CurPicIndex").commit();
-				}
+				goPrev();
 			}
 		});
 
 		mBtnNext.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				if (PICS.size() == 0)
-					return;
-
-				if (iPicIndex == INVALID_PIC_INDEX) {
-					if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
-						setClockVisibility(false);
-					}
-
-					mBtnNext.setText(getResources().getString(R.string.strNext));
-
-					iPicIndex = mRandom.nextInt(PICS.size());
-
-				} else {
-					sPicHistory.push(iPicIndex);
-
-					iPicIndex = (iPicIndex + 1) % PICS.size();
-				}
-
-				mHandler.post(mUpdateImageView);
-
-				if (!sPicHistory.empty()) {
-					mBtnPrev.setEnabled(true);
-				}
-
+				goNext();
 			}
 		});
 
@@ -434,6 +417,47 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 		});
 	}
+
+	private void goNext() {
+		if (PICS.size() == 0)
+			return;
+
+		if (iPicIndex == INVALID_PIC_INDEX) {
+			if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
+				setClockVisibility(false);
+			}
+
+			mBtnNext.setText(getResources().getString(R.string.strNext));
+
+			if ((iPicIndex = mSharedPref.getInt(PREF_LAST_CODE,
+					INVALID_PIC_INDEX)) == INVALID_PIC_INDEX) {
+				iPicIndex = mRandom.nextInt(PICS.size());
+			}
+
+		} else {
+			sPicHistory.push(iPicIndex);
+			iPicIndex = (iPicIndex + 1) % PICS.size();
+		}
+
+		mHandler.post(mUpdateImageView);
+
+		if (!sPicHistory.empty()) {
+			mBtnPrev.setEnabled(true);
+		}
+	}
+
+	private void goPrev() {
+		if (sPicHistory.size() == 0)
+			return;
+
+		iPicIndex = sPicHistory.pop();
+		mHandler.post(mUpdateImageView);
+
+		if (sPicHistory.empty()) {
+			mBtnPrev.setEnabled(false);
+		}
+	}
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main_menu, menu);
@@ -539,6 +563,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void setMLVisibility(boolean bVisibility) {
 		setLayoutVisibility(R.id.mainLayout, bVisibility);
+		if (mSharedPref.getBoolean(PREF_AUTOHIDE_SB, true)) {
+			bVisibility = false;
+		}
+		setSBVisibility(bVisibility);
+	}
+
+	private void setSBVisibility(boolean bVisibility) {
 		if (bVisibility) {
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		} else {
@@ -627,6 +658,35 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private class MyGestureListener
 			extends
 				GestureDetector.SimpleOnGestureListener {
+		private final int LARGE_MOVE = 80;
+
+		@Override
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+				float velocityY) {
+			if (mImageView.getScaleType() == ScaleType.CENTER) {
+				return false;
+			}
+
+			if (e1.getX() - e2.getX() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Left with velocity " + velocityX);
+				// goNext();
+				// return true;
+			} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Right with velocity " + velocityX);
+				// goPrev();
+				// return true;
+			} else if (e1.getY() - e2.getY() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Up with velocity " + velocityY);
+				goNext();
+				return true;
+			} else if (e2.getY() - e1.getY() > LARGE_MOVE) {
+				Log.d(TAG, "Fling Down with velocity " + velocityY);
+				// goPrev();
+				// return true;
+			}
+			return false;
+		}
+
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2,
 				float distanceX, float distanceY) {
@@ -646,11 +706,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mImageView.setScaleType(ScaleType.CENTER);
 				else
 					mImageView.setScaleType(ALTER_SCALETYPE);
-
 			}
-
 			return true;
 		}
+
 		@Override
 		public boolean onSingleTapConfirmed(MotionEvent e) {
 			if (!getMLVisibility()) {
@@ -839,5 +898,113 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		LayoutInflater.from(this).inflate(CLOCKS[mFace], mClockLayout);
 		mClock = findViewById(R.id.clock);
+	}
+}
+
+class BitmapCache {
+	public static class Entry {
+		int mPos;
+		Bitmap mBitmap;
+		public Entry() {
+			clear();
+		}
+		public void clear() {
+			mPos = -1;
+			mBitmap = null;
+		}
+	}
+
+	private final Entry[] mCache;
+
+	public BitmapCache(int size) {
+		mCache = new Entry[size];
+		for (int i = 0; i < mCache.length; i++) {
+			mCache[i] = new Entry();
+		}
+	}
+
+	// Given the position, find the associated entry. Returns null if there is
+	// no such entry.
+	private Entry findEntry(int pos) {
+		for (Entry e : mCache) {
+			if (pos == e.mPos) {
+				return e;
+			}
+		}
+		return null;
+	}
+
+	// Returns the thumb bitmap if we have it, otherwise return null.
+	public synchronized Bitmap getBitmap(int pos) {
+		Entry e = findEntry(pos);
+		if (e != null) {
+			return e.mBitmap;
+		}
+		return null;
+	}
+
+	public synchronized void put(int pos, Bitmap bitmap) {
+		// First see if we already have this entry.
+		if (findEntry(pos) != null) {
+			return;
+		}
+
+		// Find the best entry we should replace.
+		// See if there is any empty entry.
+		// Otherwise assuming sequential access, kick out the entry with the
+		// greatest distance.
+		Entry best = null;
+		int maxDist = -1;
+		for (Entry e : mCache) {
+			if (e.mPos == -1) {
+				best = e;
+				break;
+			} else {
+				int dist = Math.abs(pos - e.mPos);
+				if (dist > maxDist) {
+					maxDist = dist;
+					best = e;
+				}
+			}
+		}
+
+		// Recycle the image being kicked out.
+		// This only works because our current usage is sequential, so we
+		// do not happen to recycle the image being displayed.
+		if (best.mBitmap != null) {
+			best.mBitmap.recycle();
+		}
+
+		best.mPos = pos;
+		best.mBitmap = bitmap;
+	}
+
+	// Recycle all bitmaps in the cache and clear the cache.
+	public synchronized void clear() {
+		for (Entry e : mCache) {
+			if (e.mBitmap != null) {
+				e.mBitmap.recycle();
+			}
+			e.clear();
+		}
+	}
+
+	// Returns whether the bitmap is in the cache.
+	public synchronized boolean hasBitmap(int pos) {
+		Entry e = findEntry(pos);
+		return (e != null);
+	}
+
+	// Recycle the bitmap if it's not in the cache.
+	// The input must be non-null.
+	public synchronized void recycle(Bitmap b) {
+		for (Entry e : mCache) {
+			if (e.mPos != -1) {
+				if (e.mBitmap == b) {
+					return;
+				}
+			}
+		}
+		b.recycle();
 	}
 }

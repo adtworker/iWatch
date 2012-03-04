@@ -20,6 +20,12 @@
         android:defaultValue="false"
     />
 
+    <CheckBoxPreference android:key="autohide_sb"
+        android:title="@string/pref_autohide_sb"
+        android:summary="@string/pref_autohide_sb_sum"
+        android:defaultValue="false"
+    />
+
     <CheckBoxPreference android:key="full_fill"
         android:title="@string/pref_wp_fullfill"
         android:summary="@string/pref_wp_fullfill_sum"
