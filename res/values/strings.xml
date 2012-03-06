@@ -36,4 +36,10 @@
     <string name="pref_boss_key_sum">In Boss mode, show clock will hide picture frame.</string>
     <string name="pref_wp_fullfill">Wallpaper to full fill</string>
     <string name="pref_wp_fullfill_sum">Set as wallpaper will full fill the picture.</string>
+    <string name="pref_slide_anim">Slide Animation</string>
+    <string name="pref_slide_anim_sum">Click to set slide animation.</string>
+    <string name="none">None</string>
+    <string name="slide_anim_transition">Transition</string>
+    <string name="slide_anim_slide">Slide</string>
+    <string name="slide_anim_slide_vertical">Slide vertical</string>
 </resources>

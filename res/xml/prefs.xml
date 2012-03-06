@@ -38,4 +38,12 @@
         android:defaultValue="false"
     />
 
+    <ListPreference android:key="slide_anim"
+        android:title="@string/pref_slide_anim"
+        android:summary="@string/pref_slide_anim_sum"
+        android:entries="@array/slide_anim_entries"
+        android:entryValues="@array/slide_anim_values"
+        android:defaultValue="0"
+    />
+
 </PreferenceScreen>

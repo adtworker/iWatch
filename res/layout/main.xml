@@ -11,7 +11,13 @@
         android:layout_height="wrap_content" />
 
     <ImageView
-        android:id="@+id/picView"
+        android:id="@+id/picView1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:contentDescription="@string/ContentDesc"
+        android:scaleType="centerInside" />
+    <ImageView
+        android:id="@+id/picView2"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:contentDescription="@string/ContentDesc"

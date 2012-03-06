@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
@@ -30,6 +31,7 @@ public class Settings extends PreferenceActivity
 	private CheckBoxPreference mAutoHideSysbar;
 	private CheckBoxPreference mBossKey;
 	private CheckBoxPreference mFullFill;
+	private ListPreference mSlideAnim;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,7 @@ public class Settings extends PreferenceActivity
 
 		mBossKey = (CheckBoxPreference) findPreference(WatchActivity.PREF_BOSS_KEY);
 		mFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_FULL_FILL);
+		mSlideAnim = (ListPreference) findPreference(WatchActivity.PREF_SLIDE_ANIM);
 	}
 	@Override
 	protected void onResume() {
@@ -93,13 +96,13 @@ public class Settings extends PreferenceActivity
 
 		return super.onPreferenceTreeClick(prefScreen, preference);
 	}
-
 	protected void refresh() {
 		mAutoHideClock.setChecked(mSharedPref.getBoolean(
 				WatchActivity.PREF_AUTOHIDE_CLOCK, true));
 
 		mAutoHideAD.setChecked(mSharedPref.getBoolean(
 				WatchActivity.PREF_AUTOHIDE_AD, false));
+		update_ad_sum();
 
 		mAutoHideSysbar.setChecked(mSharedPref.getBoolean(
 				WatchActivity.PREF_AUTOHIDE_SB, false));
@@ -110,7 +113,7 @@ public class Settings extends PreferenceActivity
 		mFullFill.setChecked(mSharedPref.getBoolean(
 				WatchActivity.PREF_FULL_FILL, false));
 
-		update_ad_sum();
+		mSlideAnim.setOnPreferenceChangeListener(this);
 	}
 
 	protected void update_ad_sum() {
@@ -141,8 +144,19 @@ public class Settings extends PreferenceActivity
 
 	@Override
 	public boolean onPreferenceChange(Preference preference, Object newValue) {
+		if (preference instanceof ListPreference) {
+			final ListPreference listPref = (ListPreference) preference;
+			final int idx = listPref.findIndexOfValue((String) newValue);
+			listPref.setSummary(listPref.getEntries()[idx]);
 
-		return false;
+			if (WatchActivity.PREF_SLIDE_ANIM.equals(preference.getKey())) {
+				int slideAnim = Integer.parseInt((String) newValue);
+				Editor ed = mSharedPref.edit();
+				ed.putInt(WatchActivity.PREF_SLIDE_ANIM, slideAnim).commit();
+			}
+		}
+
+		return true;
 	}
 
 	private void setupAdLayout() {

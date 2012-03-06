@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+     <string-array name="slide_anim_entries" translatable="false">
+         <item>@string/none</item>
+         <item>@string/slide_anim_transition</item>
+         <item>@string/slide_anim_slide</item>
+         <item>@string/slide_anim_slide_vertical</item>
+     </string-array>
+
+     <string-array name="slide_anim_values" translatable="false">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+     </string-array>
+</resources>

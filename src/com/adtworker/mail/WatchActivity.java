@@ -40,6 +40,8 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
@@ -55,7 +57,8 @@ import com.adview.AdViewTargeting.RunMode;
 public class WatchActivity extends Activity implements AdViewInterface {
 
 	private final Handler mHandler = new Handler();
-	private ImageView mImageView;
+	private int mImageViewCurrent = 0;
+	private ImageView[] mImageViews = new ImageView[2];
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
 	private TextView mBtnDisp;
@@ -64,6 +67,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private ViewGroup mClockLayout;
 	private View mClock = null;
 	private BitmapCache mCache;
+
+	private int mAnimationIndex = -1;
+	private Animation[] mSlideShowInAnimation;
+	private Animation[] mSlideShowOutAnimation;
 
 	private final String TAG = "WatchActivity";
 	private final String ASSETS_NAME = "pics.zip";
@@ -74,9 +81,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final ScaleType DEFAULT_SCALETYPE = ScaleType.FIT_CENTER;
 	private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_INSIDE;
 	// private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_CROP;
+	private ImageView.ScaleType mScaleType = DEFAULT_SCALETYPE;
 
 	private int iPicIndex = INVALID_PIC_INDEX;
 	private int mFace = -1;
+	private int mStep = 0;
 	private int iAdClick = 0;
 	private boolean bKeyBackIn2Sec = false;
 	private boolean bLargePicLoaded = false;
@@ -97,6 +106,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREF_AD_CLICK_TIME = "ad_click_time";
 	final static String PREF_BOSS_KEY = "boss_key";
 	final static String PREF_FULL_FILL = "full_fill";
+	final static String PREF_SLIDE_ANIM = "slide_anim";
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
 	private final static ArrayList<String> PICS = new ArrayList<String>();
@@ -118,7 +128,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.main);
 
-		mImageView = (ImageView) findViewById(R.id.picView);
+		mImageViews[0] = (ImageView) findViewById(R.id.picView1);
+		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
 		mBtnDisp = (TextView) findViewById(R.id.btnDisp);
@@ -159,7 +170,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				return true;
 			}
 		};
-		mImageView.setOnTouchListener(rootListener);
+
+		for (ImageView iv : mImageViews)
+			iv.setOnTouchListener(rootListener);
 
 		setupAdLayout();
 		setupButtons();
@@ -169,6 +182,22 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			mBtnPrev.setEnabled(false);
 		}
 		mCache = new BitmapCache(3);
+
+		mSlideShowInAnimation = new Animation[]{
+				makeInAnimation(R.anim.transition_in),
+				makeInAnimation(R.anim.slide_in),
+				makeInAnimation(R.anim.slide_in_vertical),
+				makeInAnimation(R.anim.slide_in_r),
+				makeInAnimation(R.anim.slide_in_vertical_r),};
+
+		mSlideShowOutAnimation = new Animation[]{
+				makeOutAnimation(R.anim.transition_out),
+				makeOutAnimation(R.anim.slide_out),
+				makeOutAnimation(R.anim.slide_out_vertical),
+				makeOutAnimation(R.anim.slide_out_r),
+				makeOutAnimation(R.anim.slide_out_vertical_r),};
+
+		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 	}
 
 	private final Runnable mCheck2ShowAD = new Runnable() {
@@ -198,19 +227,43 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		public void run() {
 			try {
 				if (!mSharedPref.getBoolean(PREF_BOSS_KEY, false)
-						&& mImageView.getVisibility() == View.GONE) {
-					mImageView.setVisibility(View.VISIBLE);
+						&& mImageViews[mImageViewCurrent].getVisibility() == View.GONE) {
+					mImageViews[mImageViewCurrent].setVisibility(View.VISIBLE);
 					if (getClockVisibility()) {
 						setClockVisibility(false);
 					}
 
 				}
 
-				InputStream is = getAssets().open(PICS.get(iPicIndex));
-				Bitmap bm = BitmapFactory.decodeStream(is);
-				mImageView.setImageBitmap(bm);
-				mImageView.setScaleType(DEFAULT_SCALETYPE);
-				mImageView.scrollTo(0, 0);
+				ImageView oldView = mImageViews[mImageViewCurrent];
+				if (++mImageViewCurrent == mImageViews.length) {
+					mImageViewCurrent = 0;
+				}
+				ImageView newView = mImageViews[mImageViewCurrent];
+				newView.setVisibility(View.VISIBLE);
+
+				Bitmap bm = mCache.getBitmap(iPicIndex);
+				if (bm == null) {
+					InputStream is = getAssets().open(PICS.get(iPicIndex));
+					bm = BitmapFactory.decodeStream(is);
+					mCache.put(iPicIndex, bm);
+				}
+				newView.setImageBitmap(bm);
+				newView.setScaleType(DEFAULT_SCALETYPE);
+				newView.scrollTo(0, 0);
+
+				if (mAnimationIndex != -1) {
+					int animation = mAnimationIndex;
+					if (mAnimationIndex > 0) {
+						animation = mAnimationIndex + (1 - mStep);
+					}
+					Animation aIn = mSlideShowInAnimation[animation];
+					newView.startAnimation(aIn);
+					Animation aOut = mSlideShowOutAnimation[animation];
+					oldView.startAnimation(aOut);
+				}
+				newView.setVisibility(View.VISIBLE);
+				oldView.setVisibility(View.INVISIBLE);
 
 				DisplayMetrics displayMetrics = getResources()
 						.getDisplayMetrics();
@@ -220,9 +273,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} else {
 					bLargePicLoaded = false;
 				}
-
-				// if (!mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true))
-				// getPicStackInfo();
 
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage());
@@ -279,6 +329,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		} else {
 			setSBVisibility(getMLVisibility());
 		}
+
+		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 	}
 
 	@Override
@@ -410,7 +462,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				boolean bClockVisible = getClockVisibility();
 				setClockVisibility(!bClockVisible);
 				if (mSharedPref.getBoolean(PREF_BOSS_KEY, false)) {
-					mImageView.setVisibility(bClockVisible
+					mImageViews[mImageViewCurrent].setVisibility(bClockVisible
 							? View.VISIBLE
 							: View.GONE);
 				}
@@ -439,6 +491,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			iPicIndex = (iPicIndex + 1) % PICS.size();
 		}
 
+		mStep = 1;
 		mHandler.post(mUpdateImageView);
 
 		if (!sPicHistory.empty()) {
@@ -451,6 +504,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			return;
 
 		iPicIndex = sPicHistory.pop();
+		mStep = -1;
 		mHandler.post(mUpdateImageView);
 
 		if (sPicHistory.empty()) {
@@ -567,6 +621,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			bVisibility = false;
 		}
 		setSBVisibility(bVisibility);
+
+		((LinearLayout) findViewById(R.id.mainLayout))
+				.startAnimation(bVisibility ? AnimationUtils.loadAnimation(
+						this, R.anim.footer_appear) : AnimationUtils
+						.loadAnimation(this, R.anim.footer_disappear));
 	}
 
 	private void setSBVisibility(boolean bVisibility) {
@@ -590,10 +649,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		try {
 
 			if (mSharedPref.getBoolean(PREF_FULL_FILL, false)) {
-				WallpaperManager.getInstance(this)
-						.setBitmap(
-								((BitmapDrawable) mImageView.getDrawable())
-										.getBitmap());
+				WallpaperManager.getInstance(this).setBitmap(
+						((BitmapDrawable) mImageViews[mImageViewCurrent]
+								.getDrawable()).getBitmap());
 
 			} else {
 
@@ -637,8 +695,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				opt.inSampleSize = bm_w / width;
 				Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
 
-				bm = BitmapFactory.decodeStream(
-						getAssets().open(PICS.get(iPicIndex)), null, opt);
+				bm = mCache.getBitmap(iPicIndex);
+				if (bm == null) {
+					bm = BitmapFactory.decodeStream(
+							getAssets().open(PICS.get(iPicIndex)), null, opt);
+					mCache.put(iPicIndex, bm);
+				}
 
 				Bitmap bm_wp = Bitmap.createBitmap(width, height,
 						Bitmap.Config.ARGB_8888);
@@ -663,49 +725,58 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 				float velocityY) {
-			if (mImageView.getScaleType() == ScaleType.CENTER) {
+			if (mScaleType == ScaleType.CENTER) {
 				return false;
 			}
 
-			if (e1.getX() - e2.getX() > LARGE_MOVE) {
-				Log.d(TAG, "Fling Left with velocity " + velocityX);
-				// goNext();
-				// return true;
-			} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
-				Log.d(TAG, "Fling Right with velocity " + velocityX);
-				// goPrev();
-				// return true;
-			} else if (e1.getY() - e2.getY() > LARGE_MOVE) {
-				Log.d(TAG, "Fling Up with velocity " + velocityY);
-				goNext();
-				return true;
-			} else if (e2.getY() - e1.getY() > LARGE_MOVE) {
-				Log.d(TAG, "Fling Down with velocity " + velocityY);
-				// goPrev();
-				// return true;
+			if (mAnimationIndex == 1) { // slide horizontal
+				if (e1.getX() - e2.getX() > LARGE_MOVE) {
+					Log.d(TAG, "Fling Left with velocity " + velocityX);
+					goNext();
+					return true;
+				} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
+					Log.d(TAG, "Fling Right with velocity " + velocityX);
+					goPrev();
+					return true;
+				}
+			} else if (mAnimationIndex == 2) { // slide vertical
+				if (e1.getY() - e2.getY() > LARGE_MOVE) {
+					Log.d(TAG, "Fling Up with velocity " + velocityY);
+					goNext();
+					return true;
+				} else if (e2.getY() - e1.getY() > LARGE_MOVE) {
+					Log.d(TAG, "Fling Down with velocity " + velocityY);
+					goPrev();
+					return true;
+				}
 			}
+
 			return false;
 		}
 
 		@Override
 		public boolean onScroll(MotionEvent e1, MotionEvent e2,
 				float distanceX, float distanceY) {
-			if (mImageView.getScaleType() == ScaleType.CENTER) {
-				mImageView.scrollBy((int) distanceX, (int) distanceY);
+			if (mScaleType == ScaleType.CENTER) {
+				mImageViews[mImageViewCurrent].scrollBy((int) distanceX,
+						(int) distanceY);
 			}
 			return true;
 		}
 
 		@Override
 		public boolean onDoubleTap(MotionEvent e) {
-			if (mImageView.getScaleType() != DEFAULT_SCALETYPE) {
-				mImageView.setScaleType(DEFAULT_SCALETYPE);
-				mImageView.scrollTo(0, 0);
-			} else if (mImageView.getScaleType() == DEFAULT_SCALETYPE) {
-				if (bLargePicLoaded)
-					mImageView.setScaleType(ScaleType.CENTER);
-				else
-					mImageView.setScaleType(ALTER_SCALETYPE);
+			if (mScaleType != DEFAULT_SCALETYPE) {
+				mScaleType = DEFAULT_SCALETYPE;
+				mImageViews[mImageViewCurrent].setScaleType(mScaleType);
+				mImageViews[mImageViewCurrent].scrollTo(0, 0);
+			} else if (mScaleType == DEFAULT_SCALETYPE) {
+				if (bLargePicLoaded) {
+					mScaleType = ScaleType.CENTER;
+				} else {
+					mScaleType = ALTER_SCALETYPE;
+				}
+				mImageViews[mImageViewCurrent].setScaleType(mScaleType);
 			}
 			return true;
 		}
@@ -898,6 +969,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		LayoutInflater.from(this).inflate(CLOCKS[mFace], mClockLayout);
 		mClock = findViewById(R.id.clock);
+	}
+
+	private Animation makeInAnimation(int id) {
+		Animation inAnimation = AnimationUtils.loadAnimation(this, id);
+		return inAnimation;
+	}
+
+	private Animation makeOutAnimation(int id) {
+		Animation outAnimation = AnimationUtils.loadAnimation(this, id);
+		return outAnimation;
 	}
 }
 
