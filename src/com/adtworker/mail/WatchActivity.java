@@ -66,7 +66,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private LinearLayout mAdLayout;
 	private ViewGroup mClockLayout;
 	private View mClock = null;
-	private BitmapCache mCache;
 
 	private int mAnimationIndex = -1;
 	private Animation[] mSlideShowInAnimation;
@@ -85,7 +84,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private int iPicIndex = INVALID_PIC_INDEX;
 	private int mFace = -1;
-	private int mStep = 0;
+	private int mStep = 1;
 	private int iAdClick = 0;
 	private boolean bKeyBackIn2Sec = false;
 	private boolean bLargePicLoaded = false;
@@ -181,7 +180,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		if (sPicHistory.empty()) {
 			mBtnPrev.setEnabled(false);
 		}
-		mCache = new BitmapCache(3);
 
 		mSlideShowInAnimation = new Animation[]{
 				makeInAnimation(R.anim.transition_in),
@@ -242,28 +240,28 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				ImageView newView = mImageViews[mImageViewCurrent];
 				newView.setVisibility(View.VISIBLE);
 
-				Bitmap bm = mCache.getBitmap(iPicIndex);
-				if (bm == null) {
-					InputStream is = getAssets().open(PICS.get(iPicIndex));
-					bm = BitmapFactory.decodeStream(is);
-					mCache.put(iPicIndex, bm);
-				}
+				InputStream is = getAssets().open(PICS.get(iPicIndex));
+				Bitmap bm = BitmapFactory.decodeStream(is);
+
 				newView.setImageBitmap(bm);
 				newView.setScaleType(DEFAULT_SCALETYPE);
 				newView.scrollTo(0, 0);
 
-				if (mAnimationIndex != -1) {
+				if (mAnimationIndex >= 0) {
 					int animation = mAnimationIndex;
 					if (mAnimationIndex > 0) {
 						animation = mAnimationIndex + (1 - mStep);
 					}
 					Animation aIn = mSlideShowInAnimation[animation];
 					newView.startAnimation(aIn);
+					newView.setVisibility(View.VISIBLE);
 					Animation aOut = mSlideShowOutAnimation[animation];
+					oldView.setVisibility(View.INVISIBLE);
 					oldView.startAnimation(aOut);
+				} else {
+					newView.setVisibility(View.VISIBLE);
+					oldView.setVisibility(View.INVISIBLE);
 				}
-				newView.setVisibility(View.VISIBLE);
-				oldView.setVisibility(View.INVISIBLE);
 
 				DisplayMetrics displayMetrics = getResources()
 						.getDisplayMetrics();
@@ -350,7 +348,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		// Log.v(TAG, "onDestroy()");
 		super.onDestroy();
 		PICS.clear();
-		mCache.clear();
 
 		Editor editor = mSharedPref.edit();
 		if (iPicIndex != INVALID_PIC_INDEX) {
@@ -695,12 +692,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				opt.inSampleSize = bm_w / width;
 				Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
 
-				bm = mCache.getBitmap(iPicIndex);
-				if (bm == null) {
-					bm = BitmapFactory.decodeStream(
-							getAssets().open(PICS.get(iPicIndex)), null, opt);
-					mCache.put(iPicIndex, bm);
-				}
+				bm = BitmapFactory.decodeStream(
+						getAssets().open(PICS.get(iPicIndex)), null, opt);
 
 				Bitmap bm_wp = Bitmap.createBitmap(width, height,
 						Bitmap.Config.ARGB_8888);
@@ -979,113 +972,5 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private Animation makeOutAnimation(int id) {
 		Animation outAnimation = AnimationUtils.loadAnimation(this, id);
 		return outAnimation;
-	}
-}
-
-class BitmapCache {
-	public static class Entry {
-		int mPos;
-		Bitmap mBitmap;
-		public Entry() {
-			clear();
-		}
-		public void clear() {
-			mPos = -1;
-			mBitmap = null;
-		}
-	}
-
-	private final Entry[] mCache;
-
-	public BitmapCache(int size) {
-		mCache = new Entry[size];
-		for (int i = 0; i < mCache.length; i++) {
-			mCache[i] = new Entry();
-		}
-	}
-
-	// Given the position, find the associated entry. Returns null if there is
-	// no such entry.
-	private Entry findEntry(int pos) {
-		for (Entry e : mCache) {
-			if (pos == e.mPos) {
-				return e;
-			}
-		}
-		return null;
-	}
-
-	// Returns the thumb bitmap if we have it, otherwise return null.
-	public synchronized Bitmap getBitmap(int pos) {
-		Entry e = findEntry(pos);
-		if (e != null) {
-			return e.mBitmap;
-		}
-		return null;
-	}
-
-	public synchronized void put(int pos, Bitmap bitmap) {
-		// First see if we already have this entry.
-		if (findEntry(pos) != null) {
-			return;
-		}
-
-		// Find the best entry we should replace.
-		// See if there is any empty entry.
-		// Otherwise assuming sequential access, kick out the entry with the
-		// greatest distance.
-		Entry best = null;
-		int maxDist = -1;
-		for (Entry e : mCache) {
-			if (e.mPos == -1) {
-				best = e;
-				break;
-			} else {
-				int dist = Math.abs(pos - e.mPos);
-				if (dist > maxDist) {
-					maxDist = dist;
-					best = e;
-				}
-			}
-		}
-
-		// Recycle the image being kicked out.
-		// This only works because our current usage is sequential, so we
-		// do not happen to recycle the image being displayed.
-		if (best.mBitmap != null) {
-			best.mBitmap.recycle();
-		}
-
-		best.mPos = pos;
-		best.mBitmap = bitmap;
-	}
-
-	// Recycle all bitmaps in the cache and clear the cache.
-	public synchronized void clear() {
-		for (Entry e : mCache) {
-			if (e.mBitmap != null) {
-				e.mBitmap.recycle();
-			}
-			e.clear();
-		}
-	}
-
-	// Returns whether the bitmap is in the cache.
-	public synchronized boolean hasBitmap(int pos) {
-		Entry e = findEntry(pos);
-		return (e != null);
-	}
-
-	// Recycle the bitmap if it's not in the cache.
-	// The input must be non-null.
-	public synchronized void recycle(Bitmap b) {
-		for (Entry e : mCache) {
-			if (e.mPos != -1) {
-				if (e.mBitmap == b) {
-					return;
-				}
-			}
-		}
-		b.recycle();
 	}
 }
