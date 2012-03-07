@@ -74,6 +74,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final String TAG = "WatchActivity";
 	private final String ASSETS_NAME = "pics.zip";
 	public final static int INVALID_PIC_INDEX = -1;
+	public final static int CLICKS_TO_HIDE_AD = 1;
 	public final static String APP_FOLDER = "/data/com.adtworker.mail";
 	public final static String PIC_FOLDER = "/iWatch";
 	private final Random mRandom = new Random(System.currentTimeMillis());
@@ -366,7 +367,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				}
 			}, 5000);
 
-			if (++iAdClick >= 2) {
+			if (++iAdClick >= CLICKS_TO_HIDE_AD) {
 				Log.d(TAG, "User just clicked AD.");
 				mHandler.postDelayed(new Runnable() {
 					@Override
