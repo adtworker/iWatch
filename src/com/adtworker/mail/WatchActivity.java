@@ -613,16 +613,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	}
 
 	private void setMLVisibility(boolean bVisibility) {
-		setLayoutVisibility(R.id.mainLayout, bVisibility);
-		if (mSharedPref.getBoolean(PREF_AUTOHIDE_SB, true)) {
-			bVisibility = false;
-		}
-		setSBVisibility(bVisibility);
-
 		((LinearLayout) findViewById(R.id.mainLayout))
 				.startAnimation(bVisibility ? AnimationUtils.loadAnimation(
 						this, R.anim.footer_appear) : AnimationUtils
 						.loadAnimation(this, R.anim.footer_disappear));
+
+		setLayoutVisibility(R.id.mainLayout, bVisibility);
+		if (mSharedPref.getBoolean(PREF_AUTOHIDE_SB, false)) {
+			bVisibility = false;
+		}
+		setSBVisibility(bVisibility);
 	}
 
 	private void setSBVisibility(boolean bVisibility) {
