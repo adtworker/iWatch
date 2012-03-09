@@ -30,7 +30,8 @@ public class Settings extends PreferenceActivity
 	private CheckBoxPreference mAutoHideAD;
 	private CheckBoxPreference mAutoHideSysbar;
 	private CheckBoxPreference mBossKey;
-	private CheckBoxPreference mFullFill;
+	private CheckBoxPreference mPicFullFill;
+	private CheckBoxPreference mWpFullFill;
 	private ListPreference mSlideAnim;
 
 	@Override
@@ -48,7 +49,8 @@ public class Settings extends PreferenceActivity
 		mAutoHideSysbar = (CheckBoxPreference) findPreference(WatchActivity.PREF_AUTOHIDE_SB);
 
 		mBossKey = (CheckBoxPreference) findPreference(WatchActivity.PREF_BOSS_KEY);
-		mFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_FULL_FILL);
+		mPicFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_PIC_FULL_FILL);
+		mWpFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_WP_FULL_FILL);
 		mSlideAnim = (ListPreference) findPreference(WatchActivity.PREF_SLIDE_ANIM);
 	}
 	@Override
@@ -88,9 +90,15 @@ public class Settings extends PreferenceActivity
 			return true;
 		}
 
-		if (WatchActivity.PREF_FULL_FILL.equals(preference.getKey())) {
-			ed.putBoolean(WatchActivity.PREF_FULL_FILL, mFullFill.isChecked())
-					.commit();
+		if (WatchActivity.PREF_PIC_FULL_FILL.equals(preference.getKey())) {
+			ed.putBoolean(WatchActivity.PREF_PIC_FULL_FILL,
+					mPicFullFill.isChecked()).commit();
+			return true;
+		}
+
+		if (WatchActivity.PREF_WP_FULL_FILL.equals(preference.getKey())) {
+			ed.putBoolean(WatchActivity.PREF_WP_FULL_FILL,
+					mWpFullFill.isChecked()).commit();
 			return true;
 		}
 
@@ -110,8 +118,11 @@ public class Settings extends PreferenceActivity
 		mBossKey.setChecked(mSharedPref.getBoolean(WatchActivity.PREF_BOSS_KEY,
 				false));
 
-		mFullFill.setChecked(mSharedPref.getBoolean(
-				WatchActivity.PREF_FULL_FILL, false));
+		mPicFullFill.setChecked(mSharedPref.getBoolean(
+				WatchActivity.PREF_PIC_FULL_FILL, true));
+
+		mWpFullFill.setChecked(mSharedPref.getBoolean(
+				WatchActivity.PREF_WP_FULL_FILL, false));
 
 		mSlideAnim.setOnPreferenceChangeListener(this);
 	}

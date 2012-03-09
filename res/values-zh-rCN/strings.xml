@@ -36,6 +36,8 @@
     <string name="pref_boss_key_sum">设置使用老板键，显示时钟时将隐藏图片</string>
     <string name="pref_wp_fullfill">壁纸拉伸</string>
     <string name="pref_wp_fullfill_sum">设置壁纸时是否全屏填满</string>
+    <string name="pref_pic_fullfill">图片放大</string>
+    <string name="pref_pic_fullfill_sum">设置默认放大图片以适应屏幕</string>
     <string name="pref_slide_anim">翻页动画</string>
     <string name="pref_slide_anim_sum">设置上一幅或下一幅的动画效果</string>
     <string name="none">无</string>

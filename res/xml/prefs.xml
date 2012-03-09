@@ -26,7 +26,13 @@
         android:defaultValue="false"
     />
 
-    <CheckBoxPreference android:key="full_fill"
+    <CheckBoxPreference android:key="pic_fullfill"
+        android:title="@string/pref_pic_fullfill"
+        android:summary="@string/pref_pic_fullfill_sum"
+        android:defaultValue="true"
+    />
+
+    <CheckBoxPreference android:key="wp_fullfill"
         android:title="@string/pref_wp_fullfill"
         android:summary="@string/pref_wp_fullfill_sum"
         android:defaultValue="false"

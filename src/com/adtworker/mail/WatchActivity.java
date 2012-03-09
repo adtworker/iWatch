@@ -105,7 +105,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREF_AUTOHIDE_SB = "autohide_sb";
 	final static String PREF_AD_CLICK_TIME = "ad_click_time";
 	final static String PREF_BOSS_KEY = "boss_key";
-	final static String PREF_FULL_FILL = "full_fill";
+	final static String PREF_PIC_FULL_FILL = "pic_fullfill";
+	final static String PREF_WP_FULL_FILL = "wp_fullfill";
 	final static String PREF_SLIDE_ANIM = "slide_anim";
 
 	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
@@ -244,8 +245,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				InputStream is = getAssets().open(PICS.get(iPicIndex));
 				Bitmap bm = BitmapFactory.decodeStream(is);
 
+				if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
+					mScaleType = DEFAULT_SCALETYPE;
+				}
+				newView.setScaleType(mScaleType);
 				newView.setImageBitmap(bm);
-				newView.setScaleType(DEFAULT_SCALETYPE);
 				newView.scrollTo(0, 0);
 
 				if (mAnimationIndex >= 0) {
@@ -646,7 +650,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private void setWallpaper() {
 		try {
 
-			if (mSharedPref.getBoolean(PREF_FULL_FILL, false)) {
+			if (mSharedPref.getBoolean(PREF_WP_FULL_FILL, false)) {
 				WallpaperManager.getInstance(this).setBitmap(
 						((BitmapDrawable) mImageViews[mImageViewCurrent]
 								.getDrawable()).getBitmap());
