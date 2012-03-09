@@ -52,6 +52,10 @@ public class Settings extends PreferenceActivity
 		mPicFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_PIC_FULL_FILL);
 		mWpFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_WP_FULL_FILL);
 		mSlideAnim = (ListPreference) findPreference(WatchActivity.PREF_SLIDE_ANIM);
+
+		findPreference("version").setSummary(
+				getString(R.string.version) + " : "
+						+ getString(R.string.app_version));
 	}
 	@Override
 	protected void onResume() {

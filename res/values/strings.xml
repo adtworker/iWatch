@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
     <string name="app_name">钟爱MM</string>
+    <string name="app_version">1.1</string>
+    <string name="about">About</string>
+    <string name="build_version">Build version</string>
+    <string name="version">Version</string>
     <string name="strPrev">Prev</string>
     <string name="strNext">Next</string>
     <string name="hide_clock">Hide clock</string>
