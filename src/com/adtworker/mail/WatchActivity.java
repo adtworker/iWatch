@@ -226,9 +226,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		@Override
 		public void run() {
 			try {
-				if (!mSharedPref.getBoolean(PREF_BOSS_KEY, false)
-						&& mImageViews[mImageViewCurrent].getVisibility() == View.GONE) {
-					mImageViews[mImageViewCurrent].setVisibility(View.VISIBLE);
+				if (mSharedPref.getBoolean(PREF_BOSS_KEY, false)) {
 					if (getClockVisibility()) {
 						setClockVisibility(false);
 					}
