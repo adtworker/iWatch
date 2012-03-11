@@ -333,6 +333,15 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			setSBVisibility(getMLVisibility());
 		}
 
+		if (mSharedPref.getBoolean(PREF_BOSS_KEY, false)) {
+			Boolean bClockVisible = getClockVisibility();
+			if (bClockVisible) {
+				mImageViews[mImageViewCurrent].setVisibility(bClockVisible
+						? View.GONE
+						: View.VISIBLE);
+			}
+		}
+
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 	}
 
