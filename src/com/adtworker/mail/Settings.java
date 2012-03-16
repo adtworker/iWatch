@@ -12,7 +12,9 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
@@ -181,11 +183,16 @@ public class Settings extends PreferenceActivity
 		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
 		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
 		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
+
+		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+				FrameLayout.LayoutParams.FILL_PARENT,
+				FrameLayout.LayoutParams.WRAP_CONTENT);
+		params.gravity = Gravity.TOP | Gravity.CENTER;
+
 		AdViewLayout adViewLayout = new AdViewLayout(this,
 				"SDK20122309480217x9sp4og4fxrj2ur");
-
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
-		adLayout.addView(adViewLayout);
+		adLayout.addView(adViewLayout, params);
 		adLayout.invalidate();
 	}
 }
