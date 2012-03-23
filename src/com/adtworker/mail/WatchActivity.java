@@ -23,9 +23,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -226,6 +229,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		@Override
 		public void run() {
 			try {
+
 				if (mSharedPref.getBoolean(PREF_BOSS_KEY, false)) {
 					if (getClockVisibility()) {
 						setClockVisibility(false);
@@ -282,6 +286,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			} finally {
 				mHandler.removeCallbacks(mUpdateImageView);
 			}
+
+			mBtnNext.setEnabled(true);
 		}
 	};
 
@@ -392,6 +398,18 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				}, 2000);
 			}
 		}
+
+		// get phone info for test
+		TelephonyManager telephonyManager = (TelephonyManager) this
+				.getSystemService(Context.TELEPHONY_SERVICE);
+		String imei = telephonyManager.getDeviceId();
+		Log.v(TAG, "Test IMEI is " + imei);
+
+		WifiManager wifi = (WifiManager) this
+				.getSystemService(Context.WIFI_SERVICE);
+		WifiInfo info = wifi.getConnectionInfo();
+		String macAddr = info.getMacAddress();
+		Log.v(TAG, "Test MAC is " + macAddr);
 	}
 
 	@Override
@@ -451,6 +469,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnNext.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
+				mBtnNext.setEnabled(false);
 				goNext();
 			}
 		});
@@ -501,7 +520,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		mStep = 1;
-		mHandler.post(mUpdateImageView);
+		mHandler.postDelayed(mUpdateImageView, 200);
 
 		if (!sPicHistory.empty()) {
 			mBtnPrev.setEnabled(true);
