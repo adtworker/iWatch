@@ -94,6 +94,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private boolean bLargePicLoaded = false;
 	private final Stack<Integer> sPicHistory = new Stack<Integer>();
 	private GestureDetector mGestureDetector;
+	private GestureDetector mClockGestureDetector;
 	private ProgressDialog mProcessDialog;
 	private ProgressBar mProgressBar;
 	private SharedPreferences mSharedPref;
@@ -143,26 +144,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mClockLayout = (ViewGroup) findViewById(R.id.clockLayout);
 		mProgressBar = (ProgressBar) findViewById(R.id.prgbar);
 		mProgressBar.setVisibility(View.GONE);
-		mClockLayout.setOnClickListener(new View.OnClickListener() {
+
+		mClockGestureDetector = new GestureDetector(this,
+				new MyClockGestureListener());
+		mClockLayout.setOnTouchListener(new OnTouchListener() {
 			@Override
-			public void onClick(View v) {
-				if (!getMLVisibility()) {
-					setMLVisibility(true);
-					return;
-				}
-
-				int face = (mFace + 1) % CLOCKS.length;
-				if (mFace != face) {
-					if (face < 0 || face >= CLOCKS.length) {
-						mFace = 0;
-					} else {
-						mFace = face;
-					}
-					inflateClock();
-
-					Editor edit = mSharedPref.edit();
-					edit.putInt(PREF_CLOCK_FACE, mFace).commit();
-				}
+			public boolean onTouch(View v, MotionEvent event) {
+				mClockGestureDetector.onTouchEvent(event);
+				return true;
 			}
 		});
 
@@ -174,9 +163,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				return true;
 			}
 		};
-
-		for (ImageView iv : mImageViews)
+		for (ImageView iv : mImageViews) {
 			iv.setOnTouchListener(rootListener);
+		}
 
 		setupAdLayout();
 		setupButtons();
@@ -741,6 +730,57 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			Log.e(TAG, "Failed to set wallpaper!");
 		}
 	}
+
+	private class MyClockGestureListener
+			extends
+				GestureDetector.SimpleOnGestureListener {
+		private final int LARGE_MOVE = 80;
+
+		@Override
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+				float velocityY) {
+			if (e1.getX() - e2.getX() > LARGE_MOVE) {
+				Log.d(TAG, "ClockGesture Fling Left with velocity " + velocityX);
+				ChangeClockFace(1);
+				return true;
+			} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
+				Log.d(TAG, "ClockGesture Fling Right with velocity "
+						+ velocityX);
+				ChangeClockFace(-1);
+				return true;
+			}
+
+			return false;
+		}
+
+		private void ChangeClockFace(int step) {
+			int face = (mFace + step) % CLOCKS.length;
+			if (mFace != face) {
+				if (face < 0 || face >= CLOCKS.length) {
+					mFace = 0;
+				} else {
+					mFace = face;
+				}
+
+				inflateClock();
+				Animation aIn = mSlideShowInAnimation[0];
+				mClockLayout.setVisibility(View.VISIBLE);
+				mClockLayout.startAnimation(aIn);
+
+				Editor edit = mSharedPref.edit();
+				edit.putInt(PREF_CLOCK_FACE, mFace).commit();
+			}
+		}
+
+		@Override
+		public boolean onSingleTapConfirmed(MotionEvent e) {
+			if (!getMLVisibility()) {
+				setMLVisibility(true);
+			}
+			return true;
+		}
+	}
+
 	private class MyGestureListener
 			extends
 				GestureDetector.SimpleOnGestureListener {
