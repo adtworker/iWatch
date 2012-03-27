@@ -48,4 +48,7 @@
     <string name="slide_anim_transition">Transition</string>
     <string name="slide_anim_slide">Slide</string>
     <string name="slide_anim_slide_vertical">Slide vertical</string>
+
+    <string name="remote_mode">Remote Album</string>
+    <string name="local_mode">Local Album</string>
 </resources>

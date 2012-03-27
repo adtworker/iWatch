@@ -47,4 +47,7 @@
     <string name="slide_anim_transition">过渡转换</string>
     <string name="slide_anim_slide">左右滑动</string>
     <string name="slide_anim_slide_vertical">上下滑动</string>
+
+    <string name="remote_mode">网络壁纸</string>
+    <string name="local_mode">本地壁纸</string>
 </resources>

@@ -1,7 +1,6 @@
 package com.adtworker.mail;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Time;
 
 import android.app.Activity;
@@ -44,6 +43,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
 import com.adview.AdViewInterface;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
@@ -76,7 +76,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private ImageView.ScaleType mScaleType = DEFAULT_SCALETYPE;
 	private ImageManager mImageManager;
 
-	private boolean bStart = false;
+	private boolean bStarted = false;
 	private int mFace = -1;
 	private int mStep = 1;
 	private int iAdClick = 0;
@@ -85,7 +85,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private GestureDetector mGestureDetector;
 	private GestureDetector mClockGestureDetector;
 	private ProgressDialog mProcessDialog;
-	private ProgressBar mProgressBar;
+	public ProgressBar mProgressBar;
 	private SharedPreferences mSharedPref;
 
 	final static String PREFERENCES = "iWatch";
@@ -127,6 +127,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
 		mBtnDisp = (TextView) findViewById(R.id.btnDisp);
 		mBtnClock = (TextView) findViewById(R.id.btnClock);
+		mBtnPrev.setVisibility(View.GONE);
+
 		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
 		mAdLayout = (LinearLayout) findViewById(R.id.adLayout);
 		mClockLayout = (ViewGroup) findViewById(R.id.clockLayout);
@@ -186,64 +188,58 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final Runnable mUpdateImageView = new Runnable() {
 		@Override
 		public void run() {
-			try {
 
-				if (mSharedPref.getBoolean(PREF_BOSS_KEY, false)) {
-					if (getClockVisibility()) {
-						setClockVisibility(false);
-					}
-
+			if (mSharedPref.getBoolean(PREF_BOSS_KEY, false)) {
+				if (getClockVisibility()) {
+					setClockVisibility(false);
 				}
 
-				ImageView oldView = mImageViews[mImageViewCurrent];
-				if (++mImageViewCurrent == mImageViews.length) {
-					mImageViewCurrent = 0;
+			}
+
+			ImageView oldView = mImageViews[mImageViewCurrent];
+			if (++mImageViewCurrent == mImageViews.length) {
+				mImageViewCurrent = 0;
+			}
+			ImageView newView = mImageViews[mImageViewCurrent];
+			newView.setVisibility(View.VISIBLE);
+
+			Bitmap bm;
+			if (!bStarted) {
+				bm = mImageManager.getCurrentBitmap();
+				bStarted = !bStarted;
+			} else {
+				bm = mImageManager.getImageBitmap(mStep);
+			}
+
+			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
+				mScaleType = DEFAULT_SCALETYPE;
+			}
+			newView.setScaleType(mScaleType);
+			newView.setImageBitmap(bm);
+			newView.scrollTo(0, 0);
+
+			if (mAnimationIndex >= 0) {
+				int animation = mAnimationIndex;
+				if (mAnimationIndex > 0) {
+					animation = mAnimationIndex + (1 - mStep);
 				}
-				ImageView newView = mImageViews[mImageViewCurrent];
+				Animation aIn = mSlideShowInAnimation[animation];
+				newView.startAnimation(aIn);
 				newView.setVisibility(View.VISIBLE);
+				Animation aOut = mSlideShowOutAnimation[animation];
+				oldView.setVisibility(View.INVISIBLE);
+				oldView.startAnimation(aOut);
+			} else {
+				newView.setVisibility(View.VISIBLE);
+				oldView.setVisibility(View.INVISIBLE);
+			}
 
-				InputStream is = getAssets()
-						.open(mImageManager.getCurrentStr());
-				Bitmap bm = BitmapFactory.decodeStream(is);
-
-				if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
-					mScaleType = DEFAULT_SCALETYPE;
-				}
-				newView.setScaleType(mScaleType);
-				newView.setImageBitmap(bm);
-				newView.scrollTo(0, 0);
-
-				if (mAnimationIndex >= 0) {
-					int animation = mAnimationIndex;
-					if (mAnimationIndex > 0) {
-						animation = mAnimationIndex + (1 - mStep);
-					}
-					Animation aIn = mSlideShowInAnimation[animation];
-					newView.startAnimation(aIn);
-					newView.setVisibility(View.VISIBLE);
-					Animation aOut = mSlideShowOutAnimation[animation];
-					oldView.setVisibility(View.INVISIBLE);
-					oldView.startAnimation(aOut);
-				} else {
-					newView.setVisibility(View.VISIBLE);
-					oldView.setVisibility(View.INVISIBLE);
-				}
-
-				DisplayMetrics displayMetrics = getResources()
-						.getDisplayMetrics();
-				if (bm.getWidth() > displayMetrics.widthPixels
-						|| bm.getHeight() > displayMetrics.heightPixels) {
-					bLargePicLoaded = true;
-				} else {
-					bLargePicLoaded = false;
-				}
-
-			} catch (Exception e) {
-				Log.e(TAG, e.getMessage());
-				e.printStackTrace();
-
-			} finally {
-				mHandler.removeCallbacks(mUpdateImageView);
+			DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+			if (bm.getWidth() > displayMetrics.widthPixels
+					|| bm.getHeight() > displayMetrics.heightPixels) {
+				bLargePicLoaded = true;
+			} else {
+				bLargePicLoaded = false;
 			}
 
 			mBtnNext.setEnabled(true);
@@ -313,10 +309,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		Editor editor = mSharedPref.edit();
 		if (mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX) {
+			Log.v(TAG, "Save current image index " + mImageManager.getCurrent()
+					+ " to shared pref");
 			editor.putInt(PREF_LAST_CODE, mImageManager.getCurrent()).commit();
 		}
 	}
-
 	@Override
 	public void onClickAd() {
 		Log.v(TAG, "onClickAd()");
@@ -446,9 +443,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX)
 			return;
 
-		if (!bStart) {
-
-			bStart = !bStart;
+		if (!bStarted) {
 
 			if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
 				setClockVisibility(false);
@@ -458,6 +453,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			mImageManager.setCurrent(mSharedPref.getInt(PREF_LAST_CODE,
 					ImageManager.INVALID_PIC_INDEX));
+			mBtnPrev.setVisibility(View.VISIBLE);
 		}
 
 		mStep = 1;
@@ -465,7 +461,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	}
 	private void goPrev() {
 		mStep = -1;
-		mHandler.post(mUpdateImageView);
+		mHandler.postDelayed(mUpdateImageView, 20);
 	}
 
 	@Override
@@ -482,8 +478,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						: R.string.show_clock);
 		menu.findItem(R.id.menu_toggle_clock).setVisible(false);
 
-		// Hide settings in current version
-		// menu.findItem(R.id.menu_settings).setVisible(false);
+		menu.findItem(R.id.menu_toggle_mode)
+				.setTitle(
+						mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS
+								? R.string.remote_mode
+								: R.string.local_mode);
 
 		if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX) {
 			menu.findItem(R.id.menu_set_wallpaper).setEnabled(false);
@@ -498,6 +497,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		switch (item.getItemId()) {
 			case R.id.menu_toggle_clock :
 				setClockVisibility(!getClockVisibility());
+				break;
+
+			case R.id.menu_toggle_mode :
+				mImageManager
+						.setImagePathType(mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS
+								? IMAGE_PATH_TYPE.REMOTE_HTTP_URL
+								: IMAGE_PATH_TYPE.LOCAL_ASSETS);
 				break;
 
 			case R.id.menu_settings :
@@ -546,7 +552,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-
 	private boolean getLayoutVisibility(int id) {
 		LinearLayout layout = (LinearLayout) findViewById(id);
 		return layout.getVisibility() == View.VISIBLE;
@@ -600,6 +605,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private void setAdVisibility(boolean bVisibility) {
 		setLayoutVisibility(R.id.adLayout, bVisibility);
+	}
+
+	public void EnableNextPrevButtons(boolean enabled) {
+		mBtnPrev.setEnabled(enabled);
+		mBtnNext.setEnabled(enabled);
 	}
 
 	private void setWallpaper() {

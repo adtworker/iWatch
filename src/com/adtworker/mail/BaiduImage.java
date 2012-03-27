@@ -26,7 +26,7 @@ public class BaiduImage {
 	 * height-指定高<br/>
 	 */
 	static String REQUEST_URL_TEMPLETE = "http://image.baidu.com/i?ct=201326592&lm=-1&tn=baiduimagenojs&pv=&word='{0}'&z=19&pn={1}&rn={2}&cl=2&width=&height=";
-	static String BAIUD_IMG_URL_PREFIX = "http://image.baidu.com";
+	static String BAIDU_IMG_URL_PREFIX = "http://image.baidu.com";
 
 	/**
 	 * 抓取给定url转化为string
@@ -93,7 +93,7 @@ public class BaiduImage {
 		if (nodes != null && nodes.length > 0) {
 			for (int i = 0; i < nodes.length; i++) {
 				TagNode node = (TagNode) nodes[i];
-				String detailInfoURL = BAIUD_IMG_URL_PREFIX
+				String detailInfoURL = BAIDU_IMG_URL_PREFIX
 						+ node.getAttributeByName("href");
 				Object[] detailNodes = getNode(detailInfoURL, "//table//img");
 				if (detailNodes != null && detailNodes.length > 0) {

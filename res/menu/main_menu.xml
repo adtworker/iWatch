@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    
+
     <item android:id="@+id/menu_toggle_clock"
           android:title="@string/hide_clock"
           android:icon="@drawable/ic_menu_clock_face"/>
+
+    <item android:id="@+id/menu_toggle_mode"
+          android:title="@string/remote_mode"
+          android:icon="@android:drawable/ic_menu_gallery"/>
 
     <item android:id="@+id/menu_set_livewallpaper"
           android:title="@string/set_livewallpaper"
