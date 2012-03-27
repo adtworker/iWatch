@@ -26,7 +26,7 @@ public class SplashScreen extends Activity {
 			@Override
 			public void run() {
 				Intent mainIntent = new Intent(SplashScreen.this,
-						MyGallery.class);
+						WatchActivity.class);
 				startActivity(mainIntent);
 				SplashScreen.this.finish();
 			}

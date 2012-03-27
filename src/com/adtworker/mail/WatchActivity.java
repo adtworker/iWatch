@@ -1,16 +1,8 @@
 package com.adtworker.mail;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Time;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Stack;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -75,24 +67,21 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private Animation[] mSlideShowOutAnimation;
 
 	private final String TAG = "WatchActivity";
-	private final String ASSETS_NAME = "pics.zip";
-	public final static int INVALID_PIC_INDEX = -1;
 	public final static int CLICKS_TO_HIDE_AD = 1;
 	public final static String APP_FOLDER = "/data/com.adtworker.mail";
 	public final static String PIC_FOLDER = "/iWatch";
-	private final Random mRandom = new Random(System.currentTimeMillis());
 	private final ScaleType DEFAULT_SCALETYPE = ScaleType.FIT_CENTER;
 	private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_INSIDE;
 	// private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_CROP;
 	private ImageView.ScaleType mScaleType = DEFAULT_SCALETYPE;
+	private ImageManager mImageManager;
 
-	private int iPicIndex = INVALID_PIC_INDEX;
+	private boolean bStart = false;
 	private int mFace = -1;
 	private int mStep = 1;
 	private int iAdClick = 0;
 	private boolean bKeyBackIn2Sec = false;
 	private boolean bLargePicLoaded = false;
-	private final Stack<Integer> sPicHistory = new Stack<Integer>();
 	private GestureDetector mGestureDetector;
 	private GestureDetector mClockGestureDetector;
 	private ProgressDialog mProcessDialog;
@@ -113,8 +102,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREF_WP_FULL_FILL = "wp_fullfill";
 	final static String PREF_SLIDE_ANIM = "slide_anim";
 
-	// 采用反射运行时动态读取图片，在res/raw文件目录下按数组创建对应文件名
-	private final static ArrayList<String> PICS = new ArrayList<String>();
 	private final static int[] CLOCKS = {R.layout.clock_no_dial,
 			R.layout.clock_appwidget, R.layout.clock_basic_bw,
 			R.layout.clock_basic_bw1, R.layout.clock_basic_bw3,
@@ -133,6 +120,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.main);
 
+		mImageManager = new ImageManager(this);
 		mImageViews[0] = (ImageView) findViewById(R.id.picView1);
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
@@ -169,11 +157,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		setupAdLayout();
 		setupButtons();
-		initPicsList();
-
-		if (sPicHistory.empty()) {
-			mBtnPrev.setEnabled(false);
-		}
 
 		mSlideShowInAnimation = new Animation[]{
 				makeInAnimation(R.anim.transition_in),
@@ -200,20 +183,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 	};
 
-	private final Runnable mUnzipTask = new Runnable() {
-		@Override
-		public void run() {
-
-			if (!new File(getPicPath()).exists())
-				unzipFile(getPicPath(), ASSETS_NAME, true);
-
-			initPicsList();
-
-			mHandler.removeCallbacks(mUnzipTask);
-		}
-
-	};
-
 	private final Runnable mUpdateImageView = new Runnable() {
 		@Override
 		public void run() {
@@ -233,7 +202,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				ImageView newView = mImageViews[mImageViewCurrent];
 				newView.setVisibility(View.VISIBLE);
 
-				InputStream is = getAssets().open(PICS.get(iPicIndex));
+				InputStream is = getAssets()
+						.open(mImageManager.getCurrentStr());
 				Bitmap bm = BitmapFactory.decodeStream(is);
 
 				if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
@@ -279,20 +249,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			mBtnNext.setEnabled(true);
 		}
 	};
-
-	private void getPicStackInfo() {
-		String szPicName = "";
-		for (int i = 0; i < sPicHistory.size(); i++) {
-			String tmpString = String.format("[%d/%d]", sPicHistory.get(i),
-					PICS.size()) + PICS.get(sPicHistory.get(i));
-			szPicName = tmpString + "\n" + szPicName;
-		}
-		if (iPicIndex != INVALID_PIC_INDEX) {
-			szPicName = String.format("[%d/%d]", iPicIndex, PICS.size())
-					+ PICS.get(iPicIndex) + "\n" + szPicName;
-		}
-		((TextView) findViewById(R.id.picName)).setText(szPicName);
-	}
 
 	public String getPicPath() {
 		return Environment.getDataDirectory() + APP_FOLDER + PIC_FOLDER;
@@ -354,11 +310,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public void onDestroy() {
 		// Log.v(TAG, "onDestroy()");
 		super.onDestroy();
-		PICS.clear();
 
 		Editor editor = mSharedPref.edit();
-		if (iPicIndex != INVALID_PIC_INDEX) {
-			editor.putInt(PREF_LAST_CODE, iPicIndex).commit();
+		if (mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX) {
+			editor.putInt(PREF_LAST_CODE, mImageManager.getCurrent()).commit();
 		}
 	}
 
@@ -488,45 +443,29 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	}
 
 	private void goNext() {
-		if (PICS.size() == 0)
+		if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX)
 			return;
 
-		if (iPicIndex == INVALID_PIC_INDEX) {
+		if (!bStart) {
+
+			bStart = !bStart;
+
 			if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
 				setClockVisibility(false);
 			}
 
 			mBtnNext.setText(getResources().getString(R.string.strNext));
 
-			if ((iPicIndex = mSharedPref.getInt(PREF_LAST_CODE,
-					INVALID_PIC_INDEX)) == INVALID_PIC_INDEX) {
-				iPicIndex = mRandom.nextInt(PICS.size());
-			}
-
-		} else {
-			sPicHistory.push(iPicIndex);
-			iPicIndex = (iPicIndex + 1) % PICS.size();
+			mImageManager.setCurrent(mSharedPref.getInt(PREF_LAST_CODE,
+					ImageManager.INVALID_PIC_INDEX));
 		}
 
 		mStep = 1;
 		mHandler.postDelayed(mUpdateImageView, 200);
-
-		if (!sPicHistory.empty()) {
-			mBtnPrev.setEnabled(true);
-		}
 	}
-
 	private void goPrev() {
-		if (sPicHistory.size() == 0)
-			return;
-
-		iPicIndex = sPicHistory.pop();
 		mStep = -1;
 		mHandler.post(mUpdateImageView);
-
-		if (sPicHistory.empty()) {
-			mBtnPrev.setEnabled(false);
-		}
 	}
 
 	@Override
@@ -546,7 +485,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		// Hide settings in current version
 		// menu.findItem(R.id.menu_settings).setVisible(false);
 
-		if (iPicIndex == INVALID_PIC_INDEX) {
+		if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX) {
 			menu.findItem(R.id.menu_set_wallpaper).setEnabled(false);
 		} else {
 			menu.findItem(R.id.menu_set_wallpaper).setEnabled(true);
@@ -567,8 +506,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			case R.id.menu_set_livewallpaper :
 				Editor myEdit = mSharedPref.edit();
-				if (iPicIndex != INVALID_PIC_INDEX) {
-					myEdit.putString(PREF_PIC_CODE, PICS.get(iPicIndex));
+				if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX) {
+					myEdit.putString(PREF_PIC_CODE,
+							mImageManager.getCurrentStr());
 				} else {
 					myEdit.remove(PREF_PIC_CODE);
 				}
@@ -681,7 +621,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				opt.inJustDecodeBounds = true;
 
 				Bitmap bm = BitmapFactory.decodeStream(
-						getAssets().open(PICS.get(iPicIndex)), null, opt);
+						getAssets().open(mImageManager.getCurrentStr()), null,
+						opt);
 
 				int bm_w = opt.outWidth;
 				int bm_h = opt.outHeight;
@@ -713,7 +654,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
 
 				bm = BitmapFactory.decodeStream(
-						getAssets().open(PICS.get(iPicIndex)), null, opt);
+						getAssets().open(mImageManager.getCurrentStr()), null,
+						opt);
 
 				Bitmap bm_wp = Bitmap.createBitmap(width, height,
 						Bitmap.Config.ARGB_8888);
@@ -899,131 +841,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		return super.onKeyUp(keycode, event);
-	}
-
-	private void unzipFile(String targetPath, String zipFilePath,
-			boolean isAssets) {
-
-		try {
-			File zipFile = new File(zipFilePath);
-			InputStream is;
-			if (isAssets) {
-				is = getAssets().open(zipFilePath);
-			} else {
-				is = new FileInputStream(zipFile);
-			}
-			ZipInputStream zis = new ZipInputStream(is);
-			ZipEntry entry = null;
-			while ((entry = zis.getNextEntry()) != null) {
-				String zipPath = entry.getName();
-				try {
-
-					if (entry.isDirectory()) {
-						File zipFolder = new File(targetPath + File.separator
-								+ zipPath);
-						if (!zipFolder.exists()) {
-							zipFolder.mkdirs();
-						}
-					} else {
-						File file = new File(targetPath + File.separator
-								+ zipPath);
-						if (!file.exists()) {
-							File pathDir = file.getParentFile();
-							pathDir.mkdirs();
-							file.createNewFile();
-						}
-
-						FileOutputStream fos = new FileOutputStream(file);
-						int bread;
-						while ((bread = zis.read()) != -1) {
-							fos.write(bread);
-						}
-						fos.close();
-
-					}
-
-				} catch (Exception e) {
-					continue;
-				}
-			}
-			zis.close();
-			is.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	private boolean isValidPic(File file) {
-		if (file.isFile()) {
-			String fileName = file.getName().toLowerCase();
-			return isValidPic(fileName);
-		}
-		return false;
-	}
-
-	private boolean isValidPic(String filename) {
-		if (filename.toLowerCase().endsWith(".jpg")
-				|| filename.toLowerCase().endsWith(".png")
-				|| filename.toLowerCase().endsWith(".bmp")) {
-			return true;
-		}
-		return false;
-	}
-
-	private void initPicsList() {
-		ArrayList<String> arrayList = getAssetsPicsList("pics");
-		mProgressBar.setMax(arrayList.size());
-		mProgressBar.setVisibility(View.VISIBLE);
-		for (int i = 0; i < arrayList.size(); i++) {
-			PICS.add(arrayList.get(i));
-			mProgressBar.setProgress(PICS.size());
-		}
-		mProgressBar.setVisibility(View.GONE);
-	}
-
-	private ArrayList<String> getPicsList(String path) {
-		ArrayList<String> arrayList = new ArrayList<String>();
-		File[] files = new File(path).listFiles();
-		for (File file : files) {
-			if (file.isDirectory()) {
-				ArrayList<String> tmpArrayList = getPicsList(path
-						+ File.separator + file.getName());
-				for (int i = 0; i < tmpArrayList.size(); i++) {
-					arrayList.add(file.getName() + File.separator
-							+ tmpArrayList.get(i));
-				}
-			}
-			if (isValidPic(file)) {
-				arrayList.add(file.getName());
-			}
-		}
-		return arrayList;
-	}
-
-	private ArrayList<String> getAssetsPicsList(String path) {
-		if (path == null)
-			path = "";
-
-		ArrayList<String> arrayList = new ArrayList<String>();
-		try {
-			String[] filenames = getAssets().list(path);
-			for (int i = 0; i < filenames.length; i++) {
-				String filepath = path + File.separator + filenames[i];
-				if (isValidPic(filepath))
-					arrayList.add(filepath);
-				else {
-					ArrayList<String> tmp = getAssetsPicsList(filepath);
-					for (int j = 0; j < tmp.size(); j++)
-						arrayList.add(tmp.get(j));
-				}
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return arrayList;
 	}
 
 	protected void inflateClock() {
