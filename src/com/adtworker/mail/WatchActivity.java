@@ -54,7 +54,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private final Handler mHandler = new Handler();
 	private int mImageViewCurrent = 0;
-	private ImageView[] mImageViews = new ImageView[2];
+	private final ImageView[] mImageViews = new ImageView[2];
 	private final Random mRandom = new Random(System.currentTimeMillis());
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
@@ -326,6 +326,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			editor.putInt(PREF_LAST_CODE, mImageManager.getCurrent()).commit();
 		}
 	}
+
 	@Override
 	public void onClickAd() {
 		Log.v(TAG, "onClickAd()");
@@ -476,6 +477,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mStep = 1;
 		mHandler.postDelayed(mUpdateImageView, 200);
 	}
+
 	private void goPrev() {
 		mStep = -1;
 		mHandler.postDelayed(mUpdateImageView, 20);
@@ -521,7 +523,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case R.id.menu_toggle_mode :
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					mImageManager.setQueryKeyword("汽车");
+					mImageManager.setQueryKeyword("android MM bizhi");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
 				} else {
@@ -585,6 +587,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+
 	private boolean getLayoutVisibility(int id) {
 		LinearLayout layout = (LinearLayout) findViewById(id);
 		return layout.getVisibility() == View.VISIBLE;
@@ -644,6 +647,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnPrev.setEnabled(enabled);
 		mBtnNext.setEnabled(enabled);
 	}
+
 	private void setWallpaper() {
 		try {
 

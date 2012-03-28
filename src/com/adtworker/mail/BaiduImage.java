@@ -5,6 +5,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -16,6 +17,8 @@ import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 
+import android.util.Log;
+
 public class BaiduImage {
 	public final static Integer HTTP_RESPONSE_STATUS_SUCCESS_CODE = 200;
 	/**
@@ -25,7 +28,7 @@ public class BaiduImage {
 	 * width-指定宽<br/>
 	 * height-指定高<br/>
 	 */
-	static String REQUEST_URL_TEMPLETE = "http://image.baidu.com/i?ct=201326592&lm=-1&tn=baiduimagenojs&pv=&word={0}&z=10&pn={1}&rn={2}&cl=2&width=&height=";
+	static String REQUEST_URL_TEMPLETE = "http://image.baidu.com/i?ct=201326592&lm=-1&tn=baiduimagenojs&pv=&word={0}&z=10&pn={1}&rn={2}&cl=2&width=480&height=800";
 	static String BAIDU_IMG_URL_PREFIX = "http://image.baidu.com";
 
 	/**
@@ -87,8 +90,11 @@ public class BaiduImage {
 	public static List<String> getImgUrl(String keyword, int pageNumber,
 			int size) throws Exception {
 		List<String> imgUrlList = new ArrayList<String>();
+		Random random = new Random();
+		Integer randomPageNumber = random.nextInt(100);
 		String requestUrl = MessageFormat.format(REQUEST_URL_TEMPLETE, keyword,
-				pageNumber, size);
+				randomPageNumber, size);
+		Log.e("ImageManager", requestUrl);
 		Object[] nodes = getNode(requestUrl, "//td/a");
 		if (nodes != null && nodes.length > 0) {
 			for (int i = 0; i < nodes.length; i++) {
@@ -99,6 +105,7 @@ public class BaiduImage {
 				if (detailNodes != null && detailNodes.length > 0) {
 					TagNode detailInfo = (TagNode) detailNodes[0];
 					String imgUrl = detailInfo.getAttributeByName("src");
+					Log.e("ImageManager", imgUrl);
 					imgUrlList.add(imgUrl);
 				}
 			}
