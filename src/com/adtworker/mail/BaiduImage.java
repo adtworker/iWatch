@@ -25,7 +25,7 @@ public class BaiduImage {
 	 * width-指定宽<br/>
 	 * height-指定高<br/>
 	 */
-	static String REQUEST_URL_TEMPLETE = "http://image.baidu.com/i?ct=201326592&lm=-1&tn=baiduimagenojs&pv=&word='{0}'&z=19&pn={1}&rn={2}&cl=2&width=&height=";
+	static String REQUEST_URL_TEMPLETE = "http://image.baidu.com/i?ct=201326592&lm=-1&tn=baiduimagenojs&pv=&word={0}&z=10&pn={1}&rn={2}&cl=2&width=&height=";
 	static String BAIDU_IMG_URL_PREFIX = "http://image.baidu.com";
 
 	/**

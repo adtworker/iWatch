@@ -2,6 +2,7 @@ package com.adtworker.mail;
 
 import java.io.IOException;
 import java.sql.Time;
+import java.util.Random;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -54,6 +55,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final Handler mHandler = new Handler();
 	private int mImageViewCurrent = 0;
 	private ImageView[] mImageViews = new ImageView[2];
+	private final Random mRandom = new Random(System.currentTimeMillis());
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
 	private TextView mBtnDisp;
@@ -185,6 +187,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 	};
 
+	public void setImageView(Bitmap bm) {
+		if (bm == null)
+			return;
+
+		mImageViews[mImageViewCurrent].setImageBitmap(bm);
+		mImageViews[mImageViewCurrent].setScaleType(mScaleType);
+	}
+
 	private final Runnable mUpdateImageView = new Runnable() {
 		@Override
 		public void run() {
@@ -193,7 +203,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				if (getClockVisibility()) {
 					setClockVisibility(false);
 				}
-
 			}
 
 			ImageView oldView = mImageViews[mImageViewCurrent];
@@ -211,12 +220,17 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				bm = mImageManager.getImageBitmap(mStep);
 			}
 
+			Log.v(TAG, "current str: " + mImageManager.getCurrentStr());
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
 				mScaleType = DEFAULT_SCALETYPE;
 			}
 			newView.setScaleType(mScaleType);
 			newView.setImageBitmap(bm);
 			newView.scrollTo(0, 0);
+
+			if (mImageManager.mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+				newView.setScaleType(ScaleType.CENTER_INSIDE);
+			}
 
 			if (mAnimationIndex >= 0) {
 				int animation = mAnimationIndex;
@@ -241,8 +255,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			} else {
 				bLargePicLoaded = false;
 			}
-
-			mBtnNext.setEnabled(true);
 		}
 	};
 
@@ -410,7 +422,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnNext.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				mBtnNext.setEnabled(false);
 				goNext();
 			}
 		});
@@ -440,7 +451,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	}
 
 	private void goNext() {
-		if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX)
+		if (mImageManager.mImageList.size() == 0)
 			return;
 
 		if (!bStarted) {
@@ -451,8 +462,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			mBtnNext.setText(getResources().getString(R.string.strNext));
 
-			mImageManager.setCurrent(mSharedPref.getInt(PREF_LAST_CODE,
-					ImageManager.INVALID_PIC_INDEX));
+			mImageManager.setCurrent(mRandom.nextInt(mImageManager.mImageList
+					.size()));
+
+			if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
+				mImageManager.setCurrent(mSharedPref.getInt(PREF_LAST_CODE,
+						ImageManager.INVALID_PIC_INDEX));
+			}
+
 			mBtnPrev.setVisibility(View.VISIBLE);
 		}
 
@@ -483,6 +500,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS
 								? R.string.remote_mode
 								: R.string.local_mode);
+		menu.findItem(R.id.menu_toggle_mode).setEnabled(mBtnNext.isEnabled());
 
 		if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX) {
 			menu.findItem(R.id.menu_set_wallpaper).setEnabled(false);
@@ -492,6 +510,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		return super.onPrepareOptionsMenu(menu);
 	}
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -500,10 +519,18 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				break;
 
 			case R.id.menu_toggle_mode :
-				mImageManager
-						.setImagePathType(mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS
-								? IMAGE_PATH_TYPE.REMOTE_HTTP_URL
-								: IMAGE_PATH_TYPE.LOCAL_ASSETS);
+
+				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
+					mImageManager.setQueryKeyword("汽车");
+					mImageManager
+							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
+				} else {
+					mProgressBar.setVisibility(View.GONE);
+					mProgressBar.setProgress(0);
+					EnableNextPrevButtons(true);
+					mImageManager
+							.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
+				}
 				break;
 
 			case R.id.menu_settings :
@@ -512,10 +539,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			case R.id.menu_set_livewallpaper :
 				Editor myEdit = mSharedPref.edit();
-				if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX) {
+				if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX
+						&& mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
+					// Now only support local assets to set as background of
+					// live wall paper
 					myEdit.putString(PREF_PIC_CODE,
 							mImageManager.getCurrentStr());
+
 				} else {
+					// remove the preference to set default clock as live
+					// wall paper
 					myEdit.remove(PREF_PIC_CODE);
 				}
 				myEdit.commit();
@@ -611,11 +644,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnPrev.setEnabled(enabled);
 		mBtnNext.setEnabled(enabled);
 	}
-
 	private void setWallpaper() {
 		try {
 
-			if (mSharedPref.getBoolean(PREF_WP_FULL_FILL, false)) {
+			if (mSharedPref.getBoolean(PREF_WP_FULL_FILL, false)
+					|| mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+
 				WallpaperManager.getInstance(this).setBitmap(
 						((BitmapDrawable) mImageViews[mImageViewCurrent]
 								.getDrawable()).getBitmap());

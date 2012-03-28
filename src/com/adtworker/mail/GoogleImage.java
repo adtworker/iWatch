@@ -14,7 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class GoogleImage {
-	static String REQUEST_TEMPLATE = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q='{0}'&start={1}&rsz={2}";
+	static String REQUEST_TEMPLATE = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q={0}&start={1}&rsz={2}&imgsz=medium&imgtype=photo";
 
 	static JSONObject json;
 
@@ -63,16 +63,15 @@ public class GoogleImage {
 				obj = resultArray.getJSONObject(i);
 
 				System.out.println("Image URL => " + obj.getString("url"));
+				System.out.println("Image tbURL => " + obj.getString("tbUrl"));
 
 				listImages.add(obj.getString("url"));
-
 			}
 
 			System.out
 					.println("Result array length => " + resultArray.length());
 
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

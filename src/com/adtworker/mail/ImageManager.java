@@ -9,7 +9,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -41,9 +40,7 @@ public class ImageManager {
 
 	private final String TAG = "ImageManager";
 	private final String IMAGE_SUBFOLDER_IN_ASSETS = "pics";
-	private final String QUERY_KEYWORD = "球星";
 	private Context mContext;
-	private final Random mRandom = new Random(System.currentTimeMillis());
 	private int mCurrentImageIndex = INVALID_PIC_INDEX;
 	private int mLastImageIndex = INVALID_PIC_INDEX;
 	private int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
@@ -51,8 +48,9 @@ public class ImageManager {
 	private int[] mLastIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
 	private int mBitmapCacheCurrent = 0;
-	private int mSearchPageNum = 5;
-	private int mSearchPageSize = 20;
+	private int mSearchPageNum = 10;
+	private int mSearchPageSize = 8;
+	private String mQueryKeyword;
 	private Bitmap[] mBitmapCache = new Bitmap[2];
 	private Bitmap mCurrentBitmap = null;
 
@@ -63,18 +61,22 @@ public class ImageManager {
 
 	public ImageManager(Context context) {
 		mContext = context;
-		initImageList();
-		Log.v(TAG, "Current = " + mCurrentImageIndex);
-		Log.v(TAG, "Last = " + mLastImageIndex);
-	}
+		for (int i = 0; i < mCurrentIndexArray.length; i++)
+			mCurrentIndexArray[i] = INVALID_PIC_INDEX;
+		for (int i = 0; i < mLastIndexArray.length; i++)
+			mLastIndexArray[i] = INVALID_PIC_INDEX;
 
+		setImagePathType(mImagePathType);
+	}
 	public void setImagePathType(IMAGE_PATH_TYPE type) {
 		mCurrentIndexArray[mImagePathType.ordinal()] = mCurrentImageIndex;
 		mLastIndexArray[mImagePathType.ordinal()] = mLastImageIndex;
 		mImagePathType = type;
 		initImageList();
-		Log.v(TAG, "Current = " + mCurrentImageIndex);
-		Log.v(TAG, "Last = " + mLastImageIndex);
+	}
+
+	public void setQueryKeyword(String word) {
+		mQueryKeyword = word;
 	}
 
 	public IMAGE_PATH_TYPE getImagePathType() {
@@ -88,9 +90,7 @@ public class ImageManager {
 			return true;
 	}
 	public void setCurrent(int index) {
-		if (isValidIndex(index)
-				&& mImagePathType != IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-
+		if (isValidIndex(index)) {
 			mCurrentImageIndex = index;
 		}
 	}
@@ -124,7 +124,10 @@ public class ImageManager {
 					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
 							.decodeStream(is);
 				} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-					mBitmapCache[mBitmapCacheCurrent] = LoadImageFromURL(getCurrentStr());
+					new loadImageTask().execute();
+					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
+							.decodeResource(mContext.getResources(),
+									R.drawable.ic_launcher_alarmclock);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -150,7 +153,11 @@ public class ImageManager {
 					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
 							.decodeStream(is);
 				} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-					mBitmapCache[mBitmapCacheCurrent] = LoadImageFromURL(getImageStr(step));
+					getImageStr(step);
+					new loadImageTask().execute();
+					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
+							.decodeResource(mContext.getResources(),
+									R.drawable.ic_launcher_alarmclock);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -177,13 +184,8 @@ public class ImageManager {
 				break;
 		}
 
-		Log.v(TAG, "Path Type value = " + mImagePathType.ordinal());
 		mCurrentImageIndex = mCurrentIndexArray[mImagePathType.ordinal()];
 		mLastImageIndex = mLastIndexArray[mImagePathType.ordinal()];
-
-		if (mCurrentImageIndex == INVALID_PIC_INDEX) {
-			mCurrentImageIndex = mRandom.nextInt(mImageList.size());
-		}
 	}
 
 	private class getImagesTask extends AsyncTask<Void, Void, Void> {
@@ -201,28 +203,59 @@ public class ImageManager {
 		protected Void doInBackground(Void... params) {
 			try {
 				for (int i = 0; i < mSearchPageNum; i++) {
-					String keyword = Uri.encode(QUERY_KEYWORD);
-					List<String> temp = BaiduImage.getImgUrl(keyword, i,
-							mSearchPageSize);
+					String keyword = Uri.encode(mQueryKeyword);
+					List<String> temp = GoogleImage.getImgUrl(keyword, i
+							* mSearchPageSize, mSearchPageSize);
 					for (int j = 0; j < temp.size(); j++) {
 						mImageList.add(temp.get(j));
 						((WatchActivity) mContext).mProgressBar.setProgress(i
-								* temp.size() + j);
+								* temp.size() + j + 1);
 					}
-
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
 			Log.v(TAG, "size is " + mImageList.size());
+
+			if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL
+					&& mImageList.size() == 0) {
+				Log.e(TAG, "remote update fails, back to local mode.");
+				setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
+			}
+
 			return null;
 		}
-
 		@Override
 		protected void onPostExecute(Void result) {
 			super.onPostExecute(result);
 			((WatchActivity) mContext).mProgressBar.setVisibility(View.GONE);
 			((WatchActivity) mContext).EnableNextPrevButtons(true);
+		}
+	}
+
+	private class loadImageTask extends AsyncTask<Void, Void, Void> {
+		Bitmap bm;
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			WatchActivity activity = (WatchActivity) mContext;
+			activity.EnableNextPrevButtons(false);
+		}
+		@Override
+		protected Void doInBackground(Void... params) {
+			bm = LoadImageFromURL(getCurrentStr());
+			return null;
+		}
+		@Override
+		protected void onPostExecute(Void result) {
+			super.onPostExecute(result);
+			WatchActivity activity = (WatchActivity) mContext;
+			if (bm != null) {
+				activity.setImageView(bm);
+			}
+			activity.EnableNextPrevButtons(true);
 		}
 	}
 
