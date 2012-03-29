@@ -43,18 +43,18 @@ public class ImageManager {
 
 	private final String TAG = "ImageManager";
 	private final String IMAGE_SUBFOLDER_IN_ASSETS = "pics";
-	private Context mContext;
+	private final Context mContext;
 	private int mCurrentImageIndex = INVALID_PIC_INDEX;
 	private int mLastImageIndex = INVALID_PIC_INDEX;
-	private int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
+	private final int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
-	private int[] mLastIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
+	private final int[] mLastIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
 	private int mBitmapCacheCurrent = 0;
-	private int mSearchPageNum = 10;
-	private int mSearchPageSize = 8;
+	private final int mSearchPageNum = 2;
+	private final int mSearchPageSize = 8;
 	private String mQueryKeyword;
-	private Bitmap[] mBitmapCache = new Bitmap[2];
+	private final Bitmap[] mBitmapCache = new Bitmap[2];
 	private Bitmap mCurrentBitmap = null;
 
 	public final static int INVALID_PIC_INDEX = -1;
@@ -227,8 +227,10 @@ public class ImageManager {
 		protected Void doInBackground(Void... params) {
 			try {
 				for (int i = 0; i < mSearchPageNum; i++) {
-					String keyword = Uri.encode(mQueryKeyword);
-					List<String> temp = GoogleImage.getImgUrl(keyword, i
+					String keyword = Uri.encode(mQueryKeyword, "GBK");
+					// List<String> temp = GoogleImage.getImgUrl(keyword, i
+					// * mSearchPageSize, mSearchPageSize);
+					List<String> temp = BaiduImage.getImgUrl(keyword, i
 							* mSearchPageSize, mSearchPageSize);
 					for (int j = 0; j < temp.size(); j++) {
 						mImageList.add(temp.get(j));
