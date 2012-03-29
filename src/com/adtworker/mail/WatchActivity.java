@@ -88,6 +88,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private GestureDetector mClockGestureDetector;
 	private ProgressDialog mProcessDialog;
 	public ProgressBar mProgressBar;
+	public ProgressBar mProgressIcon;
 	private SharedPreferences mSharedPref;
 
 	final static String PREFERENCES = "iWatch";
@@ -136,6 +137,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mClockLayout = (ViewGroup) findViewById(R.id.clockLayout);
 		mProgressBar = (ProgressBar) findViewById(R.id.prgbar);
 		mProgressBar.setVisibility(View.GONE);
+		mProgressIcon = (ProgressBar) findViewById(R.id.prgIcon);
+		mProgressIcon.setVisibility(View.GONE);
 
 		mClockGestureDetector = new GestureDetector(this,
 				new MyClockGestureListener());
@@ -227,10 +230,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			newView.setScaleType(mScaleType);
 			newView.setImageBitmap(bm);
 			newView.scrollTo(0, 0);
-
-			if (mImageManager.mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-				newView.setScaleType(ScaleType.CENTER_INSIDE);
-			}
 
 			if (mAnimationIndex >= 0) {
 				int animation = mAnimationIndex;

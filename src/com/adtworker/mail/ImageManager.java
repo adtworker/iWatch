@@ -22,8 +22,11 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.SystemClock;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 
@@ -124,10 +127,22 @@ public class ImageManager {
 					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
 							.decodeStream(is);
 				} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-					new loadImageTask().execute();
-					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
-							.decodeResource(mContext.getResources(),
-									R.drawable.ic_launcher_alarmclock);
+					new loadImageTask().execute(getCurrentStr());
+
+					DisplayMetrics displayMetrics = mContext.getResources()
+							.getDisplayMetrics();
+					int width = displayMetrics.widthPixels;
+					int height = displayMetrics.heightPixels;
+					Bitmap bm = Bitmap.createBitmap(width, height,
+							Bitmap.Config.ARGB_8888);
+					Canvas canvas = new Canvas(bm);
+					Bitmap bmIcon = BitmapFactory.decodeResource(
+							mContext.getResources(),
+							R.drawable.ic_launcher_alarmclock);
+					canvas.drawBitmap(bmIcon, (width - bmIcon.getWidth()) / 2,
+							(height - bmIcon.getHeight()) / 2, null);
+					bmIcon.recycle();
+					mBitmapCache[mBitmapCacheCurrent] = bm;
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -136,7 +151,6 @@ public class ImageManager {
 		}
 		return mCurrentBitmap;
 	}
-
 	public Bitmap getImageBitmap(int step) {
 		int nextImageIndex = (mCurrentImageIndex + step) % mImageList.size();
 		mBitmapCacheCurrent = (mBitmapCacheCurrent + 1) % mBitmapCache.length;
@@ -153,11 +167,22 @@ public class ImageManager {
 					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
 							.decodeStream(is);
 				} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-					getImageStr(step);
-					new loadImageTask().execute();
-					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
-							.decodeResource(mContext.getResources(),
-									R.drawable.ic_launcher_alarmclock);
+					new loadImageTask().execute(getImageStr(step));
+
+					DisplayMetrics displayMetrics = mContext.getResources()
+							.getDisplayMetrics();
+					int width = displayMetrics.widthPixels;
+					int height = displayMetrics.heightPixels;
+					Bitmap bm = Bitmap.createBitmap(width, height,
+							Bitmap.Config.ARGB_8888);
+					Canvas canvas = new Canvas(bm);
+					Bitmap bmIcon = BitmapFactory.decodeResource(
+							mContext.getResources(),
+							R.drawable.ic_launcher_alarmclock);
+					canvas.drawBitmap(bmIcon, (width - bmIcon.getWidth()) / 2,
+							(height - bmIcon.getHeight()) / 2, null);
+					bmIcon.recycle();
+					mBitmapCache[mBitmapCacheCurrent] = bm;
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -189,11 +214,10 @@ public class ImageManager {
 	}
 
 	private class getImagesTask extends AsyncTask<Void, Void, Void> {
-
+		WatchActivity activity = (WatchActivity) mContext;
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			WatchActivity activity = (WatchActivity) mContext;
 			activity.mProgressBar.setProgress(0);
 			activity.mProgressBar.setVisibility(View.VISIBLE);
 			activity.mProgressBar.setMax(mSearchPageNum * mSearchPageSize);
@@ -208,10 +232,12 @@ public class ImageManager {
 							* mSearchPageSize, mSearchPageSize);
 					for (int j = 0; j < temp.size(); j++) {
 						mImageList.add(temp.get(j));
-						((WatchActivity) mContext).mProgressBar.setProgress(i
-								* temp.size() + j + 1);
+						activity.mProgressBar.setProgress(i * temp.size() + j
+								+ 1);
 					}
 				}
+				activity.mProgressBar.setProgress(mSearchPageNum
+						* mSearchPageSize);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -229,32 +255,62 @@ public class ImageManager {
 		@Override
 		protected void onPostExecute(Void result) {
 			super.onPostExecute(result);
-			((WatchActivity) mContext).mProgressBar.setVisibility(View.GONE);
-			((WatchActivity) mContext).EnableNextPrevButtons(true);
+			activity.EnableNextPrevButtons(true);
+			SystemClock.sleep(200);
+			activity.mProgressBar.setVisibility(View.GONE);
 		}
 	}
 
-	private class loadImageTask extends AsyncTask<Void, Void, Void> {
-		Bitmap bm;
-
+	private class loadImageTask extends AsyncTask<String, Integer, Bitmap> {
+		WatchActivity activity = (WatchActivity) mContext;
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			WatchActivity activity = (WatchActivity) mContext;
+			activity.mProgressIcon.setVisibility(View.VISIBLE);
 			activity.EnableNextPrevButtons(false);
 		}
 		@Override
-		protected Void doInBackground(Void... params) {
-			bm = LoadImageFromURL(getCurrentStr());
-			return null;
+		protected Bitmap doInBackground(String... params) {
+			publishProgress(0);
+			final Bitmap bm;
+			try {
+				URLConnection connection = new URL(params[0]).openConnection();
+				String contentType = connection.getHeaderField("Content-Type");
+				boolean isImage = contentType.startsWith("image/");
+				publishProgress(30);
+				if (isImage) {
+					HttpGet httpRequest = new HttpGet(params[0]);
+					HttpClient httpclient = new DefaultHttpClient();
+					HttpResponse response = httpclient.execute(httpRequest);
+					publishProgress(70);
+					HttpEntity entity = response.getEntity();
+					BufferedHttpEntity bufferedHttpEntity = new BufferedHttpEntity(
+							entity);
+					InputStream is = bufferedHttpEntity.getContent();
+					bm = BitmapFactory.decodeStream(is);
+				} else {
+					bm = BitmapFactory.decodeResource(mContext.getResources(),
+							R.drawable.no_image);
+				}
+			} catch (Exception e) {
+				Log.e(e.getClass().getName(), e.getMessage(), e);
+				return null;
+			}
+			publishProgress(100);
+			return bm;
 		}
 		@Override
-		protected void onPostExecute(Void result) {
+		protected void onProgressUpdate(Integer... progress) {
+			activity.mProgressIcon.setProgress(progress[0]);
+		}
+		@Override
+		protected void onPostExecute(Bitmap result) {
 			super.onPostExecute(result);
-			WatchActivity activity = (WatchActivity) mContext;
-			if (bm != null) {
-				activity.setImageView(bm);
+			if (result != null) {
+				activity.setImageView(result);
+				mBitmapCache[mBitmapCacheCurrent] = result;
 			}
+			activity.mProgressIcon.setVisibility(View.GONE);
 			activity.EnableNextPrevButtons(true);
 		}
 	}
@@ -373,30 +429,4 @@ public class ImageManager {
 		return arrayList;
 	}
 
-	private Bitmap LoadImageFromURL(String url) {
-		try {
-			URLConnection connection = new URL(url).openConnection();
-			String contentType = connection.getHeaderField("Content-Type");
-			boolean isImage = contentType.startsWith("image/");
-			if (isImage) {
-				HttpGet httpRequest = new HttpGet(url);
-				HttpClient httpclient = new DefaultHttpClient();
-				HttpResponse response = httpclient.execute(httpRequest);
-				HttpEntity entity = response.getEntity();
-				BufferedHttpEntity bufferedHttpEntity = new BufferedHttpEntity(
-						entity);
-
-				InputStream is = bufferedHttpEntity.getContent();
-				Bitmap bm = BitmapFactory.decodeStream(is);
-				return bm;
-			} else {
-				Bitmap bm = BitmapFactory.decodeResource(
-						mContext.getResources(), R.drawable.no_image);
-				return bm;
-			}
-		} catch (Exception e) {
-			Log.e(e.getClass().getName(), e.getMessage(), e);
-			return null;
-		}
-	}
 }
