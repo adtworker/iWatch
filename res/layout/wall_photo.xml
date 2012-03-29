@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<RelativeLayout
+    android:id="@+id/banner_top_layout"
+    android:layout_width="fill_parent"
+    android:layout_height="45dip"
+     android:padding="5dip"
+    >
+     
+    <ImageView 
+        android:id="@+id/shop_photo"
+        android:layout_width="33dip"
+    	 android:layout_height="33dip"
+    	 android:layout_alignParentLeft="true"
+    	 android:layout_centerVertical="true"
+    	 android:src="@drawable/shop_type_taobao_photo"
+    	 android:scaleType="centerCrop"
+    	 android:layout_marginLeft="5dip"
+    	 android:contentDescription="image"
+    	 android:onClick="clickToShop"
+        />
+    <LinearLayout
+        android:id="@+id/shop_info"
+        android:layout_width="wrap_content"
+	 	 android:layout_height="wrap_content"
+	 	 android:orientation="vertical"
+	 	 android:layout_toRightOf="@id/shop_photo"
+	 	 android:layout_centerVertical="true"
+	 	 android:layout_marginLeft="4dip"
+	 	 android:onClick="clickToShop"
+	 	 android:clickable="true"
+        >
+    <TextView 
+        android:id="@+id/search_name"
+        android:layout_width="wrap_content"
+    	android:layout_height="wrap_content"
+    	android:textSize="16sp"
+        android:singleLine="true"
+        android:text=""
+        android:maxEms="8"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:scrollHorizontally="true"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:ellipsize="marquee"
+        />
+    
+    </LinearLayout>
+    
+</RelativeLayout>
+
+
+	<ProgressBar 
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+    />
+	
+    <com.adtworker.mail.view.CustomGallery
+        android:id="@+id/gallery"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        />
+    
+  		<LinearLayout 
+        android:id="@+id/gallery_location_layout"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/gallery"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="8dip"
+        android:contentDescription="gallery_location_point_view_description"
+        android:visibility="visible"
+        />  
+
+
+
+     <com.adtworker.mail.view.SuperScrollView
+        android:id="@+id/photo_wall_scrollview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" 
+        android:layout_below="@id/banner_top_layout"
+        android:layout_above="@id/gallery_location_layout"
+        android:background="#cccccc" 	
+        android:visibility="gone"
+        android:scrollbars="vertical"
+        >
+
+        <LinearLayout
+            android:id="@+id/photo_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" 
+            android:orientation="horizontal"
+            android:baselineAligned="false"
+            android:padding="2dip"
+            >
+        <LinearLayout
+            android:id="@+id/photo_layout1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" 
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:padding="2dip"
+            >
+            </LinearLayout>
+        <LinearLayout
+            android:id="@+id/photo_layout2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" 
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:padding="2dip"
+            > 
+            </LinearLayout>
+        <LinearLayout
+            android:id="@+id/photo_layout3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" 
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:padding="2dip"
+            >                       
+        </LinearLayout>
+        </LinearLayout>
+    </com.adtworker.mail.view.SuperScrollView>
+
+</RelativeLayout>

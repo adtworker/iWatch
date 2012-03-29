@@ -525,6 +525,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mImageManager.setQueryKeyword("android MM bizhi");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
+					Intent intent = new Intent();
+					intent.setClass(this, WallPhotoActivity.class);
+					startActivity(intent);
+					// 如果不关闭当前的会出现好多个页面
+					this.finish();
 				} else {
 					mProgressBar.setVisibility(View.GONE);
 					mProgressBar.setProgress(0);
