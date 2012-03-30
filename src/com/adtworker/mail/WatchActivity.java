@@ -450,8 +450,27 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		});
 	}
 
+	private void initStartIndex() {
+		if (mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX)
+			return;
+
+		mImageManager.setCurrent(mRandom.nextInt(mImageManager
+				.getImageListSize()));
+
+		if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
+			int index = mSharedPref.getInt(PREF_LAST_CODE,
+					ImageManager.INVALID_PIC_INDEX);
+
+			if (bStarted) {
+				int size = mImageManager.getImageListSize();
+				index = (size + index - 1) % size;
+			}
+			mImageManager.setCurrent(index);
+		}
+	}
+
 	private void goNext() {
-		if (mImageManager.mImageList.size() == 0)
+		if (mImageManager.getImageListSize() == 0)
 			return;
 
 		if (!bStarted) {
@@ -461,16 +480,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 
 			mBtnNext.setText(getResources().getString(R.string.strNext));
-
-			mImageManager.setCurrent(mRandom.nextInt(mImageManager.mImageList
-					.size()));
-
-			if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-				mImageManager.setCurrent(mSharedPref.getInt(PREF_LAST_CODE,
-						ImageManager.INVALID_PIC_INDEX));
-			}
-
 			mBtnPrev.setVisibility(View.VISIBLE);
+
+			initStartIndex();
 		}
 
 		mStep = 1;
@@ -526,11 +538,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
 				} else {
-					mProgressBar.setVisibility(View.GONE);
-					mProgressBar.setProgress(0);
-					EnableNextPrevButtons(true);
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
+				}
+				if (bStarted
+						&& mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX) {
+					initStartIndex();
 				}
 				break;
 

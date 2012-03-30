@@ -94,7 +94,7 @@ public class BaiduImage {
 		Integer randomPageNumber = random.nextInt(100);
 		String requestUrl = MessageFormat.format(REQUEST_URL_TEMPLETE, keyword,
 				randomPageNumber, size);
-		Log.e("ImageManager", requestUrl);
+		Log.d("ImageManager", requestUrl);
 		Object[] nodes = getNode(requestUrl, "//td/a");
 		if (nodes != null && nodes.length > 0) {
 			for (int i = 0; i < nodes.length; i++) {
@@ -105,7 +105,7 @@ public class BaiduImage {
 				if (detailNodes != null && detailNodes.length > 0) {
 					TagNode detailInfo = (TagNode) detailNodes[0];
 					String imgUrl = detailInfo.getAttributeByName("src");
-					Log.e("ImageManager", imgUrl);
+					Log.d("ImageManager", imgUrl);
 					imgUrlList.add(imgUrl);
 				}
 			}

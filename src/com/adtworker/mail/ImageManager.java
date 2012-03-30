@@ -78,16 +78,20 @@ public class ImageManager {
 		initImageList();
 	}
 
-	public void setQueryKeyword(String word) {
-		mQueryKeyword = word;
-	}
-
 	public IMAGE_PATH_TYPE getImagePathType() {
 		return mImagePathType;
 	}
 
+	public void setQueryKeyword(String word) {
+		mQueryKeyword = word;
+	}
+
+	public int getImageListSize() {
+		return mImageList.size();
+	}
+
 	private boolean isValidIndex(int index) {
-		if (index < 0 || index >= mImageList.size())
+		if (index < 0 || index >= getImageListSize())
 			return false;
 		else
 			return true;
@@ -99,11 +103,14 @@ public class ImageManager {
 	}
 
 	public String getCurrentStr() {
+		Log.d(TAG, "getCurrentStr(): " + mCurrentImageIndex);
 		return mImageList.get(mCurrentImageIndex);
 	}
 
 	public String getImageStr(int step) {
-		mCurrentImageIndex = (mCurrentImageIndex + step) % mImageList.size();
+		Log.d(TAG, "getImageStr(): " + mCurrentImageIndex + ", " + step);
+		mCurrentImageIndex = getNextSteppedIndex(step);
+		Log.d(TAG, "getImageStr(): " + mCurrentImageIndex);
 		return getCurrentStr();
 	}
 
@@ -112,11 +119,16 @@ public class ImageManager {
 	}
 
 	public int getNext() {
-		return (mCurrentImageIndex + 1) % mImageList.size();
+		return getNextSteppedIndex(1);
 	}
 
 	public int getPrev() {
-		return (mCurrentImageIndex - 1) % mImageList.size();
+		return getNextSteppedIndex(-1);
+	}
+
+	public int getNextSteppedIndex(int step) {
+		int size = getImageListSize();
+		return (size + mCurrentImageIndex + step) % size;
 	}
 
 	public Bitmap getCurrentBitmap() {
@@ -152,7 +164,7 @@ public class ImageManager {
 		return mCurrentBitmap;
 	}
 	public Bitmap getImageBitmap(int step) {
-		int nextImageIndex = (mCurrentImageIndex + step) % mImageList.size();
+		int nextImageIndex = getNextSteppedIndex(step);
 		mBitmapCacheCurrent = (mBitmapCacheCurrent + 1) % mBitmapCache.length;
 
 		if (nextImageIndex != mLastImageIndex) {
@@ -244,10 +256,8 @@ public class ImageManager {
 				e.printStackTrace();
 			}
 
-			Log.v(TAG, "size is " + mImageList.size());
-
 			if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL
-					&& mImageList.size() == 0) {
+					&& getImageListSize() == 0) {
 				Log.e(TAG, "remote update fails, back to local mode.");
 				setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
 			}
