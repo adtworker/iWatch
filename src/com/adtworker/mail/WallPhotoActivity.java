@@ -1,25 +1,35 @@
 package com.adtworker.mail;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Message;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.adtworker.mail.service.CallbackHandler;
+import com.adtworker.mail.service.Service;
 import com.adtworker.mail.service.entity.ImgLoadSupporter;
+import com.adtworker.mail.view.SuperScrollView;
 
 public class WallPhotoActivity extends Activity {
 	private LinearLayout photoLayout1;
 	private LinearLayout photoLayout2;
 	private LinearLayout photoLayout3;
+	public Service service;
+	private SuperScrollView superScrollView;
+	private final ArrayList<ImageView> imageViewList = new ArrayList<ImageView>();
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
+		service = Service.getInstance(this);
 		setContentView(R.layout.wall_photo);
+		superScrollView = (SuperScrollView) findViewById(R.id.photo_wall_scrollview);
+		superScrollView.setVisibility(View.VISIBLE);
 		addGroupProducts();
 	}
 	private void initPhotoLayouts() {
@@ -34,15 +44,27 @@ public class WallPhotoActivity extends Activity {
 	}
 	private int photoWallWidth = 0;
 	private int wallPage = 0;
+
+	private void addImageViewToList(ImageView imageView) {
+		if (!imageViewList.contains(imageView)) {
+			imageViewList.add(imageView);
+		}
+	}
+	/**
+	 * 图片墙初始化
+	 */
 	private void addGroupProducts() {
+		wallPage++;
 		initPhotoLayouts();
 		try {
 			if (photoWallWidth == 0) {
 				photoWallWidth = getResources().getDisplayMetrics().widthPixels / 3;
 			}
 			for (int i = 0; i < 10; i++) {
-				wallPage++;
+
 				ImageView imageView = generateWallImage();
+				addImageViewToList(imageView);
+				updateImageOfProduct(imageView, false);
 				addImageViewToLayout(imageView, photoWallWidth);
 			}
 
@@ -50,6 +72,13 @@ public class WallPhotoActivity extends Activity {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * 将图片画到屏幕上
+	 * 
+	 * @param imageView
+	 * @param photoWallWidth2
+	 */
 	private void addImageViewToLayout(ImageView imageView, int photoWallWidth2) {
 		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
 				photoWallWidth, (photoWallWidth * 320) / 240);
@@ -76,28 +105,36 @@ public class WallPhotoActivity extends Activity {
 		}
 	}
 
+	/**
+	 * 创建单个图片对象，此处的url暂时写死固定
+	 * 
+	 * @return
+	 */
 	private ImageView generateWallImage() {
 		ImageView imageView = new ImageView(this);
 		imageView.setImageDrawable(null);
 		imageView.setBackgroundColor(Color.WHITE);
 		imageView
-				.setTag("http://tupian.feiku.com/data/pic/20100119/1263864880739435.jpg");
+				.setTag("http://img6.cache.netease.com/cnews/2012/3/30/201203302306386f8c8.jpg");
 		imageView.setClickable(true);
+		imageView.setContentDescription(TAG_IMAGE_STATE_UNLOAD);
 		return imageView;
 	}
 
 	private void updateImageOfProduct(ImageView imageView, boolean isLocal) {
-		String contentString = imageView.getContentDescription().toString();
-		if (contentString.equals(TAG_IMAGE_STATE_OK)
-				|| contentString.equals(TAG_IMAGE_STATE_LOADING)) {
-			return;
-		}
-		getImgLoadSupporter(imageView);
+
+		service.loadImg(getImgLoadSupporter(imageView));
 	}
 
 	private final String TAG_IMAGE_STATE_OK = "true";
 	private final String TAG_IMAGE_STATE_LOADING = "isLoading";
 	private final String TAG_IMAGE_STATE_UNLOAD = "unload";
+	/**
+	 * 定义图片异步处理加载
+	 * 
+	 * @param imageView
+	 * @return
+	 */
 	private ImgLoadSupporter getImgLoadSupporter(final ImageView imageView) {
 		CallbackHandler callbackHandler = new CallbackHandler(
 				CallbackHandler.CallbackType.img) {
@@ -105,10 +142,7 @@ public class WallPhotoActivity extends Activity {
 			public void dispatchMessage(Message msg) {
 				super.dispatchMessage(msg);
 				Bitmap tempBitmap = (Bitmap) msg.obj;
-				String contentString = imageView.getContentDescription()
-						.toString();
-				if (tempBitmap != null
-						&& !contentString.equals(TAG_IMAGE_STATE_UNLOAD)) {
+				if (tempBitmap != null) {
 					imageView.setImageBitmap(tempBitmap);
 					imageView.setContentDescription(TAG_IMAGE_STATE_OK);
 					tempBitmap = null;
@@ -122,6 +156,14 @@ public class WallPhotoActivity extends Activity {
 		imgLoadSupporter.url = (String) imageView.getTag();
 		imageView.setContentDescription(TAG_IMAGE_STATE_LOADING);
 		return imgLoadSupporter;
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (service != null) {
+			service.destroy();
+		}
+		super.onDestroy();
 	}
 
 }

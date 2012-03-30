@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+      android:background="@color/bg_color"
     >
 <RelativeLayout
     android:id="@+id/banner_top_layout"
@@ -59,25 +60,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
     />
-	
-    <com.adtworker.mail.view.CustomGallery
-        android:id="@+id/gallery"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        />
     
-  		<LinearLayout 
-        android:id="@+id/gallery_location_layout"
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/gallery"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="8dip"
-        android:contentDescription="gallery_location_point_view_description"
-        android:visibility="visible"
-        />  
 
 
 
@@ -86,7 +69,6 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" 
         android:layout_below="@id/banner_top_layout"
-        android:layout_above="@id/gallery_location_layout"
         android:background="#cccccc" 	
         android:visibility="gone"
         android:scrollbars="vertical"
