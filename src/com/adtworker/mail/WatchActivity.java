@@ -196,6 +196,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		mImageViews[mImageViewCurrent].setImageBitmap(bm);
 		mImageViews[mImageViewCurrent].setScaleType(mScaleType);
+		// TextView tv = (TextView) findViewById(R.id.picName);
+		// tv.setText(bm.getWidth() + "x" + bm.getHeight());
 	}
 
 	private final Runnable mUpdateImageView = new Runnable() {
@@ -264,13 +266,22 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	@Override
 	public void onStart() {
-		// Log.v(TAG, "onStart()");
+		Log.v(TAG, "onStart()");
 		super.onStart();
+
+		// If Image list initialization failed, restart the process
+		Log.d(TAG, "Init List failed? " + mImageManager.isInitListFailed());
+		if (mImageManager.isInitListFailed()) {
+			ImageManager.IMAGE_PATH_TYPE type = mImageManager
+					.getImagePathType();
+			mImageManager.setImagePathType(type);
+			initStartIndex();
+		}
 	}
 
 	@Override
 	public void onResume() {
-		// Log.v(TAG, "onResume()");
+		Log.v(TAG, "onResume()");
 		super.onResume();
 
 		int face = mSharedPref.getInt(PREF_CLOCK_FACE, 0);
@@ -453,22 +464,23 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private void initStartIndex() {
 		if (mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX)
 			return;
+		int size = mImageManager.getImageListSize();
+		if (size == 0)
+			return;
 
-		mImageManager.setCurrent(mRandom.nextInt(mImageManager
-				.getImageListSize()));
+		mImageManager.setCurrent(mRandom.nextInt(size));
 
 		if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
 			int index = mSharedPref.getInt(PREF_LAST_CODE,
 					ImageManager.INVALID_PIC_INDEX);
 
 			if (bStarted) {
-				int size = mImageManager.getImageListSize();
 				index = (size + index - 1) % size;
 			}
 			mImageManager.setCurrent(index);
 		}
+		Log.d(TAG, "initStartIndex(): start from " + mImageManager.getCurrent());
 	}
-
 	private void goNext() {
 		if (mImageManager.getImageListSize() == 0)
 			return;
@@ -541,8 +553,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
 				}
-				if (bStarted
-						&& mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX) {
+				if (bStarted) {
 					initStartIndex();
 				}
 				break;
