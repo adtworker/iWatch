@@ -1,10 +1,13 @@
 package com.adtworker.mail;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -293,21 +296,20 @@ public class ImageManager {
 			publishProgress(0);
 			final Bitmap bm;
 			String cachedFileString = getCachedFilename(params[0]);
-			// File file = new File(cachedFileString);
-			// if (file.exists()) {
-			// Log.d(TAG, "file exists: " + cachedFileString);
-			// publishProgress(10);
-			// try {
-			// InputStream is = new BufferedInputStream(
-			// new FileInputStream(file));
-			// bm = BitmapFactory.decodeStream(is);
-			// Log.v(TAG, "bm is null? " + (bm == null));
-			// return bm;
-			// } catch (Exception e) {
-			// e.printStackTrace();
-			// return null;
-			// }
-			// }
+			File file = new File(cachedFileString);
+			if (file.exists()) {
+				Log.d(TAG, "file exists: " + cachedFileString);
+				try {
+					InputStream is = new BufferedInputStream(
+							new FileInputStream(file));
+					bm = BitmapFactory.decodeStream(is);
+					publishProgress(100);
+					return bm;
+				} catch (Exception e) {
+					e.printStackTrace();
+					return null;
+				}
+			}
 
 			try {
 				URLConnection connection = new URL(params[0]).openConnection();
@@ -324,7 +326,7 @@ public class ImageManager {
 							entity);
 					InputStream is = bufferedHttpEntity.getContent();
 					bm = BitmapFactory.decodeStream(is);
-					SaveImageFile(is, params[0]);
+					SaveImageFile(bufferedHttpEntity.getContent(), params[0]);
 				} else {
 					bm = BitmapFactory.decodeResource(mContext.getResources(),
 							R.drawable.no_image);
@@ -356,22 +358,24 @@ public class ImageManager {
 
 		Log.d(TAG, "Saving " + getCachedFilename(str));
 		File file = new File(getCachedFilename(str));
+		OutputStream out = null;
 		if (file.exists())
 			return;
 
 		try {
-			file.createNewFile();
-			FileOutputStream out = new FileOutputStream(file);
+			out = new BufferedOutputStream(new FileOutputStream(file));
 			byte[] buf = new byte[1024];
-			while (is.read(buf) != -1)
+			while (is.read(buf) != -1) {
 				out.write(buf);
-			out.close();
+			}
+			out.flush();
 
+			if (out != null)
+				out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
 	private String getCachedFilename(String imgPath) {
 		// String path = mContext.getFilesDir().getPath();
 		String path = Environment.getExternalStorageDirectory()
@@ -397,8 +401,11 @@ public class ImageManager {
 
 	private String getImageFilename(String imgPath) {
 		int start = imgPath.lastIndexOf("/");
-		if (start != -1) {
+		int end = imgPath.lastIndexOf("?");
+		if (start != -1 && end == -1) {
 			return imgPath.substring(start + 1);
+		} else if (start != -1 && end != -1) {
+			return imgPath.substring(start + 1, end - 1);
 		} else {
 			return null;
 		}
