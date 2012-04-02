@@ -35,7 +35,7 @@
     <CheckBoxPreference android:key="wp_fullfill"
         android:title="@string/pref_wp_fullfill"
         android:summary="@string/pref_wp_fullfill_sum"
-        android:defaultValue="false"
+        android:defaultValue="true"
     />
 
     <CheckBoxPreference android:key="boss_key"

@@ -40,15 +40,14 @@
     <string name="pref_boss_key_sum">In Boss mode, show clock will hide picture frame.</string>
     <string name="pref_pic_fullfill">Picture to fit screen</string>
     <string name="pref_pic_fullfill_sum">Zoom pictures to fit screen by default.</string>
-    <string name="pref_wp_fullfill">Wallpaper to full fill</string>
-    <string name="pref_wp_fullfill_sum">Picture will be enlarged for wallpaper.</string>
+    <string name="pref_wp_fullfill">Wallpaper auto scale</string>
+    <string name="pref_wp_fullfill_sum">Picture will be scaled to fit screen</string>
     <string name="pref_slide_anim">Slide Animation</string>
     <string name="pref_slide_anim_sum">Click to set slide animation.</string>
     <string name="none">None</string>
     <string name="slide_anim_transition">Transition</string>
     <string name="slide_anim_slide">Slide</string>
     <string name="slide_anim_slide_vertical">Slide vertical</string>
-
     <string name="remote_mode">Remote Album</string>
     <string name="local_mode">Local Album</string>
 </resources>
