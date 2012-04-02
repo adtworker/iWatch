@@ -28,7 +28,7 @@ public class BaiduImage {
 	 * width-指定宽<br/>
 	 * height-指定高<br/>
 	 */
-	static String REQUEST_URL_TEMPLETE = "http://image.baidu.com/i?ct=201326592&lm=-1&tn=baiduimagenojs&pv=&word={0}&z=10&pn={1}&rn={2}&cl=2&width=480&height=800";
+	static String REQUEST_URL_TEMPLETE = "http://image.baidu.com/i?ct=201326592&lm=-1&tn=baiduimagenojs&pv=&word={0}&z=10&pn={1}&rn={2}&cl=2&width={3}&height={4}";
 	static String BAIDU_IMG_URL_PREFIX = "http://image.baidu.com";
 
 	/**
@@ -88,13 +88,13 @@ public class BaiduImage {
 	 * @throws Exception
 	 */
 	public static List<String> getImgUrl(String keyword, int pageNumber,
-			int size) throws Exception {
+			int size, int width, int height) throws Exception {
 		List<String> imgUrlList = new ArrayList<String>();
-		Random random = new Random();
-		Integer randomPageNumber = random.nextInt(100);
+		Random random = new Random(System.currentTimeMillis());
+		Integer randomPageNumber = random.nextInt(1000);
 		String requestUrl = MessageFormat.format(REQUEST_URL_TEMPLETE, keyword,
-				randomPageNumber, size);
-		Log.e("ImageManager", requestUrl);
+				randomPageNumber, size, width, height);
+		Log.d("ImageManager", requestUrl);
 		Object[] nodes = getNode(requestUrl, "//td/a");
 		if (nodes != null && nodes.length > 0) {
 			for (int i = 0; i < nodes.length; i++) {
@@ -105,7 +105,7 @@ public class BaiduImage {
 				if (detailNodes != null && detailNodes.length > 0) {
 					TagNode detailInfo = (TagNode) detailNodes[0];
 					String imgUrl = detailInfo.getAttributeByName("src");
-					Log.e("ImageManager", imgUrl);
+					Log.d("ImageManager", imgUrl);
 					imgUrlList.add(imgUrl);
 				}
 			}
@@ -115,7 +115,7 @@ public class BaiduImage {
 
 	public static void main(String[] args) throws Exception {
 		System.out.println(Calendar.getInstance().getTime());
-		List<String> imgList = getImgUrl("HM", 1, 7);
+		List<String> imgList = getImgUrl("HM", 1, 7, 480, 800);
 		for (int i = 0; i < imgList.size(); i++) {
 			System.out.println(imgList.get(i));
 		}

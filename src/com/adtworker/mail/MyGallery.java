@@ -74,8 +74,8 @@ public class MyGallery extends Activity {
 
 		try {
 			String keyword = Uri.encode("安卓手机 壁纸");
-			PhotoURLS = (ArrayList<String>) BaiduImage
-					.getImgUrl(keyword, 1, 16);
+			PhotoURLS = (ArrayList<String>) BaiduImage.getImgUrl(keyword, 1,
+					16, 480, 800);
 
 		} catch (Exception e) {
 			e.printStackTrace();
