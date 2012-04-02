@@ -738,6 +738,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				WallpaperManager.getInstance(this).setBitmap(bm_wp);
 			}
+			WallpaperManager.getInstance(this).setWallpaperOffsetSteps(0, 0);
 
 		} catch (IOException e) {
 			Log.e(TAG, "Failed to set wallpaper!");
