@@ -4,54 +4,7 @@
     android:layout_height="fill_parent"
       android:background="@color/bg_color"
     >
-<RelativeLayout
-    android:id="@+id/banner_top_layout"
-    android:layout_width="fill_parent"
-    android:layout_height="45dip"
-     android:padding="5dip"
-    >
-     
-    <ImageView 
-        android:id="@+id/shop_photo"
-        android:layout_width="33dip"
-    	 android:layout_height="33dip"
-    	 android:layout_alignParentLeft="true"
-    	 android:layout_centerVertical="true"
-    	 android:src="@drawable/shop_type_taobao_photo"
-    	 android:scaleType="centerCrop"
-    	 android:layout_marginLeft="5dip"
-    	 android:contentDescription="image"
-    	 android:onClick="clickToShop"
-        />
-    <LinearLayout
-        android:id="@+id/shop_info"
-        android:layout_width="wrap_content"
-	 	 android:layout_height="wrap_content"
-	 	 android:orientation="vertical"
-	 	 android:layout_toRightOf="@id/shop_photo"
-	 	 android:layout_centerVertical="true"
-	 	 android:layout_marginLeft="4dip"
-	 	 android:onClick="clickToShop"
-	 	 android:clickable="true"
-        >
-    <TextView 
-        android:id="@+id/search_name"
-        android:layout_width="wrap_content"
-    	android:layout_height="wrap_content"
-    	android:textSize="16sp"
-        android:singleLine="true"
-        android:text=""
-        android:maxEms="8"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:scrollHorizontally="true"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:ellipsize="marquee"
-        />
-    
-    </LinearLayout>
-    
-</RelativeLayout>
+
 
 
 	<ProgressBar 
@@ -68,7 +21,6 @@
         android:id="@+id/photo_wall_scrollview"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" 
-        android:layout_below="@id/banner_top_layout"
         android:background="#cccccc" 	
         android:visibility="gone"
         android:scrollbars="vertical"

@@ -252,7 +252,7 @@ public class WallPhotoActivity extends Activity {
 	}
 
 	/**
-	 * 创建单个图片对象，此处的url暂时写死固定
+	 * 创建单个图片对象
 	 * 
 	 * @return
 	 */

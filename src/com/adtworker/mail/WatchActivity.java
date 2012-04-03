@@ -514,6 +514,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
 		menu.findItem(R.id.menu_toggle_clock).setTitle(
 				getClockVisibility()
 						? R.string.hide_clock
@@ -533,9 +534,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			menu.findItem(R.id.menu_set_wallpaper).setEnabled(true);
 		}
 
-		return super.onPrepareOptionsMenu(menu);
+		return true;
 	}
-
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
