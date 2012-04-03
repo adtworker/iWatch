@@ -1,12 +1,14 @@
 package com.adtworker.mail;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.ImageView;
@@ -16,24 +18,42 @@ import com.adtworker.mail.service.CallbackHandler;
 import com.adtworker.mail.service.Service;
 import com.adtworker.mail.service.entity.ImgInfo;
 import com.adtworker.mail.service.entity.ImgLoadSupporter;
+import com.adtworker.mail.view.ScrollViewListener;
 import com.adtworker.mail.view.SuperScrollView;
 
 public class WallPhotoActivity extends Activity {
 	private LinearLayout photoLayout1;
 	private LinearLayout photoLayout2;
 	private LinearLayout photoLayout3;
+	private CallbackHandler wallImageGetter;
 	public Service service;
+	protected long oldTimeInMillis = 0;
 	private SuperScrollView superScrollView;
 	private final ArrayList<ImageView> imageViewList = new ArrayList<ImageView>();
+	public static int index = 0;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		service = Service.getInstance(this);
 		setContentView(R.layout.wall_photo);
-		superScrollView = (SuperScrollView) findViewById(R.id.photo_wall_scrollview);
-		superScrollView.setVisibility(View.VISIBLE);
 		addGroupProducts();
+		setScrollView();
+		initGetter();
 	}
+	private void initGetter() {
+		wallImageGetter = new CallbackHandler(
+				CallbackHandler.CallbackType.wallProduct) {
+
+			@Override
+			public void dispatchMessage(Message msg) {
+				super.dispatchMessage(msg);
+				addGroupProducts();
+				WallPhotoActivity.index = 0;
+			}
+		};
+	}
+
 	private void initPhotoLayouts() {
 		if (photoLayout1 == null) {
 			photoLayout1 = (LinearLayout) findViewById(R.id.photo_layout1);
@@ -46,6 +66,7 @@ public class WallPhotoActivity extends Activity {
 	}
 	private int photoWallWidth = 0;
 	private int wallPage = 0;
+	private final int offset = 3000;
 
 	private void addImageViewToList(ImageView imageView) {
 		if (!imageViewList.contains(imageView)) {
@@ -62,11 +83,11 @@ public class WallPhotoActivity extends Activity {
 			if (photoWallWidth == 0) {
 				photoWallWidth = getResources().getDisplayMetrics().widthPixels / 3;
 			}
-			List<ImgInfo> imgInfoList = BaiduImage.getImgInfoList(
+			List<ImgInfo> imgInfoUrl = BaiduImage.getImgInfoList(
 					"android MM bizhi", 2, 20, 480, 800);
-			for (int i = 0; i < imgInfoList.size(); i++) {
+			for (int i = 0; i < imgInfoUrl.size(); i++) {
 
-				ImageView imageView = generateWallImage(imgInfoList.get(i));
+				ImageView imageView = generateWallImage(imgInfoUrl.get(i));
 				addImageViewToList(imageView);
 				updateImageOfProduct(imageView, false);
 				addImageViewToLayout(imageView, photoWallWidth);
@@ -82,7 +103,7 @@ public class WallPhotoActivity extends Activity {
 	 * @param imageView
 	 * @param photoWallWidth2
 	 */
-	private void addImageViewToLayout(ImageView imageView, int photoWallWidth2) {
+	private void addImageViewToLayout(ImageView imageView, int photoWallWidth) {
 		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
 				photoWallWidth, (photoWallWidth * 320) / 240);
 		params.setMargins(0, 0, 0, (int) (4 * getResources()
@@ -107,6 +128,128 @@ public class WallPhotoActivity extends Activity {
 			}
 		}
 	}
+	private boolean isChecking = false;
+	private int checkCount = 0;
+
+	private void setScrollView() {
+		if (superScrollView == null) {
+			superScrollView = (SuperScrollView) findViewById(R.id.photo_wall_scrollview);
+		}
+		superScrollView.setVisibility(View.VISIBLE);
+		superScrollView.setScrollViewListener(new ScrollViewListener() {
+
+			public void onScrollChanged(SuperScrollView scrollView, int x,
+					int y, int oldx, int oldy) {
+				if (!isChecking) {
+					if ((checkCount++) > 10) {
+						if (oldy >= y) {
+							checkImageViewList(y, y + scrollView.getHeight(),
+									offset, false);
+						} else {
+							checkImageViewList(y, y + scrollView.getHeight(),
+									offset, true);
+						}
+						checkScrollStoped(scrollView);
+					}
+				}
+				superScrollView.getBottom();
+				View view = scrollView.getChildAt(0);
+				if (view.getMeasuredHeight() <= (scrollView.getScrollY()
+						+ scrollView.getHeight() + 0)) {
+					if (0 == WallPhotoActivity.index) {
+						WallPhotoActivity.index++;
+						loadNewPhotosHandler.sendEmptyMessage(0);
+					}
+				}
+			}
+
+			private void checkScrollStoped(SuperScrollView scrollView) {
+				long currentTimeInMillis = Calendar.getInstance()
+						.getTimeInMillis();
+				if ((currentTimeInMillis - oldTimeInMillis) > 100) {
+					int top = scrollView.computeVerticalScrollOffset();
+					sendScrollStopedImageViewList(top,
+							top + scrollView.getHeight(), 0);
+				}
+				oldTimeInMillis = currentTimeInMillis;
+			}
+		});
+
+	}
+	private String sendScrollStopedImageViewList(int top, int bottom, int offset) {
+		String item_ids = "";
+		ImageView tempImageView = null;
+		for (ImageView imageView : imageViewList) {
+			if ((imageView.getTop() > (bottom + offset))
+					|| (imageView.getBottom() < (top - offset))) {
+
+			} else {
+				if (item_ids.equals("")) {
+					item_ids = item_ids
+							+ String.valueOf(imageView.getTag(R.id.tag_id));
+				} else {
+					item_ids = item_ids + "-"
+							+ String.valueOf(imageView.getTag(R.id.tag_id));
+				}
+				tempImageView = imageView;
+			}
+		}
+		// if (tempImageView != null) {
+		// DataHandler
+		// .getInstance(this)
+		// .handleCustomData(
+		// DataAcquisitionParamsFactory.generateParams("page",
+		// String.valueOf(currentPage), "item_ids",
+		// item_ids, "index", String
+		// .valueOf(tempImageView
+		// .getTag(R.id.tag_page))),
+		// DataAcquisitionParamsFactory.EVENT_WALL_SCROLL_STOP);
+		// }
+
+		return item_ids;
+	}
+
+	public Handler loadNewPhotosHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			wallImageGetter.dispatchMessage(msg);
+		};
+	};
+	private void checkImageViewList(int top, int bottom, int offset,
+			boolean isDownFling) {
+		isChecking = true;
+		synchronized (imageViewList) {
+			ArrayList<ImgLoadSupporter> imgLoadSupporterList = new ArrayList<ImgLoadSupporter>();
+			for (ImageView imageView : imageViewList) {
+				if ((imageView.getTop() > (bottom + offset))
+						|| (imageView.getBottom() < (top - offset))) {
+					imageView.setImageBitmap(null);
+					imageView.setContentDescription(TAG_IMAGE_STATE_UNLOAD);
+				} else {
+					String contentString = imageView.getContentDescription()
+							.toString();
+					if (!contentString.equals(TAG_IMAGE_STATE_OK)
+							&& !contentString.equals(TAG_IMAGE_STATE_LOADING)) {
+						if (isDownFling) {
+							imgLoadSupporterList
+									.add(getImgLoadSupporter(imageView));
+						} else {
+							imgLoadSupporterList.add(0,
+									getImgLoadSupporter(imageView));
+						}
+						// updateImageOfProduct(imageView, true);
+					}
+				}
+			}
+			int size = imgLoadSupporterList.size();
+			if (size > 0) {
+				// Log.e("new local imgTask", "" + size);
+				service.loadImgFromLocal(imgLoadSupporterList);
+			}
+		}
+		checkCount = 0;
+		isChecking = false;
+	}
 
 	/**
 	 * 创建单个图片对象，此处的url暂时写死固定
@@ -118,6 +261,8 @@ public class WallPhotoActivity extends Activity {
 		imageView.setImageDrawable(null);
 		imageView.setBackgroundColor(Color.WHITE);
 		imageView.setTag(imgInfo.getUrl());
+		imageView.setTag(R.id.tag_page, wallPage);
+		imageView.setTag(R.id.tag_id, imgInfo.getTagId());
 		imageView.setClickable(true);
 		imageView.setContentDescription(TAG_IMAGE_STATE_UNLOAD);
 		return imageView;
