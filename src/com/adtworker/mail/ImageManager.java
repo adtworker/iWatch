@@ -26,7 +26,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.SystemClock;
@@ -247,10 +246,10 @@ public class ImageManager {
 		protected Void doInBackground(Void... params) {
 			try {
 				for (int i = 0; i < mSearchPageNum; i++) {
-					String keyword = Uri.encode(mQueryKeyword, "GBK");
+
 					// List<String> temp = GoogleImage.getImgUrl(keyword, i
 					// * mSearchPageSize, mSearchPageSize);
-					List<String> temp = BaiduImage.getImgUrl(keyword, i
+					List<String> temp = BaiduImage.getImgUrl(mQueryKeyword, i
 							* mSearchPageSize, mSearchPageSize, 480, 800);
 					for (int j = 0; j < temp.size(); j++) {
 						mImageList.add(temp.get(j));

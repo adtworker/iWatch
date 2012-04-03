@@ -1,6 +1,7 @@
 package com.adtworker.mail;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
@@ -13,6 +14,7 @@ import android.widget.LinearLayout;
 
 import com.adtworker.mail.service.CallbackHandler;
 import com.adtworker.mail.service.Service;
+import com.adtworker.mail.service.entity.ImgInfo;
 import com.adtworker.mail.service.entity.ImgLoadSupporter;
 import com.adtworker.mail.view.SuperScrollView;
 
@@ -60,9 +62,11 @@ public class WallPhotoActivity extends Activity {
 			if (photoWallWidth == 0) {
 				photoWallWidth = getResources().getDisplayMetrics().widthPixels / 3;
 			}
-			for (int i = 0; i < 10; i++) {
+			List<ImgInfo> imgInfoList = BaiduImage.getImgInfoList(
+					"android MM bizhi", 2, 20, 480, 800);
+			for (int i = 0; i < imgInfoList.size(); i++) {
 
-				ImageView imageView = generateWallImage();
+				ImageView imageView = generateWallImage(imgInfoList.get(i));
 				addImageViewToList(imageView);
 				updateImageOfProduct(imageView, false);
 				addImageViewToLayout(imageView, photoWallWidth);
@@ -72,7 +76,6 @@ public class WallPhotoActivity extends Activity {
 			e.printStackTrace();
 		}
 	}
-
 	/**
 	 * 将图片画到屏幕上
 	 * 
@@ -110,12 +113,11 @@ public class WallPhotoActivity extends Activity {
 	 * 
 	 * @return
 	 */
-	private ImageView generateWallImage() {
+	private ImageView generateWallImage(ImgInfo imgInfo) {
 		ImageView imageView = new ImageView(this);
 		imageView.setImageDrawable(null);
 		imageView.setBackgroundColor(Color.WHITE);
-		imageView
-				.setTag("http://img6.cache.netease.com/cnews/2012/3/30/201203302306386f8c8.jpg");
+		imageView.setTag(imgInfo.getUrl());
 		imageView.setClickable(true);
 		imageView.setContentDescription(TAG_IMAGE_STATE_UNLOAD);
 		return imageView;

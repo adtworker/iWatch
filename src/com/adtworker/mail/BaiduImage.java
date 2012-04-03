@@ -17,7 +17,10 @@ import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 
+import android.net.Uri;
 import android.util.Log;
+
+import com.adtworker.mail.service.entity.ImgInfo;
 
 public class BaiduImage {
 	public final static Integer HTTP_RESPONSE_STATUS_SUCCESS_CODE = 200;
@@ -75,6 +78,18 @@ public class BaiduImage {
 		return ns;
 	}
 
+	public static List<ImgInfo> getImgInfoList(String keyword, int pageNumber,
+			int size, int width, int height) throws Exception {
+		List<String> imgUrlList = getImgUrl(keyword, pageNumber, size, width,
+				height);
+		List<ImgInfo> imgList = new ArrayList<ImgInfo>();
+		for (int i = 0; i < imgUrlList.size(); i++) {
+			ImgInfo info = new ImgInfo(imgUrlList.get(i));
+			imgList.add(info);
+		}
+		return imgList;
+	}
+
 	/**
 	 * 获取img url
 	 * 
@@ -89,11 +104,12 @@ public class BaiduImage {
 	 */
 	public static List<String> getImgUrl(String keyword, int pageNumber,
 			int size, int width, int height) throws Exception {
+		String gbkKeyword = Uri.encode(keyword, "GBK");
 		List<String> imgUrlList = new ArrayList<String>();
 		Random random = new Random(System.currentTimeMillis());
-		Integer randomPageNumber = random.nextInt(1000);
-		String requestUrl = MessageFormat.format(REQUEST_URL_TEMPLETE, keyword,
-				randomPageNumber, size, width, height);
+		Integer randomPageNumber = random.nextInt(300);
+		String requestUrl = MessageFormat.format(REQUEST_URL_TEMPLETE,
+				gbkKeyword, randomPageNumber, size, width, height);
 		Log.d("ImageManager", requestUrl);
 		Object[] nodes = getNode(requestUrl, "//td/a");
 		if (nodes != null && nodes.length > 0) {

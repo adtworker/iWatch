@@ -51,4 +51,7 @@
 
     <string name="remote_mode">Remote Album</string>
     <string name="local_mode">Local Album</string>
+    
+    <item type="id" name="tag_page"></item>
+	<item type="id" name="tag_id"></item>
 </resources>
