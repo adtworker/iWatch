@@ -3,9 +3,10 @@ package com.adtworker.mail;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -33,6 +34,7 @@ public class BaiduImage {
 	 */
 	static String REQUEST_URL_TEMPLETE = "http://image.baidu.com/i?ct=201326592&lm=-1&tn=baiduimagenojs&pv=&word={0}&z=10&pn={1}&rn={2}&cl=2&width={3}&height={4}";
 	static String BAIDU_IMG_URL_PREFIX = "http://image.baidu.com";
+	static String SCRIPT_IMG = "http://image.baidu.com/i?tn=baiduimage&ct=201326592&cl=2&lm=-1&st=-1&fm=index&fr=&sf=1&fmq=1333707568520_R&pv=&ic=0&nc=1&z=&se=1&showtab=0&fb=0&width=&height=&face=0&istype=2&word=MM&s=1#z=&width=480&height=800&pn=0";
 
 	/**
 	 * 抓取给定url转化为string
@@ -128,13 +130,47 @@ public class BaiduImage {
 		}
 		return imgUrlList;
 	}
-
-	public static void main(String[] args) throws Exception {
-		System.out.println(Calendar.getInstance().getTime());
-		List<String> imgList = getImgUrl("HM", 1, 7, 480, 800);
-		for (int i = 0; i < imgList.size(); i++) {
-			System.out.println(imgList.get(i));
+	public static void getImgUrlByScript(String keyword, int pageNumber,
+			int size, int width, int height) throws Exception {
+		String gbkKeyword = Uri.encode(keyword, "GBK");
+		List<String> imgUrlList = new ArrayList<String>();
+		Random random = new Random(System.currentTimeMillis());
+		Integer randomPageNumber = random.nextInt(300);
+		String requestUrl = MessageFormat.format(REQUEST_URL_TEMPLETE,
+				gbkKeyword, randomPageNumber, size, width, height);
+		Object[] nodes = getNode(requestUrl, "//body/script");
+		if (nodes != null && nodes.length > 0) {
+			for (int i = 0; i < nodes.length; i++) {
+				TagNode node = (TagNode) nodes[i];
+				System.out.println(node.getText());
+			}
 		}
-		System.out.println(Calendar.getInstance().getTime());
+	}
+	public static String getImgUrlFromScript() throws Exception {
+		Object[] nodes = getNode(SCRIPT_IMG, "//script");
+		for (int i = 0; i < nodes.length; i++) {
+			TagNode node = (TagNode) nodes[i];
+			String json = node.getText().toString();
+			if (json.startsWith("var imgdata =")) {
+				return json;
+			}
+		}
+		return null;
+	}
+
+	private static Pattern pattern = Pattern
+			.compile(".*\"objURL\":\"(.*)\",\"fromURL\".*");
+	public static void main(String[] args) throws Exception {
+		String json = getImgUrlFromScript();
+		// System.out.println(json);
+		String imgs[] = json.split("currentIndex");
+		for (int i = 0; i < imgs.length; i++) {
+			String info = imgs[i];
+			Matcher m = pattern.matcher(info);
+			if (m.matches()) {
+				System.out.println(m.group(1).trim());
+			}
+		}
+
 	}
 }
