@@ -55,8 +55,7 @@ public class ImageManager {
 	private final int[] mLastIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
 	private int mBitmapCacheCurrent = 0;
-	private final int mSearchPageNum = 2;
-	private final int mSearchPageSize = 8;
+	private static Integer pageNumber = 1;
 	private String mQueryKeyword;
 	private final Bitmap[] mBitmapCache = new Bitmap[2];
 	private Bitmap mCurrentBitmap = null;
@@ -239,27 +238,24 @@ public class ImageManager {
 			super.onPreExecute();
 			activity.mProgressBar.setProgress(0);
 			activity.mProgressBar.setVisibility(View.VISIBLE);
-			activity.mProgressBar.setMax(mSearchPageNum * mSearchPageSize);
+			activity.mProgressBar.setMax(30);
 			activity.EnableNextPrevButtons(false);
 		}
 		@Override
 		protected Void doInBackground(Void... params) {
 			try {
-				for (int i = 0; i < mSearchPageNum; i++) {
 
-					// List<String> temp = GoogleImage.getImgUrl(keyword, i
-					// * mSearchPageSize, mSearchPageSize);
-					List<String> temp = BaiduImage.getImgUrl(mQueryKeyword, i
-							* mSearchPageSize, mSearchPageSize, 480, 800);
-					for (int j = 0; j < temp.size(); j++) {
-						mImageList.add(temp.get(j));
-						activity.mProgressBar.setProgress(i * temp.size() + j
-								+ 1);
-					}
+				// List<String> temp = GoogleImage.getImgUrl(keyword, i
+				// * mSearchPageSize, mSearchPageSize);
+				List<String> temp = BaiduImage.getImgUrlFromScript(
+						mQueryKeyword, pageNumber, 240, 400);
+				for (int j = 0; j < temp.size(); j++) {
+					mImageList.add(temp.get(j));
+					activity.mProgressBar.setProgress(j + 1);
 				}
-				activity.mProgressBar.setProgress(mSearchPageNum
-						* mSearchPageSize);
+				activity.mProgressBar.setProgress(30);
 				mInitListFailed = false;
+				pageNumber = pageNumber + 1;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

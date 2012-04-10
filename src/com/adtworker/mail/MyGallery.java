@@ -73,9 +73,9 @@ public class MyGallery extends Activity {
 				.add("http://pic5.nipic.com/20100104/2590249_091123039134_2.jpg");
 
 		try {
-			String keyword = Uri.encode("安卓手机 壁纸");
-			PhotoURLS = (ArrayList<String>) BaiduImage.getImgUrl(keyword, 1,
-					16, 480, 800);
+			String keyword = Uri.encode("MM");
+			PhotoURLS = (ArrayList<String>) BaiduImage.getImgUrlFromScript(
+					keyword, 1, 240, 400);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -202,7 +202,7 @@ public class MyGallery extends Activity {
 	}
 	public class ImageAdapter extends BaseAdapter {
 		int mGalleryItemBackground;
-		private Context mContext;
+		private final Context mContext;
 
 		ArrayList<Drawable> drawablesFromUrl = new ArrayList<Drawable>();
 

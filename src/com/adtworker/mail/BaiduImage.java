@@ -34,7 +34,6 @@ public class BaiduImage {
 	 */
 	static String REQUEST_URL_TEMPLETE = "http://image.baidu.com/i?ct=201326592&lm=-1&tn=baiduimagenojs&pv=&word={0}&z=10&pn={1}&rn={2}&cl=2&width={3}&height={4}";
 	static String BAIDU_IMG_URL_PREFIX = "http://image.baidu.com";
-	static String SCRIPT_IMG = "http://image.baidu.com/i?tn=baiduimage&ct=201326592&cl=2&lm=-1&st=-1&fm=index&fr=&sf=1&fmq=1333707568520_R&pv=&ic=0&nc=1&z=&se=1&showtab=0&fb=0&width=&height=&face=0&istype=2&word=MM&s=1#z=&width=480&height=800&pn=0";
 
 	/**
 	 * 抓取给定url转化为string
@@ -146,31 +145,35 @@ public class BaiduImage {
 			}
 		}
 	}
-	public static String getImgUrlFromScript() throws Exception {
-		Object[] nodes = getNode(SCRIPT_IMG, "//script");
+
+	static String SCRIPT_IMG = "http://image.baidu.com/i?tn=baiduimage&word={0}&pn={1}&s=1#z=&width={2}&height={3}&lm=-1&st=-1&fm=index&fr=&sf=1&fmq=1333707568520_R&pv=&ic=0&nc=1&se=1&showtab=0&fb=0&face=0&istype=2";
+
+	public static List<String> getImgUrlFromScript(String keyword,
+			Integer pageNumber, Integer width, Integer height) throws Exception {
+		String requestUrl = MessageFormat.format(SCRIPT_IMG, keyword,
+				pageNumber * 30, width, height);
+		Object[] nodes = getNode(requestUrl, "//script");
+		String json = "";
 		for (int i = 0; i < nodes.length; i++) {
 			TagNode node = (TagNode) nodes[i];
-			String json = node.getText().toString();
+			json = node.getText().toString();
 			if (json.startsWith("var imgdata =")) {
-				return json;
+				break;
 			}
 		}
-		return null;
-	}
-
-	private static Pattern pattern = Pattern
-			.compile(".*\"objURL\":\"(.*)\",\"fromURL\".*");
-	public static void main(String[] args) throws Exception {
-		String json = getImgUrlFromScript();
-		// System.out.println(json);
+		List<String> imgUrlList = new ArrayList<String>();
 		String imgs[] = json.split("currentIndex");
 		for (int i = 0; i < imgs.length; i++) {
 			String info = imgs[i];
 			Matcher m = pattern.matcher(info);
 			if (m.matches()) {
-				System.out.println(m.group(1).trim());
+				imgUrlList.add(m.group(1).trim());
 			}
 		}
-
+		return imgUrlList;
 	}
+
+	private static Pattern pattern = Pattern
+			.compile(".*\"objURL\":\"(.*)\",\"fromURL\".*");
+
 }

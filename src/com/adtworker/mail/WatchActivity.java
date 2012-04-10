@@ -368,7 +368,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				.getSystemService(Context.TELEPHONY_SERVICE);
 		String imei = telephonyManager.getDeviceId();
 		Log.v(TAG, "Test IMEI is " + imei);
-
 		WifiManager wifi = (WifiManager) this
 				.getSystemService(Context.WIFI_SERVICE);
 		WifiInfo info = wifi.getConnectionInfo();

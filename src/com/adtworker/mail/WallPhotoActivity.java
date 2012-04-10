@@ -16,7 +16,6 @@ import android.widget.LinearLayout;
 
 import com.adtworker.mail.service.CallbackHandler;
 import com.adtworker.mail.service.Service;
-import com.adtworker.mail.service.entity.ImgInfo;
 import com.adtworker.mail.service.entity.ImgLoadSupporter;
 import com.adtworker.mail.view.ScrollViewListener;
 import com.adtworker.mail.view.SuperScrollView;
@@ -83,8 +82,8 @@ public class WallPhotoActivity extends Activity {
 			if (photoWallWidth == 0) {
 				photoWallWidth = getResources().getDisplayMetrics().widthPixels / 3;
 			}
-			List<ImgInfo> imgInfoUrl = BaiduImage.getImgInfoList(
-					"android MM bizhi", 2, 20, 480, 800);
+			List<String> imgInfoUrl = BaiduImage.getImgUrlFromScript("MM", 1,
+					240, 400);
 			for (int i = 0; i < imgInfoUrl.size(); i++) {
 
 				ImageView imageView = generateWallImage(imgInfoUrl.get(i));
@@ -256,13 +255,13 @@ public class WallPhotoActivity extends Activity {
 	 * 
 	 * @return
 	 */
-	private ImageView generateWallImage(ImgInfo imgInfo) {
+	private ImageView generateWallImage(String url) {
 		ImageView imageView = new ImageView(this);
 		imageView.setImageDrawable(null);
 		imageView.setBackgroundColor(Color.WHITE);
-		imageView.setTag(imgInfo.getUrl());
+		imageView.setTag(url);
 		imageView.setTag(R.id.tag_page, wallPage);
-		imageView.setTag(R.id.tag_id, imgInfo.getTagId());
+		// imageView.setTag(R.id.tag_id, imgInfo.getTagId());
 		imageView.setClickable(true);
 		imageView.setContentDescription(TAG_IMAGE_STATE_UNLOAD);
 		return imageView;
