@@ -3,7 +3,6 @@ package com.adtworker.mail.service.entity;
 public class ImgInfo {
 
 	private String url;
-	private String previewUrl;
 
 	public String getUrl() {
 		return url;
@@ -15,23 +14,15 @@ public class ImgInfo {
 
 	public ImgInfo() {
 		super();
+		// TODO Auto-generated constructor stub
 	}
-	public ImgInfo(String sourceUrl, String previewUrl) {
+	public ImgInfo(String givenUrl) {
 		super();
-		this.url = sourceUrl;
-		this.previewUrl = previewUrl;
+		this.url = givenUrl;
 	}
 	private static Integer tagId = 0;
 	public String getTagId() {
 		tagId = tagId + 1;
 		return String.valueOf(tagId);
-	}
-
-	public String getPreviewUrl() {
-		return previewUrl;
-	}
-
-	public void setPreviewUrl(String previewUrl) {
-		this.previewUrl = previewUrl;
 	}
 }

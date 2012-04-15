@@ -34,6 +34,7 @@ public class Settings extends PreferenceActivity
 	private CheckBoxPreference mBossKey;
 	private CheckBoxPreference mPicFullFill;
 	private CheckBoxPreference mWpFullFill;
+	private CheckBoxPreference mAutoRotate;
 	private ListPreference mSlideAnim;
 
 	@Override
@@ -41,7 +42,9 @@ public class Settings extends PreferenceActivity
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.prefs);
 		setContentView(R.layout.pref_adview);
-		setupAdLayout();
+		if (android.os.Build.VERSION.SDK_INT < 12) {
+			setupAdLayout();
+		}
 
 		mSharedPref = getSharedPreferences(WatchActivity.PREFERENCES,
 				Context.MODE_PRIVATE);
@@ -53,6 +56,7 @@ public class Settings extends PreferenceActivity
 		mBossKey = (CheckBoxPreference) findPreference(WatchActivity.PREF_BOSS_KEY);
 		mPicFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_PIC_FULL_FILL);
 		mWpFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_WP_FULL_FILL);
+		mAutoRotate = ((CheckBoxPreference) findPreference(WatchActivity.PREF_AUTO_ROTATE));
 		mSlideAnim = (ListPreference) findPreference(WatchActivity.PREF_SLIDE_ANIM);
 
 		findPreference("version").setSummary(
@@ -108,6 +112,12 @@ public class Settings extends PreferenceActivity
 			return true;
 		}
 
+		if (WatchActivity.PREF_AUTO_ROTATE.equals(preference.getKey())) {
+			ed.putBoolean(WatchActivity.PREF_AUTO_ROTATE,
+					mAutoRotate.isChecked()).commit();
+			return true;
+		}
+
 		return super.onPreferenceTreeClick(prefScreen, preference);
 	}
 	protected void refresh() {
@@ -129,6 +139,9 @@ public class Settings extends PreferenceActivity
 
 		mWpFullFill.setChecked(mSharedPref.getBoolean(
 				WatchActivity.PREF_WP_FULL_FILL, false));
+
+		mAutoRotate.setChecked(mSharedPref.getBoolean(
+				WatchActivity.PREF_AUTO_ROTATE, false));
 
 		mSlideAnim.setOnPreferenceChangeListener(this);
 	}

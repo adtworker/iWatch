@@ -1,5 +1,7 @@
 package com.adtworker.mail;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +12,7 @@ import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.view.KeyEvent;
 import android.view.View;
 
 public class SplashScreen extends Activity {
@@ -31,7 +34,28 @@ public class SplashScreen extends Activity {
 				SplashScreen.this.finish();
 			}
 		}, nWelcomeScreenDisplay);
+
+		// remove cached folds of youmi, domob
+		String strSdcardPath = "/mnt/sdcard";
+		String[] strFoldNames = {"youmicache", "DomobAppDownload"};
+		for (String strFoldName : strFoldNames) {
+			String path = strSdcardPath + File.separator + strFoldName;
+			Utils.delFolder(path);
+		}
+
+		// Utils.delFolder("/mnt/sdcard/.adtwkr/AppCache");
 	}
+
+	@Override
+	public boolean onKeyUp(int keycode, KeyEvent event) {
+		switch (keycode) {
+
+			case KeyEvent.KEYCODE_BACK :
+				return true;
+		}
+		return super.onKeyUp(keycode, event);
+	}
+
 	class SplashView extends View {
 		SplashView(Context context) {
 			super(context);
@@ -50,5 +74,4 @@ public class SplashScreen extends Activity {
 			canvas.drawBitmap(bitmap, x, y, paint);
 		}
 	}
-
 }

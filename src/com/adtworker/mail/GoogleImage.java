@@ -25,11 +25,10 @@ import org.json.JSONObject;
 import android.util.Log;
 
 import com.adtworker.mail.constants.Constants;
-import com.adtworker.mail.service.entity.ImgInfo;
 
 public class GoogleImage {
 	static String REQUEST_TEMPLATE = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q={0}&start={1}&rsz={2}&imgsz=medium&imgtype=photo";
-	private static String GOOGLE_AJAX_URL_TEMPLATE = "http://www.google.com.hk/search?q=MM+%E5%A3%81%E7%BA%B8&hl=zh-CN&newwindow=1&safe=strict&tbs=isz:ex,iszw:480,iszh:800&biw=1399&bih=347&tbm=isch&ijn=2&ei=PyCKT8DJAavimAWUiJjgCQ&sprg=3&page=4&start=96";
+	private static String GOOGLE_AJAX_URL_TEMPLATE = "http://www.google.com.hk/search?q=MM&hl=zh-CN&newwindow=1&safe=strict&tbs=isz:ex,iszw:480,iszh:800&biw=1399&bih=347&tbm=isch&ijn=2&ei=PyCKT8DJAavimAWUiJjgCQ&sprg=3&page=4&start=96";
 
 	static JSONObject json;
 
@@ -132,15 +131,14 @@ public class GoogleImage {
 		}
 		return imageMap;
 	}
-
-	public static List<ImgInfo> getImgListByAjax(String keyword, Integer width,
-			Integer height, Integer page, Integer start) {
+	public static List<AdtImage> getImgListByAjax(String keyword,
+			Integer width, Integer height, Integer page, Integer start) {
 		Map<String, String> imgMaps = getImgByAjaxUrl(keyword, width, height,
 				page, start);
-		List<ImgInfo> imgList = new ArrayList<ImgInfo>();
+		List<AdtImage> imgList = new ArrayList<AdtImage>();
 		if (imgMaps != null && imgMaps.size() > 0) {
 			for (String key : imgMaps.keySet()) {
-				ImgInfo imgInfo = new ImgInfo(key, imgMaps.get(key));
+				AdtImage imgInfo = new AdtImage(key, imgMaps.get(key));
 				imgList.add(imgInfo);
 			}
 		}

@@ -37,73 +37,29 @@
         <item name="android:singleLine">true</item>
     </style>
 
-    <style name="AlarmEvent">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">fill_parent</item>
-        <item name="android:verticalSpacing">3dp</item>
-    </style>
-
-    <style name="BigTimeTxt">
-        <item name="android:textSize">105dip</item>
-        <item name="android:textColor">@color/white</item>
+    <style name="OnScreenHintTextAppearance">
+        <item name="android:textColor">@android:color/primary_text_dark</item>
+        <item name="android:textColorHighlight">#FFFF9200</item>
+        <item name="android:textColorHint">#808080</item>
+        <item name="android:textColorLink">#5C5CFF</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:gravity">center|bottom</item>
-        <item name="android:singleLine">true</item>
     </style>
-    <style name="MediumTimeTxt">
-        <item name="android:textSize">80sp</item>
-        <item name="android:textColor">@color/white</item>
+    <style name="OnScreenHintTextAppearance.Small">
+        <item name="android:textSize">14sp</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:gravity">center|bottom</item>
-        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@android:color/secondary_text_dark</item>
     </style>
-    <style name="BigTitleTxt">
-        <item name="android:textSize">48dip</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:gravity">center|bottom</item>
-        <item name="android:singleLine">true</item>
+    <style name="Animation_OnScreenHint">
+        <item name="android:windowEnterAnimation">@anim/on_screen_hint_enter</item>
+        <item name="android:windowExitAnimation">@anim/on_screen_hint_exit</item>
     </style>
-
-    <style name="MediumTitleTxt">
-        <item name="android:textSize">36sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:gravity">center|bottom</item>
-        <item name="android:singleLine">true</item>
-    </style>
-
-    <style name="AmPmTxt">
-        <item name="android:textSize">40dip</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textStyle">normal</item>
-        <item name="android:gravity">left|bottom</item>
-        <item name="android:singleLine">true</item>
-    </style>
-
-    <style name="MediumAmPmTxt">
-        <item name="android:textSize">30sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textStyle">normal</item>
-        <item name="android:gravity">left|bottom</item>
-        <item name="android:singleLine">true</item>
-    </style>
-
-
-    <style name="AlertPromptTxt">
-        <item name="android:textSize">18sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textStyle">normal</item>
-        <item name="android:gravity">left|bottom</item>
-        <item name="android:singleLine">true</item>
-    </style>
-    <style name="TimePicker">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_margin">3dip</item>
-        <item name="android:focusable">true</item>
-        <item name="android:focusableInTouchMode">true</item>
-        <item name="android:layout_gravity">center</item>
+    <style name="ReviewControlText">
+        <item name="android:textSize">12sp</item>
         <item name="android:gravity">center</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
     </style>
 </resources>

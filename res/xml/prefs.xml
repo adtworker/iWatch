@@ -44,6 +44,12 @@
         android:defaultValue="false"
     />
 
+    <CheckBoxPreference android:key="auto_rotate"
+        android:title="@string/pref_auto_rotate"
+        android:summary="@string/pref_auto_rotate_sum"
+        android:defaultValue="false"
+    />
+
     <ListPreference android:key="slide_anim"
         android:title="@string/pref_slide_anim"
         android:summary="@string/pref_slide_anim_sum"

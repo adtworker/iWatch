@@ -1,40 +1,28 @@
 package com.adtworker.mail;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.SystemClock;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-
-import com.adtworker.mail.constants.Constants;
-import com.adtworker.mail.service.entity.ImgInfo;
 
 public class ImageManager {
 
@@ -57,16 +45,15 @@ public class ImageManager {
 			.ordinal()];
 	private final int[] mLastIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
-	private int mBitmapCacheCurrent = 0;
-	private static Integer pageNumber = 1;
-	private String mQueryKeyword;
-	private final Bitmap[] mBitmapCache = new Bitmap[2];
+	private final int mSearchPageNum = 8;
+	private final int mSearchPageSize = 8;
 	private Bitmap mCurrentBitmap = null;
 
 	public final static int INVALID_PIC_INDEX = -1;
 
 	public IMAGE_PATH_TYPE mImagePathType = IMAGE_PATH_TYPE.LOCAL_ASSETS;
-	public ArrayList<String> mImageList = new ArrayList<String>();
+	public ArrayList<AdtImage> mImageList = new ArrayList<AdtImage>();
+	private final ArrayList<String> mQueryKeywords = new ArrayList<String>();
 
 	public ImageManager(Context context) {
 		mContext = context;
@@ -92,10 +79,13 @@ public class ImageManager {
 		return mInitListFailed;
 	}
 
-	public void setQueryKeyword(String word) {
-		mQueryKeyword = word;
+	public void setQueryKeyword(String args) {
+		mQueryKeywords.clear();
+		String[] words = args.split(" ");
+		for (String word : words) {
+			mQueryKeywords.add(word);
+		}
 	}
-
 	public int getImageListSize() {
 		return mImageList.size();
 	}
@@ -112,11 +102,24 @@ public class ImageManager {
 		}
 	}
 
+	public boolean isCurrentAsset() {
+		return mImageList.get(mCurrentImageIndex).isAsset;
+	}
+
 	public String getCurrentStr() {
-		return mImageList.get(mCurrentImageIndex);
+		return mImageList.get(mCurrentImageIndex).urlFull;
+	}
+
+	public String getCurrentStrTb() {
+		return mImageList.get(mCurrentImageIndex).urlThumb;
+	}
+
+	public String getCurrentStrLocal() {
+		return getCachedFilename(mImageList.get(mCurrentImageIndex).urlFull);
 	}
 
 	public String getImageStr(int step) {
+		mLastImageIndex = mCurrentImageIndex;
 		mCurrentImageIndex = getNextSteppedIndex(step);
 		return getCurrentStr();
 	}
@@ -138,82 +141,49 @@ public class ImageManager {
 		return (size + mCurrentImageIndex + step) % size;
 	}
 
+	private Bitmap getBitmap(String strImage) {
+		Bitmap bitmap = null;
+		try {
+			if (mImagePathType == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
+				InputStream is = mContext.getAssets().open(strImage);
+				bitmap = BitmapFactory.decodeStream(is);
+			} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+				bitmap = getBitmapFromSDCard(strImage);
+
+				if (bitmap == null) {
+					String tbUrl = getCurrentStrTb();
+					Bitmap bm = getBitmapFromSDCard(tbUrl);
+					if (bm == null) {
+						bm = getBitmapFromUrl(tbUrl);
+					}
+					new loadImageTask().execute(strImage,
+							Integer.toString(mCurrentImageIndex));
+					bitmap = bm;
+				} else {
+					((WatchActivity) mContext).mProgressIcon
+							.setVisibility(View.GONE);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return bitmap;
+	}
+
 	public Bitmap getCurrentBitmap() {
 		if (mCurrentBitmap == null) {
-			try {
-				if (mImagePathType == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					InputStream is = mContext.getAssets().open(getCurrentStr());
-					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
-							.decodeStream(is);
-				} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-					new loadImageTask().execute(getCurrentStr());
-
-					DisplayMetrics displayMetrics = mContext.getResources()
-							.getDisplayMetrics();
-					int width = displayMetrics.widthPixels;
-					int height = displayMetrics.heightPixels;
-					Bitmap bm = Bitmap.createBitmap(width, height,
-							Bitmap.Config.ARGB_8888);
-					Canvas canvas = new Canvas(bm);
-					Bitmap bmIcon = BitmapFactory.decodeResource(
-							mContext.getResources(),
-							R.drawable.ic_launcher_alarmclock);
-					canvas.drawBitmap(bmIcon, (width - bmIcon.getWidth()) / 2,
-							(height - bmIcon.getHeight()) / 2, null);
-					bmIcon.recycle();
-					mBitmapCache[mBitmapCacheCurrent] = bm;
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			mCurrentBitmap = mBitmapCache[mBitmapCacheCurrent];
+			String imgstr = getCurrentStr();
+			mCurrentBitmap = getBitmap(imgstr);
 		}
 		return mCurrentBitmap;
 	}
+
 	public Bitmap getImageBitmap(int step) {
-		int nextImageIndex = getNextSteppedIndex(step);
-		mBitmapCacheCurrent = (mBitmapCacheCurrent + 1) % mBitmapCache.length;
-
-		if (nextImageIndex != mLastImageIndex) {
-			mLastImageIndex = mCurrentImageIndex;
-			if (mBitmapCache[mBitmapCacheCurrent] != null) {
-				mBitmapCache[mBitmapCacheCurrent].recycle();
-				mBitmapCache[mBitmapCacheCurrent] = null;
-			}
-			try {
-				if (mImagePathType == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					InputStream is = mContext.getAssets().open(
-							getImageStr(step));
-					mBitmapCache[mBitmapCacheCurrent] = BitmapFactory
-							.decodeStream(is);
-				} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-					new loadImageTask().execute(getImageStr(step));
-
-					DisplayMetrics displayMetrics = mContext.getResources()
-							.getDisplayMetrics();
-					int width = displayMetrics.widthPixels;
-					int height = displayMetrics.heightPixels;
-					Bitmap bm = Bitmap.createBitmap(width, height,
-							Bitmap.Config.ARGB_8888);
-					Canvas canvas = new Canvas(bm);
-					Bitmap bmIcon = BitmapFactory.decodeResource(
-							mContext.getResources(),
-							R.drawable.ic_launcher_alarmclock);
-					canvas.drawBitmap(bmIcon, (width - bmIcon.getWidth()) / 2,
-							(height - bmIcon.getHeight()) / 2, null);
-					bmIcon.recycle();
-					mBitmapCache[mBitmapCacheCurrent] = bm;
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} else {
-			mLastImageIndex = mCurrentImageIndex;
-			mCurrentImageIndex = nextImageIndex;
-		}
-		mCurrentBitmap = mBitmapCache[mBitmapCacheCurrent];
+		String imgstr = getImageStr(step);
+		mCurrentBitmap = getBitmap(imgstr);
 		return mCurrentBitmap;
 	}
+
 	private void initImageList() {
 		mImageList.clear();
 		mInitListFailed = true;
@@ -221,7 +191,8 @@ public class ImageManager {
 			case LOCAL_ASSETS :
 				ArrayList<String> arrayList = getAssetsImagesList(IMAGE_SUBFOLDER_IN_ASSETS);
 				for (int i = 0; i < arrayList.size(); i++) {
-					mImageList.add(arrayList.get(i));
+					AdtImage image = new AdtImage(arrayList.get(i), true);
+					mImageList.add(image);
 				}
 				mInitListFailed = false;
 				break;
@@ -241,27 +212,45 @@ public class ImageManager {
 			super.onPreExecute();
 			activity.mProgressBar.setProgress(0);
 			activity.mProgressBar.setVisibility(View.VISIBLE);
-			activity.mProgressBar.setMax(30);
+			activity.mProgressBar.setMax(mSearchPageNum * mSearchPageSize
+					* mQueryKeywords.size());
 			activity.EnableNextPrevButtons(false);
 		}
 		@Override
 		protected Void doInBackground(Void... params) {
 			try {
+				int count = 0;
+				for (int k = 0; k < mQueryKeywords.size(); k++) {
+					Log.d(TAG, "querying word " + mQueryKeywords.get(k));
+					String keyword = Uri.encode(mQueryKeywords.get(k), "GBK");
 
-				// List<String> temp = GoogleImage.getImgUrl(keyword, i
-				// * mSearchPageSize, mSearchPageSize);
+					for (int i = 0; i < mSearchPageNum; i++) {
 
-				List<ImgInfo> temp = ImageSearchAdapter.getImgList(
-						mQueryKeyword, 240, 400, pageNumber, 20);
-				for (int j = 0; j < temp.size(); j++) {
-					mImageList.add(temp.get(j).getPreviewUrl());
-					activity.mProgressBar.setProgress(j + 1);
+						List<AdtImage> temp = ImageSearchAdapter.getImgList(
+								keyword, 480, 800, i * mSearchPageSize,
+								mSearchPageSize);
+
+						for (int j = 0; j < temp.size(); j++) {
+							activity.mProgressBar.setProgress(++count);
+							AdtImage img = temp.get(j);
+							String url = img.urlFull;
+							if (url.toLowerCase().endsWith(".gif"))
+								continue;
+
+							img.urlFull = Uri.decode(img.urlFull);
+							img.urlThumb = Uri.decode(img.urlThumb);
+							mImageList.add(img);
+						}
+					}
 				}
-				activity.mProgressBar.setProgress(30);
+				Log.d(TAG, "image list size = " + mImageList.size());
+
+				activity.mProgressBar.setProgress(mSearchPageNum
+						* mSearchPageSize);
 				mInitListFailed = false;
-				pageNumber = pageNumber + 1;
+
 			} catch (Exception e) {
-				Log.e(Constants.TAG, "get img error", e);
+				e.printStackTrace();
 			}
 
 			if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL
@@ -278,64 +267,79 @@ public class ImageManager {
 			activity.EnableNextPrevButtons(true);
 			SystemClock.sleep(200);
 			activity.mProgressBar.setVisibility(View.GONE);
+
+			if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+				new loadAllImageTask().execute();
+			}
 		}
+	}
+
+	private class loadAllImageTask extends AsyncTask<Void, Void, Void> {
+		@Override
+		protected Void doInBackground(Void... params) {
+			if (getImageListSize() == 0)
+				return null;
+
+			for (int i = 0; i < mImageList.size(); i++) {
+				AdtImage img = mImageList.get(i);
+				String url;
+				if (img.hasThumb) {
+					url = img.urlThumb;
+				} else {
+					url = img.urlFull;
+				}
+
+				Bitmap bitmap = getBitmapFromSDCard(url);
+				if (bitmap == null) {
+					bitmap = getBitmapFromUrl(url);
+					if (bitmap != null) {
+						writeBitmap2AppCache(bitmap, url);
+					} else {
+						Log.e(TAG, "image " + i + " is null.");
+					}
+				}
+			}
+			return null;
+		}
+
 	}
 
 	private class loadImageTask extends AsyncTask<String, Integer, Bitmap> {
 		WatchActivity activity = (WatchActivity) mContext;
+		int loadingImgID = INVALID_PIC_INDEX;
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
 			activity.mProgressIcon.setVisibility(View.VISIBLE);
-			activity.EnableNextPrevButtons(false);
+			// activity.EnableNextPrevButtons(false);
 		}
 
 		@Override
 		protected Bitmap doInBackground(String... params) {
+			loadingImgID = Integer.parseInt(params[1]);
 			publishProgress(0);
-			final Bitmap bm;
-			String cachedFileString = getCachedFilename(params[0]);
-			File file = new File(cachedFileString);
-			if (file.exists()) {
-				Log.d(TAG, "file exists: " + cachedFileString);
-				try {
-					InputStream is = new BufferedInputStream(
-							new FileInputStream(file));
-					bm = BitmapFactory.decodeStream(is);
-					publishProgress(100);
-					return bm;
-				} catch (Exception e) {
-					e.printStackTrace();
-					return null;
-				}
+			Bitmap bitmap;
+			String url = params[0];
+			// bitmap = getBitMapFromSDCard(url);
+			// if (bitmap != null) {
+			// Log.d(TAG, "got bitmap from AppCache.");
+			// publishProgress(100);
+			// return bitmap;
+			// }
+			bitmap = getBitmapFromUrl(url);
+			if (bitmap != null) {
+				Log.d(TAG, "got bitmap from Remote: " + url);
+				writeBitmap2AppCache(bitmap, url);
+				publishProgress(100);
+				return bitmap;
 			}
 
-			try {
-				URLConnection connection = new URL(params[0]).openConnection();
-				String contentType = connection.getHeaderField("Content-Type");
-				boolean isImage = contentType.startsWith("image/");
-				publishProgress(30);
-				if (isImage) {
-					HttpGet httpRequest = new HttpGet(params[0]);
-					HttpClient httpclient = new DefaultHttpClient();
-					HttpResponse response = httpclient.execute(httpRequest);
-					publishProgress(70);
-					HttpEntity entity = response.getEntity();
-					BufferedHttpEntity bufferedHttpEntity = new BufferedHttpEntity(
-							entity);
-					InputStream is = bufferedHttpEntity.getContent();
-					bm = BitmapFactory.decodeStream(is);
-					SaveImageFile(bufferedHttpEntity.getContent(), params[0]);
-				} else {
-					bm = BitmapFactory.decodeResource(mContext.getResources(),
-							R.drawable.no_image);
-				}
-			} catch (Exception e) {
-				Log.e(e.getClass().getName(), e.getMessage(), e);
-				return null;
-			}
+			// Log.e(TAG, "failed to get image " + url
+			// + ", Using default instead.");
+			// bitmap = BitmapFactory.decodeResource(mContext.getResources(),
+			// R.drawable.no_image);
 			publishProgress(100);
-			return bm;
+			return bitmap;
 		}
 		@Override
 		protected void onProgressUpdate(Integer... progress) {
@@ -344,48 +348,133 @@ public class ImageManager {
 		@Override
 		protected void onPostExecute(Bitmap result) {
 			super.onPostExecute(result);
-			if (result != null) {
+			if (result != null && loadingImgID == mCurrentImageIndex) {
 				activity.setImageView(result);
-				mBitmapCache[mBitmapCacheCurrent] = result;
+				mCurrentBitmap = result;
 			}
-			activity.mProgressIcon.setVisibility(View.GONE);
-			activity.EnableNextPrevButtons(true);
+			if (loadingImgID == mCurrentImageIndex) {
+				activity.mProgressIcon.setVisibility(View.GONE);
+			}
+			// activity.EnableNextPrevButtons(true);
 		}
 	}
 
-	private void SaveImageFile(InputStream is, String str) {
+	private Bitmap getBitmapFromUrl(String url) {
 
-		Log.d(TAG, "Saving " + getCachedFilename(str));
-		File file = new File(getCachedFilename(str));
-		OutputStream out = null;
-		if (file.exists())
-			return;
-
+		Bitmap bitmap = null;
+		URL u = null;
+		HttpURLConnection conn = null;
+		InputStream is = null;
 		try {
-			out = new BufferedOutputStream(new FileOutputStream(file));
-			byte[] buf = new byte[1024];
-			while (is.read(buf) != -1) {
-				out.write(buf);
-			}
-			out.flush();
+			u = new URL(url);
+			conn = (HttpURLConnection) u.openConnection();
+			conn.setConnectTimeout(5 * 1000);
+			is = conn.getInputStream();
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inSampleSize = 1;
+			bitmap = BitmapFactory.decodeStream(is, null, options);
+			is.close();
+		} catch (Exception e) {
+			Log.e(TAG, "Failed to get image from " + url);
+			e.printStackTrace();
+		}
+		return bitmap;
+	}
 
-			if (out != null)
-				out.close();
+	private Bitmap getBitmapFromSDCard(String url) {
+		Bitmap bitmap = null;
+		try {
+			FileInputStream fis = new FileInputStream(getFile(url));
+			bitmap = BitmapFactory.decodeStream(fis);
+			fis.close();
+		} catch (Exception e) {
+			return bitmap;
+		}
+		return bitmap;
+	}
+
+	private void writeInputStream2AppCache(InputStream is, String url) {
+		try {
+			FileOutputStream fos = new FileOutputStream(getFile(url), false);
+			int len = 0;
+			byte[] b = new byte[is.available()];
+
+			while ((len = is.read(b)) != -1) {
+				fos.write(b, 0, len);
+			}
+			if (null != is) {
+				is.close();
+			}
+			if (null != fos) {
+				fos.close();
+			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	private String getCachedFilename(String imgPath) {
-		// String path = mContext.getFilesDir().getPath();
+
+	private void writeBitmap2AppCache(Bitmap bitmap, String url) {
+		if (bitmap == null)
+			return;
+
+		try {
+			FileOutputStream fos = new FileOutputStream(getFile(url), false);
+			byte[] bitmapByte = Bitmap2Byte(bitmap);
+			ByteArrayInputStream bis = new ByteArrayInputStream(bitmapByte);
+			int len = 0;
+			byte[] b = new byte[bis.available()];
+			while ((len = bis.read(b)) != -1) {
+				fos.write(b, 0, len);
+			}
+			if (null != bis) {
+				bis.close();
+			}
+			if (null != fos) {
+				fos.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private File getFile(String url) {
+		File file = null;
+		try {
+			file = new File(getCachedFilename(url));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return file;
+	}
+
+	private String getCachedFilename(String url) {
+		final String APP_SUBFOLDER = ".adtwkr";
+		final String APP_CACHE = "AppCache";
 		String path = Environment.getExternalStorageDirectory()
-				+ File.separator + "iWatch";
+				+ File.separator + APP_SUBFOLDER + File.separator + APP_CACHE;
 
 		File file = new File(path);
 		if (!file.exists())
 			file.mkdirs();
 
-		return path + File.separator + getHostname(imgPath) + "."
-				+ getImageFilename(imgPath);
+		if (!file.exists()) {
+			// Environment.getExternalStorageState() !=
+			// Environment.MEDIA_MOUNTED
+			path = mContext.getFilesDir().getPath() + File.separator
+					+ APP_CACHE;
+			file = new File(path);
+			if (!file.exists())
+				file.mkdir();
+
+			if (!file.exists())
+				return null;
+		}
+
+		return path + File.separator + url.hashCode();
+
+		// return path + File.separator + getHostname(url) + "."
+		// + getImageFilename(url);
 	}
 
 	private String getHostname(String imgPath) {
@@ -524,4 +613,17 @@ public class ImageManager {
 		return arrayList;
 	}
 
+	private byte[] Bitmap2Byte(Bitmap bm) {
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
+		return baos.toByteArray();
+	}
+
+	private Bitmap Byte2Bimap(byte[] b) {
+		if (b.length == 0) {
+			return null;
+		}
+		return BitmapFactory.decodeByteArray(b, 0, b.length);
+	}
 }

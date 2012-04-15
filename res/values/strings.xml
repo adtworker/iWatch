@@ -10,6 +10,7 @@
     <string name="hide_clock">Hide clock</string>
     <string name="show_clock">Show clock</string>
     <string name="full_screen">Full screen</string>
+    <string name="exit_full_screen">Exit Full Screen</string>
     <string name="ContentDesc">Missing Picture</string>
     <string name="strExit">Exit</string>
     <string name="settings">Settings</string>
@@ -44,13 +45,21 @@
     <string name="pref_wp_fullfill_sum">Picture will be scaled to fit screen</string>
     <string name="pref_slide_anim">Slide Animation</string>
     <string name="pref_slide_anim_sum">Click to set slide animation.</string>
+    <string name="pref_auto_rotate">Auto-rotate screen</string>
+    <string name="pref_auto_rotate_sum">Set screen orientation to auto rotate when viewing images.</string>
     <string name="none">None</string>
     <string name="slide_anim_transition">Transition</string>
     <string name="slide_anim_slide">Slide</string>
     <string name="slide_anim_slide_vertical">Slide vertical</string>
     <string name="remote_mode">Remote Album</string>
     <string name="local_mode">Local Album</string>
-    
+    <string name="browse_all">Browse All</string>
+    <string name="runningFaceDetection">Please wait\u2026</string>
+    <string name="wallpaper">Setting wallpaper, please wait\u2026</string>
+    <string name="savingImage">Saving picture\u2026</string>
+    <string name="multiface_crop_help">Tap a face to begin.</string>
+    <string name="crop_label">Crop Image</string>
+    <string name="failed_network">Network is not available, use local album instead.</string>
     <item type="id" name="tag_page"></item>
 	<item type="id" name="tag_id"></item>
 </resources>

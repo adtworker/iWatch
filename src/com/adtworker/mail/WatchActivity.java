@@ -1,5 +1,8 @@
 package com.adtworker.mail;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Time;
 import java.util.Random;
@@ -11,14 +14,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
@@ -49,6 +51,8 @@ import com.adview.AdViewInterface;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
 import com.adview.AdViewTargeting.RunMode;
+import com.android.camera.CropImage;
+import com.android.camera.OnScreenHint;
 
 public class WatchActivity extends Activity implements AdViewInterface {
 
@@ -70,13 +74,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private final String TAG = "WatchActivity";
 	public final static int CLICKS_TO_HIDE_AD = 1;
-	public final static String APP_FOLDER = "/data/com.adtworker.mail";
-	public final static String PIC_FOLDER = "/iWatch";
 	private final ScaleType DEFAULT_SCALETYPE = ScaleType.FIT_CENTER;
 	private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_INSIDE;
 	// private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_CROP;
 	private ImageView.ScaleType mScaleType = DEFAULT_SCALETYPE;
-	private ImageManager mImageManager;
+	ImageManager mImageManager;
 
 	private boolean bStarted = false;
 	private int mFace = -1;
@@ -90,6 +92,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public ProgressBar mProgressBar;
 	public ProgressBar mProgressIcon;
 	private SharedPreferences mSharedPref;
+	private OnScreenHint mScreenHint;
 
 	final static String PREFERENCES = "iWatch";
 	final static String PREF_CLOCK_FACE = "face";
@@ -104,6 +107,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREF_PIC_FULL_FILL = "pic_fullfill";
 	final static String PREF_WP_FULL_FILL = "wp_fullfill";
 	final static String PREF_SLIDE_ANIM = "slide_anim";
+	final static String PREF_AUTO_ROTATE = "auto_rotate";
 
 	private final static int[] CLOCKS = {R.layout.clock_no_dial,
 			R.layout.clock_appwidget, R.layout.clock_basic_bw,
@@ -162,7 +166,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			iv.setOnTouchListener(rootListener);
 		}
 
-		setupAdLayout();
+		// Disable AD for android 3.0 and above for crash of suizong
+		if (android.os.Build.VERSION.SDK_INT < 12) {
+			setupAdLayout();
+		}
 		setupButtons();
 
 		mSlideShowInAnimation = new Animation[]{
@@ -182,6 +189,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 	}
 
+	@SuppressWarnings("unused")
 	private final Runnable mCheck2ShowAD = new Runnable() {
 		@Override
 		public void run() {
@@ -250,8 +258,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 
 			DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-			if (bm.getWidth() > displayMetrics.widthPixels
-					|| bm.getHeight() > displayMetrics.heightPixels) {
+			if (bm != null
+					&& (bm.getWidth() > displayMetrics.widthPixels || bm
+							.getHeight() > displayMetrics.heightPixels)) {
 				bLargePicLoaded = true;
 			} else {
 				bLargePicLoaded = false;
@@ -259,26 +268,28 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 	};
 
-	public String getPicPath() {
-		return Environment.getDataDirectory() + APP_FOLDER + PIC_FOLDER;
-		// return Environment.getExternalStorageDirectory() + PIC_FOLDER;
-	}
-
 	@Override
 	public void onStart() {
 		Log.v(TAG, "onStart()");
 		super.onStart();
 
 		// If Image list initialization failed, restart the process
-		Log.d(TAG, "Init List failed? " + mImageManager.isInitListFailed());
 		if (mImageManager.isInitListFailed()) {
+			Toast.makeText(this, getString(R.string.failed_network),
+					Toast.LENGTH_SHORT).show();
+
 			ImageManager.IMAGE_PATH_TYPE type = mImageManager
 					.getImagePathType();
 			mImageManager.setImagePathType(type);
 			initStartIndex();
 		}
-	}
 
+		if (mSharedPref.getBoolean(PREF_AUTO_ROTATE, false)) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+		} else {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		}
+	}
 	@Override
 	public void onResume() {
 		Log.v(TAG, "onResume()");
@@ -315,6 +326,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	@Override
 	public void onPause() {
 		// Log.v(TAG, "onPause()");
+		if (mScreenHint != null) {
+			mScreenHint.cancel();
+			mScreenHint = null;
+		}
+
 		super.onPause();
 	}
 
@@ -425,23 +441,41 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnPrev.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				goPrev();
+				goNextorPrev(-1);
 			}
 		});
 
 		mBtnNext.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				goNext();
+				goNextorPrev(1);
 			}
 		});
 
 		mBtnDisp.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				// hide mainLayout only leave background image
-				if (getMLVisibility()) {
-					setMLVisibility(false);
+				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
+					// hide mainLayout only leave background image
+					if (getMLVisibility()) {
+						setMLVisibility(false);
+					}
+				} else if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+					if (mScreenHint == null) {
+						mScreenHint = OnScreenHint.makeText(WatchActivity.this,
+								"demo");
+						mScreenHint.show();
+						setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+					} else {
+						mScreenHint.cancel();
+						mScreenHint = null;
+						setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+					}
+
+					// Intent intent = new Intent();
+					// intent.setClass(WatchActivity.this,
+					// WallPhotoActivity.class);
+					// startActivity(intent);
 				}
 			}
 		});
@@ -477,14 +511,17 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				index = (size + index - 1) % size;
 			}
 			mImageManager.setCurrent(index);
+		} else {
+			mImageManager.setCurrent(0);
 		}
 		Log.d(TAG, "initStartIndex(): start from " + mImageManager.getCurrent());
 	}
-	private void goNext() {
+
+	private void goNextorPrev(int step) {
 		if (mImageManager.getImageListSize() == 0)
 			return;
 
-		if (!bStarted) {
+		if (step > 0 && !bStarted) {
 
 			if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
 				setClockVisibility(false);
@@ -496,13 +533,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			initStartIndex();
 		}
 
-		mStep = 1;
-		mHandler.postDelayed(mUpdateImageView, 200);
-	}
-
-	private void goPrev() {
-		mStep = -1;
-		mHandler.postDelayed(mUpdateImageView, 20);
+		mStep = step;
+		mHandler.post(mUpdateImageView);
 	}
 
 	@Override
@@ -527,6 +559,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 								: R.string.local_mode);
 		menu.findItem(R.id.menu_toggle_mode).setEnabled(mBtnNext.isEnabled());
 
+		menu.findItem(R.id.menu_full_screen).setTitle(
+				getMLVisibility()
+						? R.string.full_screen
+						: R.string.exit_full_screen);
+
 		if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX) {
 			menu.findItem(R.id.menu_set_wallpaper).setEnabled(false);
 		} else {
@@ -545,21 +582,22 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case R.id.menu_toggle_mode :
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					mImageManager.setQueryKeyword("android MM bizhi");
+					mImageManager.setQueryKeyword("美女 模特 美眉 beauty showgirl");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
-					Intent intent = new Intent();
-					intent.setClass(this, WallPhotoActivity.class);
-					startActivity(intent);
-					// 如果不关闭当前的会出现好多个页面
-					this.finish();
+					mBtnDisp.setText(R.string.browse_all);
 				} else {
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
+					mBtnDisp.setText(R.string.full_screen);
 				}
 				if (bStarted) {
 					initStartIndex();
 				}
+				break;
+
+			case R.id.menu_full_screen :
+				setMLVisibility(!getMLVisibility());
 				break;
 
 			case R.id.menu_settings :
@@ -568,12 +606,15 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			case R.id.menu_set_livewallpaper :
 				Editor myEdit = mSharedPref.edit();
-				if (mImageManager.getCurrent() == ImageManager.INVALID_PIC_INDEX
-						&& mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					// Now only support local assets to set as background of
-					// live wall paper
-					myEdit.putString(PREF_PIC_CODE,
-							mImageManager.getCurrentStr());
+				if (mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX) {
+					String pic_code;
+					if (mImageManager.isCurrentAsset()) {
+						pic_code = mImageManager.getCurrentStr();
+					} else {
+						pic_code = mImageManager.getCurrentStrLocal();
+					}
+					Log.d(TAG, "saving pic_code " + pic_code);
+					myEdit.putString(PREF_PIC_CODE, pic_code);
 
 				} else {
 					// remove the preference to set default clock as live
@@ -614,7 +655,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-
 	private boolean getLayoutVisibility(int id) {
 		LinearLayout layout = (LinearLayout) findViewById(id);
 		return layout.getVisibility() == View.VISIBLE;
@@ -662,6 +702,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private boolean getAdVisibility() {
 		return getLayoutVisibility(R.id.adLayout);
 	}
@@ -678,27 +719,56 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private void setWallpaper() {
 		try {
 
-			if (mSharedPref.getBoolean(PREF_WP_FULL_FILL, false)
-					|| mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+			DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+			int width = displayMetrics.widthPixels;
+			int height = displayMetrics.heightPixels;
 
-				WallpaperManager.getInstance(this).setBitmap(
-						((BitmapDrawable) mImageViews[mImageViewCurrent]
-								.getDrawable()).getBitmap());
+			if (width > height) { // landscape
+				int tmp = width;
+				width = height * 2;
+				height = tmp;
+			} else { // portrait
+				width = width * 2;
+			}
+
+			Bitmap bitmap = null;
+
+			if (mSharedPref.getBoolean(PREF_WP_FULL_FILL, false)) {
+
+				bitmap = mImageManager.getCurrentBitmap();
+
+				Intent cropIntent = new Intent(this, CropImage.class);
+				Bundle extras = new Bundle();
+				extras.putBoolean("setWallpaper", true);
+				extras.putInt("aspectX", width);
+				extras.putInt("aspectY", height);
+				extras.putInt("outputX", width);
+				extras.putInt("outputY", height);
+				extras.putBoolean("noFaceDetection", true);
+				cropIntent.putExtras(extras);
+
+				ByteArrayOutputStream bs = new ByteArrayOutputStream();
+				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bs);
+				cropIntent.putExtra("data", bs.toByteArray());
+				startActivity(cropIntent);
 
 			} else {
-
-				DisplayMetrics displayMetrics = getResources()
-						.getDisplayMetrics();
-				int width = displayMetrics.widthPixels * 2;
-				int height = displayMetrics.heightPixels;
-
 				BitmapFactory.Options opt = new BitmapFactory.Options();
 				opt.inJustDecodeBounds = true;
 
-				Bitmap bm = BitmapFactory.decodeStream(
-						getAssets().open(mImageManager.getCurrentStr()), null,
-						opt);
-
+				Bitmap bm = null;
+				if (mImageManager.isCurrentAsset()) {
+					bm = BitmapFactory.decodeStream(
+							getAssets().open(mImageManager.getCurrentStr()),
+							null, opt);
+				} else {
+					Log.d(TAG,
+							"opening local bitmap "
+									+ mImageManager.getCurrentStrLocal());
+					FileInputStream fis = new FileInputStream(new File(
+							mImageManager.getCurrentStrLocal()));
+					bm = BitmapFactory.decodeStream(fis, null, opt);
+				}
 				int bm_w = opt.outWidth;
 				int bm_h = opt.outHeight;
 				Log.d(TAG, "origin: " + bm_w + "x" + bm_h);
@@ -725,30 +795,36 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				Log.d(TAG, "scaled: " + opt.outWidth + "x" + opt.outHeight);
 
 				opt.inJustDecodeBounds = false;
-				opt.inSampleSize = bm_w / width;
-				Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
+				float t = bm_w / ((float) width / 2);
+				opt.inSampleSize = (int) t
+						+ (t - ((Math.round(t))) > 0 ? 1 : 0);
 
-				bm = BitmapFactory.decodeStream(
-						getAssets().open(mImageManager.getCurrentStr()), null,
-						opt);
+				Log.d(TAG, "inSampleSize = " + t + " => " + opt.inSampleSize);
 
-				Bitmap bm_wp = Bitmap.createBitmap(width, height,
-						Bitmap.Config.ARGB_8888);
-				Canvas canvas = new Canvas(bm_wp);
+				if (mImageManager.isCurrentAsset()) {
+					bm = BitmapFactory.decodeStream(
+							getAssets().open(mImageManager.getCurrentStr()),
+							null, opt);
+				} else {
+					FileInputStream fis = new FileInputStream(new File(
+							mImageManager.getCurrentStrLocal()));
+					bm = BitmapFactory.decodeStream(fis, null, opt);
+				}
+
+				bitmap = Bitmap.createBitmap(width, height,
+						Bitmap.Config.RGB_565);
+				Canvas canvas = new Canvas(bitmap);
 
 				canvas.drawBitmap(bm, (width - opt.outWidth) / 2,
 						(height - opt.outHeight) / 2, null);
 				bm.recycle();
-
-				WallpaperManager.getInstance(this).setBitmap(bm_wp);
+				WallpaperManager.getInstance(this).setBitmap(bitmap);
 			}
-			WallpaperManager.getInstance(this).setWallpaperOffsetSteps(0, 0);
 
 		} catch (IOException e) {
 			Log.e(TAG, "Failed to set wallpaper!");
 		}
 	}
-
 	private class MyClockGestureListener
 			extends
 				GestureDetector.SimpleOnGestureListener {
@@ -781,9 +857,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				}
 
 				inflateClock();
-				Animation aIn = mSlideShowInAnimation[0];
-				mClockLayout.setVisibility(View.VISIBLE);
-				mClockLayout.startAnimation(aIn);
 
 				Editor edit = mSharedPref.edit();
 				edit.putInt(PREF_CLOCK_FACE, mFace).commit();
@@ -792,6 +865,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		@Override
 		public boolean onSingleTapConfirmed(MotionEvent e) {
+			if (mScreenHint != null) {
+				mScreenHint.cancel();
+				mScreenHint = null;
+			}
+
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
 			}
@@ -814,21 +892,21 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			if (mAnimationIndex == 1) { // slide horizontal
 				if (e1.getX() - e2.getX() > LARGE_MOVE) {
 					Log.d(TAG, "Fling Left with velocity " + velocityX);
-					goNext();
+					goNextorPrev(1);
 					return true;
 				} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
 					Log.d(TAG, "Fling Right with velocity " + velocityX);
-					goPrev();
+					goNextorPrev(-1);
 					return true;
 				}
 			} else if (mAnimationIndex == 2) { // slide vertical
 				if (e1.getY() - e2.getY() > LARGE_MOVE) {
 					Log.d(TAG, "Fling Up with velocity " + velocityY);
-					goNext();
+					goNextorPrev(1);
 					return true;
 				} else if (e2.getY() - e1.getY() > LARGE_MOVE) {
 					Log.d(TAG, "Fling Down with velocity " + velocityY);
-					goPrev();
+					goNextorPrev(-1);
 					return true;
 				}
 			}
@@ -865,9 +943,15 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		@Override
 		public boolean onSingleTapConfirmed(MotionEvent e) {
+			if (mScreenHint != null) {
+				mScreenHint.cancel();
+				mScreenHint = null;
+			}
+
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
 			}
+
 			return true;
 		}
 	}

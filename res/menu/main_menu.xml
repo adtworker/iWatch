@@ -7,7 +7,11 @@
 
     <item android:id="@+id/menu_toggle_mode"
           android:title="@string/remote_mode"
-          android:icon="@android:drawable/ic_menu_gallery"/>
+          android:icon="@android:drawable/ic_menu_slideshow"/>
+
+    <item android:id="@+id/menu_full_screen"
+          android:title="@string/full_screen"
+          android:icon="@android:drawable/ic_menu_view" />
 
     <item android:id="@+id/menu_set_livewallpaper"
           android:title="@string/set_livewallpaper"

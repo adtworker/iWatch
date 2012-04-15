@@ -1,6 +1,7 @@
 package com.adtworker.mail;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,7 +15,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
 import android.util.DisplayMetrics;
@@ -48,11 +48,6 @@ public class LiveWallpaper extends WallpaperService
 		makePrefChanges();
 	}
 
-	private String getPicPath() {
-		return Environment.getDataDirectory() + WatchActivity.APP_FOLDER
-				+ WatchActivity.PIC_FOLDER + File.separator + strPicCode;
-	}
-
 	private void makePrefChanges() {
 		strPicCode = mSharedPref.getString(WatchActivity.PREF_PIC_CODE, "");
 		Log.d(TAG, "strPicCode is " + strPicCode);
@@ -62,6 +57,9 @@ public class LiveWallpaper extends WallpaperService
 					R.drawable.clock_dial);
 
 		} else {
+
+			boolean isAsset = !strPicCode.startsWith("/");
+
 			try {
 
 				DisplayMetrics displayMetrics = getResources()
@@ -71,10 +69,15 @@ public class LiveWallpaper extends WallpaperService
 
 				BitmapFactory.Options opt = new BitmapFactory.Options();
 				opt.inJustDecodeBounds = true;
-				// bm = BitmapFactory.decodeFile(getPicPath(), opt);
-				bm = BitmapFactory.decodeStream(getAssets().open(strPicCode),
-						null, opt);
 
+				if (isAsset) {
+					bm = BitmapFactory.decodeStream(getAssets()
+							.open(strPicCode), null, opt);
+				} else {
+					FileInputStream fis = new FileInputStream(new File(
+							strPicCode));
+					bm = BitmapFactory.decodeStream(fis, null, opt);
+				}
 				int bm_w = opt.outWidth;
 				int bm_h = opt.outHeight;
 				Log.d(TAG, "origin: " + bm_w + "x" + bm_h);
@@ -93,12 +96,19 @@ public class LiveWallpaper extends WallpaperService
 				}
 
 				opt.inJustDecodeBounds = false;
-				opt.inSampleSize = bm_w / width;
-				Log.d(TAG, "bitmap inSampleSize = " + opt.inSampleSize);
+				float t = bm_w / ((float) width);
+				opt.inSampleSize = (int) t
+						+ (t - ((Math.round(t))) > 0 ? 1 : 0);
+				Log.d(TAG, "inSampleSize = " + t + " => " + opt.inSampleSize);
 
-				// bm = BitmapFactory.decodeFile(getPicPath(), opt);
-				bm = BitmapFactory.decodeStream(getAssets().open(strPicCode),
-						null, opt);
+				if (isAsset) {
+					bm = BitmapFactory.decodeStream(getAssets()
+							.open(strPicCode), null, opt);
+				} else {
+					FileInputStream fis = new FileInputStream(new File(
+							strPicCode));
+					bm = BitmapFactory.decodeStream(fis, null, opt);
+				}
 
 			} catch (IOException e) {
 				e.printStackTrace();
