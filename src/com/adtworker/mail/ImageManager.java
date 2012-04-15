@@ -33,6 +33,9 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 
+import com.adtworker.mail.constants.Constants;
+import com.adtworker.mail.service.entity.ImgInfo;
+
 public class ImageManager {
 
 	public enum IMAGE_PATH_TYPE {
@@ -247,17 +250,18 @@ public class ImageManager {
 
 				// List<String> temp = GoogleImage.getImgUrl(keyword, i
 				// * mSearchPageSize, mSearchPageSize);
-				List<String> temp = BaiduImage.getImgUrlFromScript(
-						mQueryKeyword, pageNumber, 240, 400);
+
+				List<ImgInfo> temp = ImageSearchAdapter.getImgList(
+						mQueryKeyword, 240, 400, pageNumber, 20);
 				for (int j = 0; j < temp.size(); j++) {
-					mImageList.add(temp.get(j));
+					mImageList.add(temp.get(j).getPreviewUrl());
 					activity.mProgressBar.setProgress(j + 1);
 				}
 				activity.mProgressBar.setProgress(30);
 				mInitListFailed = false;
 				pageNumber = pageNumber + 1;
 			} catch (Exception e) {
-				e.printStackTrace();
+				Log.e(Constants.TAG, "get img error", e);
 			}
 
 			if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL

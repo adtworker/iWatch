@@ -85,7 +85,7 @@ public class BaiduImage {
 				height);
 		List<ImgInfo> imgList = new ArrayList<ImgInfo>();
 		for (int i = 0; i < imgUrlList.size(); i++) {
-			ImgInfo info = new ImgInfo(imgUrlList.get(i));
+			ImgInfo info = new ImgInfo(imgUrlList.get(i), imgUrlList.get(i));
 			imgList.add(info);
 		}
 		return imgList;

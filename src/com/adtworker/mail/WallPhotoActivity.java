@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 
 import com.adtworker.mail.service.CallbackHandler;
 import com.adtworker.mail.service.Service;
+import com.adtworker.mail.service.entity.ImgInfo;
 import com.adtworker.mail.service.entity.ImgLoadSupporter;
 import com.adtworker.mail.view.ScrollViewListener;
 import com.adtworker.mail.view.SuperScrollView;
@@ -82,11 +83,12 @@ public class WallPhotoActivity extends Activity {
 			if (photoWallWidth == 0) {
 				photoWallWidth = getResources().getDisplayMetrics().widthPixels / 3;
 			}
-			List<String> imgInfoUrl = BaiduImage.getImgUrlFromScript("MM", 1,
-					240, 400);
-			for (int i = 0; i < imgInfoUrl.size(); i++) {
+			List<ImgInfo> temp = ImageSearchAdapter.getImgList("MM", 480, 800,
+					1, 20);
+			for (int i = 0; i < temp.size(); i++) {
 
-				ImageView imageView = generateWallImage(imgInfoUrl.get(i));
+				ImageView imageView = generateWallImage(temp.get(i)
+						.getPreviewUrl());
 				addImageViewToList(imageView);
 				updateImageOfProduct(imageView, false);
 				addImageViewToLayout(imageView, photoWallWidth);
