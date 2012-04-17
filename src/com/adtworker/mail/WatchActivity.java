@@ -127,7 +127,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.main);
 
-		mImageManager = new ImageManager(this);
+		mImageManager = ImageManager.getInstance(this);
 		mImageViews[0] = (ImageView) findViewById(R.id.picView1);
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
@@ -233,6 +233,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				bm = mImageManager.getImageBitmap(mStep);
 			}
 
+			if (mScreenHint != null) {
+				mScreenHint.setText(String.format("%d/%d",
+						mImageManager.getCurrent(),
+						mImageManager.getImageListSize()));
+			}
+
 			Log.v(TAG, "current str: " + mImageManager.getCurrentStr());
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
 				mScaleType = DEFAULT_SCALETYPE;
@@ -326,11 +332,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	@Override
 	public void onPause() {
 		// Log.v(TAG, "onPause()");
-		if (mScreenHint != null) {
-			mScreenHint.cancel();
-			mScreenHint = null;
-		}
-
 		super.onPause();
 	}
 
@@ -350,6 +351,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			Log.v(TAG, "Save current image index " + mImageManager.getCurrent()
 					+ " to shared pref");
 			editor.putInt(PREF_LAST_CODE, mImageManager.getCurrent()).commit();
+		}
+
+		if (mScreenHint != null) {
+			mScreenHint.cancel();
+			mScreenHint = null;
 		}
 	}
 
@@ -463,13 +469,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} else if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
 					if (mScreenHint == null) {
 						mScreenHint = OnScreenHint.makeText(WatchActivity.this,
-								"demo");
+								String.format("%d/%d",
+										mImageManager.getCurrent(),
+										mImageManager.getImageListSize()));
 						mScreenHint.show();
-						setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
 					} else {
 						mScreenHint.cancel();
 						mScreenHint = null;
-						setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 					}
 
 					// Intent intent = new Intent();
@@ -582,7 +589,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case R.id.menu_toggle_mode :
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					mImageManager.setQueryKeyword("美女 模特 美眉 beauty showgirl");
+					mImageManager.setQueryKeyword("美女");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
 					mBtnDisp.setText(R.string.browse_all);
@@ -865,11 +872,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		@Override
 		public boolean onSingleTapConfirmed(MotionEvent e) {
-			if (mScreenHint != null) {
-				mScreenHint.cancel();
-				mScreenHint = null;
-			}
-
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
 			}
@@ -943,11 +945,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		@Override
 		public boolean onSingleTapConfirmed(MotionEvent e) {
-			if (mScreenHint != null) {
-				mScreenHint.cancel();
-				mScreenHint = null;
-			}
-
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
 			}

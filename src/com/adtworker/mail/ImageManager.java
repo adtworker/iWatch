@@ -55,6 +55,14 @@ public class ImageManager {
 	public ArrayList<AdtImage> mImageList = new ArrayList<AdtImage>();
 	private final ArrayList<String> mQueryKeywords = new ArrayList<String>();
 
+	private static ImageManager mImageManager = null;
+	public static ImageManager getInstance(Context context) {
+		if (null == mImageManager && null != context) {
+			mImageManager = new ImageManager(context);
+		}
+		return mImageManager;
+	}
+
 	public ImageManager(Context context) {
 		mContext = context;
 		for (int i = 0; i < mCurrentIndexArray.length; i++)
@@ -64,6 +72,7 @@ public class ImageManager {
 
 		setImagePathType(mImagePathType);
 	}
+
 	public void setImagePathType(IMAGE_PATH_TYPE type) {
 		mCurrentIndexArray[mImagePathType.ordinal()] = mCurrentImageIndex;
 		mLastIndexArray[mImagePathType.ordinal()] = mLastImageIndex;
@@ -212,8 +221,7 @@ public class ImageManager {
 			super.onPreExecute();
 			activity.mProgressBar.setProgress(0);
 			activity.mProgressBar.setVisibility(View.VISIBLE);
-			activity.mProgressBar.setMax(mSearchPageNum * mSearchPageSize
-					* mQueryKeywords.size());
+			activity.mProgressBar.setMax(1000);
 			activity.EnableNextPrevButtons(false);
 		}
 		@Override
@@ -368,7 +376,8 @@ public class ImageManager {
 		try {
 			u = new URL(url);
 			conn = (HttpURLConnection) u.openConnection();
-			conn.setConnectTimeout(5 * 1000);
+			conn.setConnectTimeout(5000);
+			conn.setReadTimeout(30000);
 			is = conn.getInputStream();
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inSampleSize = 1;
@@ -380,7 +389,6 @@ public class ImageManager {
 		}
 		return bitmap;
 	}
-
 	private Bitmap getBitmapFromSDCard(String url) {
 		Bitmap bitmap = null;
 		try {

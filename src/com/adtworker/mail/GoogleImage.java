@@ -28,7 +28,7 @@ import com.adtworker.mail.constants.Constants;
 
 public class GoogleImage {
 	static String REQUEST_TEMPLATE = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q={0}&start={1}&rsz={2}&imgsz=medium&imgtype=photo";
-	private static String GOOGLE_AJAX_URL_TEMPLATE = "http://www.google.com.hk/search?q=美女&hl=zh-CN&newwindow=1&safe=strict&tbs=isz:ex,iszw:480,iszh:800&biw=1399&bih=347&tbm=isch&ijn=2&ei=PyCKT8DJAavimAWUiJjgCQ&sprg=3&page=4&start=96";
+	private static String GOOGLE_AJAX_URL_TEMPLATE = "http://www.google.com.hk/search?q={0}&hl=zh-CN&newwindow=1&safe=strict&tbs=isz:ex,iszw:{1},iszh:{2}&biw=1399&bih=347&tbm=isch&ijn=2&ei=PyCKT8DJAavimAWUiJjgCQ&sprg=3&page=4&start=96";
 
 	static JSONObject json;
 
@@ -48,6 +48,8 @@ public class GoogleImage {
 		try {
 			URL url = new URL(requestUrl);
 			URLConnection connection = url.openConnection();
+			connection.setConnectTimeout(5000);
+			connection.setReadTimeout(30000);
 			connection.addRequestProperty("Referer",
 					"http://technotalkative.com");
 
