@@ -235,7 +235,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			if (mScreenHint != null) {
 				mScreenHint.setText(String.format("%d/%d",
-						mImageManager.getCurrent(),
+						mImageManager.getCurrent() + 1,
 						mImageManager.getImageListSize()));
 			}
 
@@ -279,23 +279,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		Log.v(TAG, "onStart()");
 		super.onStart();
 
-		// If Image list initialization failed, restart the process
-		if (mImageManager.isInitListFailed()) {
-			Toast.makeText(this, getString(R.string.failed_network),
-					Toast.LENGTH_SHORT).show();
-
-			ImageManager.IMAGE_PATH_TYPE type = mImageManager
-					.getImagePathType();
-			mImageManager.setImagePathType(type);
-			initStartIndex();
-		}
-
 		if (mSharedPref.getBoolean(PREF_AUTO_ROTATE, false)) {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 		} else {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		}
 	}
+
 	@Override
 	public void onResume() {
 		Log.v(TAG, "onResume()");
@@ -327,6 +317,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
+
+		// If Image list initialization failed, restart the process
+		if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL
+				&& mImageManager.isInitListFailed()) {
+			Toast.makeText(this, getString(R.string.failed_network),
+					Toast.LENGTH_SHORT).show();
+
+			mImageManager.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
+			initStartIndex();
+		}
 	}
 
 	@Override
@@ -470,7 +470,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					if (mScreenHint == null) {
 						mScreenHint = OnScreenHint.makeText(WatchActivity.this,
 								String.format("%d/%d",
-										mImageManager.getCurrent(),
+										mImageManager.getCurrent() + 1,
 										mImageManager.getImageListSize()));
 						mScreenHint.show();
 

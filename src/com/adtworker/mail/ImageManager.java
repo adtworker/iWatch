@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -17,7 +19,6 @@ import java.util.zip.ZipInputStream;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.SystemClock;
@@ -45,8 +46,8 @@ public class ImageManager {
 			.ordinal()];
 	private final int[] mLastIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
-	private final int mSearchPageNum = 8;
-	private final int mSearchPageSize = 8;
+	private final int mSearchPageNum = 1;
+	private final int mSearchPageSize = 100;
 	private Bitmap mCurrentBitmap = null;
 
 	public final static int INVALID_PIC_INDEX = -1;
@@ -221,7 +222,7 @@ public class ImageManager {
 			super.onPreExecute();
 			activity.mProgressBar.setProgress(0);
 			activity.mProgressBar.setVisibility(View.VISIBLE);
-			activity.mProgressBar.setMax(1000);
+			activity.mProgressBar.setMax(100);
 			activity.EnableNextPrevButtons(false);
 		}
 		@Override
@@ -230,23 +231,23 @@ public class ImageManager {
 				int count = 0;
 				for (int k = 0; k < mQueryKeywords.size(); k++) {
 					Log.d(TAG, "querying word " + mQueryKeywords.get(k));
-					String keyword = Uri.encode(mQueryKeywords.get(k), "GBK");
+					String keyword = URLEncoder.encode(mQueryKeywords.get(k),
+							"GBK");
 
 					for (int i = 0; i < mSearchPageNum; i++) {
 
 						List<AdtImage> temp = ImageSearchAdapter.getImgList(
-								keyword, 480, 800, i * mSearchPageSize,
-								mSearchPageSize);
+								keyword, 960, 800, i + 1, i * mSearchPageSize);
 
 						for (int j = 0; j < temp.size(); j++) {
 							activity.mProgressBar.setProgress(++count);
 							AdtImage img = temp.get(j);
-							String url = img.urlFull;
-							if (url.toLowerCase().endsWith(".gif"))
+							img.urlFull = URLDecoder.decode(img.urlFull);
+							img.urlThumb = URLDecoder.decode(img.urlThumb);
+							if (img.urlFull.toLowerCase().endsWith(".gif"))
 								continue;
-
-							img.urlFull = Uri.decode(img.urlFull);
-							img.urlThumb = Uri.decode(img.urlThumb);
+							Log.d(TAG, "Adding " + count + ") url="
+									+ img.urlFull + ", tbUrl=" + img.urlThumb);
 							mImageList.add(img);
 						}
 					}
