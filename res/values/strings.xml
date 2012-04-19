@@ -60,6 +60,10 @@
     <string name="multiface_crop_help">Tap a face to begin.</string>
     <string name="crop_label">Crop Image</string>
     <string name="failed_network">Network is not available, use local album instead.</string>
-    <item type="id" name="tag_page"></item>
-	<item type="id" name="tag_id"></item>
+    <string name="clean_buf">Clean buffer</string>
+    <string name="available_bufsize">Usable buffer size is </string>
+    <string name="used_bufsize">Your current used buffer size is </string>
+    <string name="sure_to_clean">, are you sure to clean?</string>
+    <item name="tag_page" type="id"/>
+    <item name="tag_id" type="id"/>
 </resources>

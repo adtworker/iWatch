@@ -60,6 +60,9 @@
 
     <PreferenceCategory android:title="@string/about">
 
+    <Preference android:key="storage_info"
+        android:title="@string/clean_buf" />
+
     <Preference android:key="version"
         android:title="@string/build_version" />
 

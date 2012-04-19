@@ -20,7 +20,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -40,11 +39,9 @@ public class ImageManager {
 	private final String IMAGE_SUBFOLDER_IN_ASSETS = "pics";
 	private final Context mContext;
 	private boolean mInitListFailed = false;
+	private boolean mInitInProcess = false;
 	private int mCurrentImageIndex = INVALID_PIC_INDEX;
-	private int mLastImageIndex = INVALID_PIC_INDEX;
 	private final int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
-			.ordinal()];
-	private final int[] mLastIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
 	private final int mSearchPageNum = 1;
 	private final int mSearchPageSize = 100;
@@ -68,15 +65,12 @@ public class ImageManager {
 		mContext = context;
 		for (int i = 0; i < mCurrentIndexArray.length; i++)
 			mCurrentIndexArray[i] = INVALID_PIC_INDEX;
-		for (int i = 0; i < mLastIndexArray.length; i++)
-			mLastIndexArray[i] = INVALID_PIC_INDEX;
 
 		setImagePathType(mImagePathType);
 	}
 
 	public void setImagePathType(IMAGE_PATH_TYPE type) {
 		mCurrentIndexArray[mImagePathType.ordinal()] = mCurrentImageIndex;
-		mLastIndexArray[mImagePathType.ordinal()] = mLastImageIndex;
 		mImagePathType = type;
 		initImageList();
 	}
@@ -87,6 +81,10 @@ public class ImageManager {
 
 	public boolean isInitListFailed() {
 		return mInitListFailed;
+	}
+
+	public boolean isInitInProcess() {
+		return mInitInProcess;
 	}
 
 	public void setQueryKeyword(String args) {
@@ -129,7 +127,6 @@ public class ImageManager {
 	}
 
 	public String getImageStr(int step) {
-		mLastImageIndex = mCurrentImageIndex;
 		mCurrentImageIndex = getNextSteppedIndex(step);
 		return getCurrentStr();
 	}
@@ -195,15 +192,17 @@ public class ImageManager {
 	}
 
 	private void initImageList() {
-		mImageList.clear();
-		mInitListFailed = true;
 		switch (mImagePathType) {
 			case LOCAL_ASSETS :
+				mInitListFailed = true;
+				mImageList.clear();
 				ArrayList<String> arrayList = getAssetsImagesList(IMAGE_SUBFOLDER_IN_ASSETS);
 				for (int i = 0; i < arrayList.size(); i++) {
 					AdtImage image = new AdtImage(arrayList.get(i), true);
 					mImageList.add(image);
 				}
+				mCurrentImageIndex = mCurrentIndexArray[mImagePathType
+						.ordinal()];
 				mInitListFailed = false;
 				break;
 
@@ -211,11 +210,10 @@ public class ImageManager {
 				new getImagesTask().execute();
 				break;
 		}
-
-		mCurrentImageIndex = mCurrentIndexArray[mImagePathType.ordinal()];
-		mLastImageIndex = mLastIndexArray[mImagePathType.ordinal()];
 	}
-	private class getImagesTask extends AsyncTask<Void, Void, Void> {
+	private class getImagesTask
+			extends
+				AsyncTask<Void, Void, ArrayList<AdtImage>> {
 		WatchActivity activity = (WatchActivity) mContext;
 		@Override
 		protected void onPreExecute() {
@@ -224,11 +222,14 @@ public class ImageManager {
 			activity.mProgressBar.setVisibility(View.VISIBLE);
 			activity.mProgressBar.setMax(100);
 			activity.EnableNextPrevButtons(false);
+			mInitListFailed = true;
+			mInitInProcess = true;
 		}
 		@Override
-		protected Void doInBackground(Void... params) {
+		protected ArrayList<AdtImage> doInBackground(Void... params) {
+			int count = 0;
+			ArrayList<AdtImage> tempImageList = new ArrayList<AdtImage>();
 			try {
-				int count = 0;
 				for (int k = 0; k < mQueryKeywords.size(); k++) {
 					Log.d(TAG, "querying word " + mQueryKeywords.get(k));
 					String keyword = URLEncoder.encode(mQueryKeywords.get(k),
@@ -244,41 +245,50 @@ public class ImageManager {
 							AdtImage img = temp.get(j);
 							img.urlFull = URLDecoder.decode(img.urlFull);
 							img.urlThumb = URLDecoder.decode(img.urlThumb);
+
 							if (img.urlFull.toLowerCase().endsWith(".gif"))
 								continue;
-							Log.d(TAG, "Adding " + count + ") url="
-									+ img.urlFull + ", tbUrl=" + img.urlThumb);
-							mImageList.add(img);
+
+							if (count % 50 == 0) {
+								Log.d(TAG, "Adding " + count + ") url="
+										+ img.urlFull + ", tbUrl="
+										+ img.urlThumb);
+							}
+							tempImageList.add(img);
 						}
 					}
 				}
-				Log.d(TAG, "image list size = " + mImageList.size());
+				Log.d(TAG, "image list size = " + tempImageList.size());
 
 				activity.mProgressBar.setProgress(mSearchPageNum
 						* mSearchPageSize);
-				mInitListFailed = false;
+				if (tempImageList.size() != 0) {
+					mInitListFailed = false;
+				}
 
 			} catch (Exception e) {
 				e.printStackTrace();
+				return null;
 			}
 
-			if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL
-					&& getImageListSize() == 0) {
-				Log.e(TAG, "remote update fails, back to local mode.");
-				setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
-			}
-
-			return null;
+			return tempImageList;
 		}
 		@Override
-		protected void onPostExecute(Void result) {
+		protected void onPostExecute(ArrayList<AdtImage> result) {
 			super.onPostExecute(result);
+			mInitInProcess = false;
 			activity.EnableNextPrevButtons(true);
 			SystemClock.sleep(200);
 			activity.mProgressBar.setVisibility(View.GONE);
 
-			if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+			if (!mInitListFailed) {
+				mImageList.clear();
+				mImageList = result;
 				new loadAllImageTask().execute();
+			} else {
+				mImagePathType = IMAGE_PATH_TYPE.LOCAL_ASSETS;
+				mCurrentImageIndex = mCurrentIndexArray[mImagePathType
+						.ordinal()];
 			}
 		}
 	}
@@ -378,12 +388,12 @@ public class ImageManager {
 			u = new URL(url);
 			conn = (HttpURLConnection) u.openConnection();
 			conn.setConnectTimeout(5000);
-			conn.setReadTimeout(30000);
 			is = conn.getInputStream();
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inSampleSize = 1;
 			bitmap = BitmapFactory.decodeStream(is, null, options);
 			is.close();
+			conn.disconnect();
 		} catch (Exception e) {
 			Log.e(TAG, "Failed to get image from " + url);
 			e.printStackTrace();
@@ -458,28 +468,7 @@ public class ImageManager {
 	}
 
 	private String getCachedFilename(String url) {
-		final String APP_SUBFOLDER = ".adtwkr";
-		final String APP_CACHE = "AppCache";
-		String path = Environment.getExternalStorageDirectory()
-				+ File.separator + APP_SUBFOLDER + File.separator + APP_CACHE;
-
-		File file = new File(path);
-		if (!file.exists())
-			file.mkdirs();
-
-		if (!file.exists()) {
-			// Environment.getExternalStorageState() !=
-			// Environment.MEDIA_MOUNTED
-			path = mContext.getFilesDir().getPath() + File.separator
-					+ APP_CACHE;
-			file = new File(path);
-			if (!file.exists())
-				file.mkdir();
-
-			if (!file.exists())
-				return null;
-		}
-
+		String path = Utils.getAppCacheDir(mContext);
 		return path + File.separator + url.hashCode();
 
 		// return path + File.separator + getHostname(url) + "."
@@ -629,7 +618,7 @@ public class ImageManager {
 		return baos.toByteArray();
 	}
 
-	private Bitmap Byte2Bimap(byte[] b) {
+	private Bitmap Byte2Bitmap(byte[] b) {
 		if (b.length == 0) {
 			return null;
 		}

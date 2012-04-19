@@ -127,7 +127,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.main);
 
-		mImageManager = ImageManager.getInstance(this);
 		mImageViews[0] = (ImageView) findViewById(R.id.picView1);
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
@@ -143,6 +142,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mProgressBar.setVisibility(View.GONE);
 		mProgressIcon = (ProgressBar) findViewById(R.id.prgIcon);
 		mProgressIcon.setVisibility(View.GONE);
+		mImageManager = ImageManager.getInstance(this);
 
 		mClockGestureDetector = new GestureDetector(this,
 				new MyClockGestureListener());
@@ -274,6 +274,25 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 	};
 
+	private final Runnable mCheckingNetworkInit = new Runnable() {
+		@Override
+		public void run() {
+			if (!mImageManager.isInitInProcess()) {
+				if (mImageManager.isInitListFailed()) {
+					Toast.makeText(WatchActivity.this,
+							getString(R.string.failed_network),
+							Toast.LENGTH_SHORT).show();
+
+					mBtnDisp.setText(R.string.full_screen);
+				} else {
+					mBtnDisp.setText(R.string.browse_all);
+				}
+			} else {
+				mHandler.postDelayed(mCheckingNetworkInit, 500);
+			}
+		}
+	};
+
 	@Override
 	public void onStart() {
 		Log.v(TAG, "onStart()");
@@ -318,15 +337,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 
-		// If Image list initialization failed, restart the process
-		if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL
-				&& mImageManager.isInitListFailed()) {
-			Toast.makeText(this, getString(R.string.failed_network),
-					Toast.LENGTH_SHORT).show();
-
-			mImageManager.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
-			initStartIndex();
-		}
+		if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL)
+			mHandler.postDelayed(mCheckingNetworkInit, 500);
 	}
 
 	@Override
@@ -346,11 +358,15 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		// Log.v(TAG, "onDestroy()");
 		super.onDestroy();
 
-		Editor editor = mSharedPref.edit();
-		if (mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX) {
+		if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS
+				&& mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX) {
+
+			// save offset when browsing local assets
 			Log.v(TAG, "Save current image index " + mImageManager.getCurrent()
 					+ " to shared pref");
-			editor.putInt(PREF_LAST_CODE, mImageManager.getCurrent()).commit();
+			mSharedPref.edit()
+					.putInt(PREF_LAST_CODE, mImageManager.getCurrent())
+					.commit();
 		}
 
 		if (mScreenHint != null) {
@@ -592,15 +608,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mImageManager.setQueryKeyword("美女");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
-					mBtnDisp.setText(R.string.browse_all);
+					mHandler.postDelayed(mCheckingNetworkInit, 500);
+
 				} else {
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
 					mBtnDisp.setText(R.string.full_screen);
 				}
-				if (bStarted) {
-					initStartIndex();
-				}
+
 				break;
 
 			case R.id.menu_full_screen :

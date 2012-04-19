@@ -2,7 +2,9 @@ package com.adtworker.mail;
 
 import java.sql.Time;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -36,6 +38,7 @@ public class Settings extends PreferenceActivity
 	private CheckBoxPreference mWpFullFill;
 	private CheckBoxPreference mAutoRotate;
 	private ListPreference mSlideAnim;
+	private Preference mStorageInfo;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -62,7 +65,18 @@ public class Settings extends PreferenceActivity
 		findPreference("version").setSummary(
 				getString(R.string.version) + " : "
 						+ getString(R.string.app_version));
+
+		mStorageInfo = findPreference("storage_info");
+
+		StringBuilder strBuilder = new StringBuilder();
+		strBuilder
+				.append(getString(R.string.available_bufsize))
+				.append(Utils.getAvailableSize(Utils.getAppCacheDir(this)) / 1024 / 1024)
+				.append("M");
+		mStorageInfo.setSummary(strBuilder.toString());
+
 	}
+
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -118,6 +132,42 @@ public class Settings extends PreferenceActivity
 			return true;
 		}
 
+		if ("storage_info".equals(preference.getKey())) {
+			StringBuilder strBuilder = new StringBuilder();
+			strBuilder
+					.append(getString(R.string.used_bufsize))
+					.append(String.format("%.3f",
+							(float) Utils.getFolderSize(Utils
+									.getAppCacheDir(this)) / 1024 / 1024))
+					.append("M").append(getString(R.string.sure_to_clean));
+
+			new AlertDialog.Builder(this)
+					.setTitle(getString(R.string.clean_buf))
+					.setMessage(strBuilder.toString())
+					.setPositiveButton(getString(R.string.ok),
+							new DialogInterface.OnClickListener() {
+
+								@Override
+								public void onClick(DialogInterface dialog,
+										int which) {
+									Utils.delFolder(Utils
+											.getAppCacheDir(Settings.this));
+									update_storage_sum();
+								}
+							})
+					.setNegativeButton(getString(R.string.cancel),
+							new DialogInterface.OnClickListener() {
+
+								@Override
+								public void onClick(DialogInterface dialog,
+										int which) {
+
+								}
+							}).create().show();
+
+			return true;
+		}
+
 		return super.onPreferenceTreeClick(prefScreen, preference);
 	}
 	protected void refresh() {
@@ -170,6 +220,15 @@ public class Settings extends PreferenceActivity
 			}
 		}
 		mAutoHideAD.setSummary(getString(R.string.pref_autohide_ad_sum));
+	}
+
+	protected void update_storage_sum() {
+		StringBuilder strBuilder = new StringBuilder();
+		strBuilder
+				.append(getResources().getString(R.string.available_bufsize))
+				.append(Utils.getAvailableSize(Utils.getAppCacheDir(this)) / 1024 / 1024)
+				.append("M");
+		mStorageInfo.setSummary(strBuilder.toString());
 	}
 
 	@Override
