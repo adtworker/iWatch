@@ -97,8 +97,7 @@ public class LiveWallpaper extends WallpaperService
 
 				opt.inJustDecodeBounds = false;
 				float t = bm_w / ((float) width);
-				opt.inSampleSize = (int) t
-						+ (t - ((Math.round(t))) > 0 ? 1 : 0);
+				opt.inSampleSize = Math.round(t);
 				Log.d(TAG, "inSampleSize = " + t + " => " + opt.inSampleSize);
 
 				if (isAsset) {

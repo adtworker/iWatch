@@ -37,8 +37,8 @@
     <string name="last_click_time">，最近点击时间：</string>
     <string name="pref_boss_key">老板键模式</string>
     <string name="pref_boss_key_sum">设置使用老板键，显示时钟时将隐藏图片</string>
-    <string name="pref_wp_fullfill">壁纸放大</string>
-    <string name="pref_wp_fullfill_sum">设置壁纸时是否等比放大至全屏</string>
+    <string name="pref_wp_fullfill">壁纸拉伸</string>
+    <string name="pref_wp_fullfill_sum">设置壁纸时是否拉伸放大至全屏，或者进行裁剪</string>
     <string name="pref_pic_fullfill">图片放大</string>
     <string name="pref_pic_fullfill_sum">设置默认放大图片以适应屏幕</string>
     <string name="pref_slide_anim">翻页动画</string>
@@ -59,4 +59,8 @@
     <string name="multiface_crop_help">点击脸部开始</string>
     <string name="crop_label">裁剪壁纸</string>
     <string name="failed_network">网络不可用，使用本地壁纸。</string>
+    <string name="clean_buf">清除缓存</string>
+    <string name="available_bufsize">可用缓存大小为</string>
+    <string name="used_bufsize">您当前的缓存大小为</string>
+    <string name="sure_to_clean">，是否清理？</string>
 </resources>

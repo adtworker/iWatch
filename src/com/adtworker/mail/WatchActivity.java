@@ -17,7 +17,7 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -494,12 +494,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						mScreenHint.cancel();
 						mScreenHint = null;
 					}
-
-					// Intent intent = new Intent();
-					// intent.setClass(WatchActivity.this,
-					// WallPhotoActivity.class);
-					// startActivity(intent);
 				}
+				Intent intent = new Intent();
+				intent.setClass(WatchActivity.this, MyGallery.class);
+				startActivity(intent);
 			}
 		});
 
@@ -755,8 +753,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			Bitmap bitmap = null;
 
-			if (mSharedPref.getBoolean(PREF_WP_FULL_FILL, false)) {
-
+			if (!mSharedPref.getBoolean(PREF_WP_FULL_FILL, false)) {
+				// to crop the image
 				bitmap = mImageManager.getCurrentBitmap();
 
 				Intent cropIntent = new Intent(this, CropImage.class);
@@ -771,10 +769,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				ByteArrayOutputStream bs = new ByteArrayOutputStream();
 				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bs);
+				Log.d(TAG, "bitmap size is " + bs.size());
 				cropIntent.putExtra("data", bs.toByteArray());
 				startActivity(cropIntent);
 
 			} else {
+				// to full fill the image
 				BitmapFactory.Options opt = new BitmapFactory.Options();
 				opt.inJustDecodeBounds = true;
 
@@ -818,8 +818,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				opt.inJustDecodeBounds = false;
 				float t = bm_w / ((float) width / 2);
-				opt.inSampleSize = (int) t
-						+ (t - ((Math.round(t))) > 0 ? 1 : 0);
+				opt.inSampleSize = Math.round(t);
 
 				Log.d(TAG, "inSampleSize = " + t + " => " + opt.inSampleSize);
 
@@ -833,12 +832,18 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					bm = BitmapFactory.decodeStream(fis, null, opt);
 				}
 
-				bitmap = Bitmap.createBitmap(width, height,
-						Bitmap.Config.RGB_565);
-				Canvas canvas = new Canvas(bitmap);
+				// bitmap = Bitmap.createBitmap(width, height,
+				// Bitmap.Config.RGB_565);
+				// Canvas canvas = new Canvas(bitmap);
+				// canvas.drawBitmap(bm, (width - opt.outWidth) / 2,
+				// (height - opt.outHeight) / 2, null);
 
-				canvas.drawBitmap(bm, (width - opt.outWidth) / 2,
-						(height - opt.outHeight) / 2, null);
+				float f1 = (float) width / bm.getWidth();
+				float f2 = (float) height / bm.getHeight();
+				Matrix matrix = new Matrix();
+				matrix.postScale(f1, f2);
+				bitmap = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(),
+						bm.getHeight(), matrix, true);
 				bm.recycle();
 				WallpaperManager.getInstance(this).setBitmap(bitmap);
 			}

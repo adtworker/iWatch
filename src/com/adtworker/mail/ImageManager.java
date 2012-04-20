@@ -43,8 +43,8 @@ public class ImageManager {
 	private int mCurrentImageIndex = INVALID_PIC_INDEX;
 	private final int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
-	private final int mSearchPageNum = 1;
-	private final int mSearchPageSize = 100;
+	private final int mSearchPageNum = 2;
+	private final int mSearchPageSize = 20;
 	private Bitmap mCurrentBitmap = null;
 
 	public final static int INVALID_PIC_INDEX = -1;
@@ -189,6 +189,40 @@ public class ImageManager {
 		String imgstr = getImageStr(step);
 		mCurrentBitmap = getBitmap(imgstr);
 		return mCurrentBitmap;
+	}
+
+	public Bitmap getPosBitmap(int pos, boolean tbFirst) {
+		if (pos < 0 || pos >= getImageListSize())
+			return null;
+
+		AdtImage adt = mImageList.get(pos);
+		String url = adt.urlFull;
+		if (tbFirst && adt.hasThumb) {
+			url = adt.urlThumb;
+		}
+		Bitmap bitmap = null;
+		try {
+			if (mImagePathType == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
+				InputStream is = mContext.getAssets().open(url);
+				bitmap = BitmapFactory.decodeStream(is);
+			} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+				bitmap = getBitmapFromSDCard(url);
+				if (bitmap == null) {
+					bitmap = getBitmapFromUrl(url);
+				}
+				if (tbFirst && adt.hasThumb && bitmap == null) {
+					url = adt.urlFull;
+					bitmap = getBitmapFromSDCard(url);
+				}
+				if (tbFirst && adt.hasThumb && bitmap == null) {
+					bitmap = getBitmapFromUrl(url);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return bitmap;
 	}
 
 	private void initImageList() {
