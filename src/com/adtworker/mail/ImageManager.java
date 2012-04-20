@@ -412,7 +412,7 @@ public class ImageManager {
 		}
 	}
 
-	private Bitmap getBitmapFromUrl(String url) {
+	public Bitmap getBitmapFromUrl(String url) {
 
 		Bitmap bitmap = null;
 		URL u = null;
@@ -434,7 +434,8 @@ public class ImageManager {
 		}
 		return bitmap;
 	}
-	private Bitmap getBitmapFromSDCard(String url) {
+
+	public Bitmap getBitmapFromSDCard(String url) {
 		Bitmap bitmap = null;
 		try {
 			FileInputStream fis = new FileInputStream(getFile(url));

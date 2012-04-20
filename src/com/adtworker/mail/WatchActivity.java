@@ -1,6 +1,5 @@
 package com.adtworker.mail;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -765,12 +764,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				extras.putInt("outputX", width);
 				extras.putInt("outputY", height);
 				extras.putBoolean("noFaceDetection", true);
+				extras.putString("imgUrl", mImageManager.getCurrentStr());
 				cropIntent.putExtras(extras);
 
-				ByteArrayOutputStream bs = new ByteArrayOutputStream();
-				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bs);
-				Log.d(TAG, "bitmap size is " + bs.size());
-				cropIntent.putExtra("data", bs.toByteArray());
+				// ByteArrayOutputStream bs = new ByteArrayOutputStream();
+				// bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bs);
+				// Log.d(TAG, "bitmap size is " + bs.size());
+				// cropIntent.putExtra("data", bs.toByteArray());
 				startActivity(cropIntent);
 
 			} else {
