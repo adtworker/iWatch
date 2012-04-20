@@ -475,14 +475,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnDisp.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					// hide mainLayout only leave background image
-					if (getMLVisibility()) {
-						setMLVisibility(false);
-					}
-				} else if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-
-				}
 				Intent intent = new Intent();
 				intent.setClass(WatchActivity.this, MyGallery.class);
 				startActivity(intent);
@@ -721,6 +713,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public void EnableNextPrevButtons(boolean enabled) {
 		mBtnPrev.setEnabled(enabled);
 		mBtnNext.setEnabled(enabled);
+		mBtnDisp.setEnabled(enabled);
 	}
 
 	private void setWallpaper() {
