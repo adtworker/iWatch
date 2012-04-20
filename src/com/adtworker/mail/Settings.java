@@ -18,6 +18,7 @@ import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
 import com.adview.AdViewTargeting.RunMode;
@@ -45,7 +46,8 @@ public class Settings extends PreferenceActivity
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.prefs);
 		setContentView(R.layout.pref_adview);
-		if (android.os.Build.VERSION.SDK_INT < 12) {
+		// Disable AD for android 3.0 and above for crash of suizong
+		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
 			setupAdLayout();
 		}
 
@@ -136,7 +138,7 @@ public class Settings extends PreferenceActivity
 			StringBuilder strBuilder = new StringBuilder();
 			strBuilder
 					.append(getString(R.string.used_bufsize))
-					.append(String.format("%.3f",
+					.append(String.format("%.1f",
 							(float) Utils.getFolderSize(Utils
 									.getAppCacheDir(this)) / 1024 / 1024))
 					.append("M").append(getString(R.string.sure_to_clean));

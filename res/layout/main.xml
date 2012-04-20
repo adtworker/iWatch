@@ -8,7 +8,8 @@
    <TextView
         android:id="@+id/picName"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom" />
 
     <ImageView
         android:id="@+id/picView1"
@@ -108,7 +109,7 @@
                 android:layout_height="fill_parent"
                 android:gravity="center"
                 style="@style/button_style"
-                android:text="@string/full_screen" />
+                android:text="@string/browse_all" />
 
             <com.adtworker.mail.ColorButton
                 android:id="@+id/btnNext"

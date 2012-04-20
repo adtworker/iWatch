@@ -117,7 +117,7 @@ public class MyGallery extends Activity {
 			ImageView i = new ImageView(mContext);
 
 			i.setImageDrawable(drawablesFromUrl.get(position));
-			i.setLayoutParams(new CoverFlow.LayoutParams(200, 200));
+			i.setLayoutParams(new CoverFlow.LayoutParams(300, 300));
 			i.setScaleType(ImageView.ScaleType.FIT_CENTER);
 			i.setBackgroundResource(mGalleryItemBackground);
 

@@ -46,6 +46,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
+import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewInterface;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
@@ -166,7 +167,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		// Disable AD for android 3.0 and above for crash of suizong
-		if (android.os.Build.VERSION.SDK_INT < 12) {
+		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
 			setupAdLayout();
 		}
 		setupButtons();
@@ -203,8 +204,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		mImageViews[mImageViewCurrent].setImageBitmap(bm);
 		mImageViews[mImageViewCurrent].setScaleType(mScaleType);
-		// TextView tv = (TextView) findViewById(R.id.picName);
-		// tv.setText(bm.getWidth() + "x" + bm.getHeight());
+
+		TextView tv = (TextView) findViewById(R.id.picName);
+		tv.setText(String.format("%d/%d, %dx%d",
+				mImageManager.getCurrent() + 1,
+				mImageManager.getImageListSize(), bm.getWidth(), bm.getHeight()));
 	}
 
 	private final Runnable mUpdateImageView = new Runnable() {
@@ -232,13 +236,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				bm = mImageManager.getImageBitmap(mStep);
 			}
 
-			if (mScreenHint != null) {
-				mScreenHint.setText(String.format("%d/%d",
-						mImageManager.getCurrent() + 1,
-						mImageManager.getImageListSize()));
-			}
+			TextView tv = (TextView) findViewById(R.id.picName);
+			tv.setText(String.format("%d/%d, %dx%d",
+					mImageManager.getCurrent() + 1,
+					mImageManager.getImageListSize(), bm.getWidth(),
+					bm.getHeight()));
 
-			Log.v(TAG, "current str: " + mImageManager.getCurrentStr());
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
 				mScaleType = DEFAULT_SCALETYPE;
 			}
@@ -281,10 +284,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					Toast.makeText(WatchActivity.this,
 							getString(R.string.failed_network),
 							Toast.LENGTH_SHORT).show();
-
-					mBtnDisp.setText(R.string.full_screen);
-				} else {
-					mBtnDisp.setText(R.string.browse_all);
 				}
 			} else {
 				mHandler.postDelayed(mCheckingNetworkInit, 500);
@@ -482,17 +481,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						setMLVisibility(false);
 					}
 				} else if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-					if (mScreenHint == null) {
-						mScreenHint = OnScreenHint.makeText(WatchActivity.this,
-								String.format("%d/%d",
-										mImageManager.getCurrent() + 1,
-										mImageManager.getImageListSize()));
-						mScreenHint.show();
 
-					} else {
-						mScreenHint.cancel();
-						mScreenHint = null;
-					}
 				}
 				Intent intent = new Intent();
 				intent.setClass(WatchActivity.this, MyGallery.class);
@@ -610,7 +599,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} else {
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
-					mBtnDisp.setText(R.string.full_screen);
 				}
 
 				break;

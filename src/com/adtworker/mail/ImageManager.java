@@ -43,8 +43,8 @@ public class ImageManager {
 	private int mCurrentImageIndex = INVALID_PIC_INDEX;
 	private final int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
-	private final int mSearchPageNum = 2;
-	private final int mSearchPageSize = 20;
+	private final int mSearchPageNum = 1;
+	private final int mSearchPageSize = 80;
 	private Bitmap mCurrentBitmap = null;
 
 	public final static int INVALID_PIC_INDEX = -1;
@@ -204,7 +204,12 @@ public class ImageManager {
 		try {
 			if (mImagePathType == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
 				InputStream is = mContext.getAssets().open(url);
-				bitmap = BitmapFactory.decodeStream(is);
+				BitmapFactory.Options opt = new BitmapFactory.Options();
+				if (tbFirst)
+					opt.inSampleSize = 4;
+				else
+					opt.inSampleSize = 1;
+				bitmap = BitmapFactory.decodeStream(is, null, opt);
 			} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
 				bitmap = getBitmapFromSDCard(url);
 				if (bitmap == null) {
@@ -212,7 +217,7 @@ public class ImageManager {
 				}
 				if (tbFirst && adt.hasThumb && bitmap == null) {
 					url = adt.urlFull;
-					bitmap = getBitmapFromSDCard(url);
+					bitmap = getBitmapFromSDCard(url, 4);
 				}
 				if (tbFirst && adt.hasThumb && bitmap == null) {
 					bitmap = getBitmapFromUrl(url);
@@ -272,7 +277,7 @@ public class ImageManager {
 					for (int i = 0; i < mSearchPageNum; i++) {
 
 						List<AdtImage> temp = ImageSearchAdapter.getImgList(
-								keyword, 960, 800, i + 1, i * mSearchPageSize);
+								keyword, 480, 800, i + 1, i * mSearchPageSize);
 
 						for (int j = 0; j < temp.size(); j++) {
 							activity.mProgressBar.setProgress(++count);
@@ -440,6 +445,20 @@ public class ImageManager {
 		try {
 			FileInputStream fis = new FileInputStream(getFile(url));
 			bitmap = BitmapFactory.decodeStream(fis);
+			fis.close();
+		} catch (Exception e) {
+			return bitmap;
+		}
+		return bitmap;
+	}
+
+	public Bitmap getBitmapFromSDCard(String url, int inSampleSize) {
+		Bitmap bitmap = null;
+		try {
+			FileInputStream fis = new FileInputStream(getFile(url));
+			BitmapFactory.Options opt = new BitmapFactory.Options();
+			opt.inSampleSize = inSampleSize;
+			bitmap = BitmapFactory.decodeStream(fis, null, opt);
 			fis.close();
 		} catch (Exception e) {
 			return bitmap;
