@@ -105,8 +105,14 @@ public class ImageManager {
 			return true;
 	}
 	public void setCurrent(int index) {
-		if (isValidIndex(index)) {
-			mCurrentImageIndex = index;
+		if (!isValidIndex(index)) {
+			int size = getImageListSize();
+			index = index + size % size;
+		}
+
+		mCurrentImageIndex = index;
+		if (mCurrentBitmap != null) {
+			mCurrentBitmap = null;
 		}
 	}
 
@@ -132,6 +138,7 @@ public class ImageManager {
 	}
 
 	public int getCurrent() {
+		Log.d(TAG, "current index = " + mCurrentImageIndex);
 		return mCurrentImageIndex;
 	}
 

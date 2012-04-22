@@ -12,7 +12,9 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -39,21 +41,38 @@ public class MyGallery extends Activity {
 
 		imageAdapter = new ImageAdapter(this);
 		final ImageView imgView = (ImageView) findViewById(R.id.GalleryView);
-		Gallery g = (Gallery) findViewById(R.id.Gallery);
+		final Gallery g = (Gallery) findViewById(R.id.Gallery);
 		g.setAdapter(imageAdapter);
 		g.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v,
 					int position, long id) {
-				mImageManager.setCurrent(position);
 				imgView.setImageBitmap(mImageManager.getPosBitmap(position,
 						false));
 				imgView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+				setResult(position);
 			}
 		});
 
+		imgView.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				int gv = g.getVisibility();
+				g.setVisibility(gv == View.GONE ? View.VISIBLE : View.GONE);
+			}
+
+		});
+
+		int pos = mImageManager.getCurrent();
+		if (pos != ImageManager.INVALID_PIC_INDEX) {
+			g.setSelection(pos);
+		}
+		setResult(pos);
+
 		new AddImageTask().execute();
 
+		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adLayout);
+		Utils.setupAdLayout(this, adLayout);
 	}
 
 	class AddImageTask extends AsyncTask<Void, Void, Void> {
@@ -69,13 +88,21 @@ public class MyGallery extends Activity {
 
 			return (null);
 		}
+
 		@Override
 		protected void onProgressUpdate(Void... unused) {
 			imageAdapter.notifyDataSetChanged();
+			int pos = mImageManager.getCurrent();
+			if (imageAdapter.getCount() == pos + 1) {
+				if (pos != ImageManager.INVALID_PIC_INDEX) {
+					((Gallery) findViewById(R.id.Gallery)).setSelection(pos);
+				}
+			}
 		}
 
 		@Override
 		protected void onPostExecute(Void unused) {
+
 		}
 	}
 
@@ -115,11 +142,13 @@ public class MyGallery extends Activity {
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			ImageView i = new ImageView(mContext);
+			DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+			int width = displayMetrics.widthPixels / 3;
 
 			i.setImageDrawable(drawablesFromUrl.get(position));
-			i.setLayoutParams(new CoverFlow.LayoutParams(300, 300));
+			i.setLayoutParams(new CoverFlow.LayoutParams(width, width));
 			i.setScaleType(ImageView.ScaleType.FIT_CENTER);
-			i.setBackgroundResource(mGalleryItemBackground);
+			// i.setBackgroundResource(mGalleryItemBackground);
 
 			return i;
 		}

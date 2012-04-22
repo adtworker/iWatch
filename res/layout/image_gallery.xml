@@ -21,5 +21,12 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content" />
 
+        <LinearLayout
+            android:id="@+id/adLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:background="@color/black" />
+
     </LinearLayout>
 </FrameLayout>

@@ -14,14 +14,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-
-import com.adtworker.mail.constants.Constants;
-import com.adview.AdViewLayout;
-import com.adview.AdViewTargeting;
-import com.adview.AdViewTargeting.RunMode;
 
 public class Settings extends PreferenceActivity
 		implements
@@ -46,10 +39,6 @@ public class Settings extends PreferenceActivity
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.prefs);
 		setContentView(R.layout.pref_adview);
-		// Disable AD for android 3.0 and above for crash of suizong
-		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
-			setupAdLayout();
-		}
 
 		mSharedPref = getSharedPreferences(WatchActivity.PREFERENCES,
 				Context.MODE_PRIVATE);
@@ -77,6 +66,8 @@ public class Settings extends PreferenceActivity
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
 
+		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
+		Utils.setupAdLayout(this, adLayout);
 	}
 
 	@Override
@@ -248,25 +239,5 @@ public class Settings extends PreferenceActivity
 		}
 
 		return true;
-	}
-
-	private void setupAdLayout() {
-		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
-		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
-		// 保证每次都从服务器取配置
-		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
-		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
-		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
-
-		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-				FrameLayout.LayoutParams.FILL_PARENT,
-				FrameLayout.LayoutParams.WRAP_CONTENT);
-		params.gravity = Gravity.TOP | Gravity.CENTER;
-
-		AdViewLayout adViewLayout = new AdViewLayout(this,
-				"SDK20122309480217x9sp4og4fxrj2ur");
-		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
-		adLayout.addView(adViewLayout, params);
-		adLayout.invalidate();
 	}
 }

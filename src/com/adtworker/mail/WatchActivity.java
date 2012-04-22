@@ -46,11 +46,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
-import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewInterface;
-import com.adview.AdViewLayout;
-import com.adview.AdViewTargeting;
-import com.adview.AdViewTargeting.RunMode;
 import com.android.camera.CropImage;
 import com.android.camera.OnScreenHint;
 
@@ -81,6 +77,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	ImageManager mImageManager;
 
 	private boolean bStarted = false;
+	private boolean bSetAPos = false;
 	private int mFace = -1;
 	private int mStep = 1;
 	private int iAdClick = 0;
@@ -166,10 +163,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			iv.setOnTouchListener(rootListener);
 		}
 
-		// Disable AD for android 3.0 and above for crash of suizong
-		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
-			setupAdLayout();
-		}
 		setupButtons();
 
 		mSlideShowInAnimation = new Animation[]{
@@ -187,6 +180,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				makeOutAnimation(R.anim.slide_out_vertical_r),};
 
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
+
+		Utils.setupAdLayout(this, mAdLayout);
 	}
 
 	@SuppressWarnings("unused")
@@ -229,9 +224,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			newView.setVisibility(View.VISIBLE);
 
 			Bitmap bm;
-			if (!bStarted) {
+			if (!bStarted || bSetAPos) {
 				bm = mImageManager.getCurrentBitmap();
-				bStarted = !bStarted;
+				bStarted = true;
+				bSetAPos = false;
 			} else {
 				bm = mImageManager.getImageBitmap(mStep);
 			}
@@ -442,18 +438,21 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		setAdVisibility(true);
 	}
 
-	private void setupAdLayout() {
-		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
-		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
-		// 保证每次都从服务器取配置
-		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
-		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
-		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
-		AdViewLayout adViewLayout = new AdViewLayout(this,
-				"SDK20122309480217x9sp4og4fxrj2ur");
-		adViewLayout.setAdViewInterface(this);
-		mAdLayout.addView(adViewLayout);
-		mAdLayout.invalidate();
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch (requestCode) {
+			case 1 :
+				if (resultCode != ImageManager.INVALID_PIC_INDEX
+						&& resultCode != mImageManager.getCurrent()) {
+					mImageManager.setCurrent(resultCode);
+					bSetAPos = true;
+					goNextorPrev(1);
+				}
+				break;
+
+			default :
+				break;
+		}
 	}
 
 	private void setupButtons() {
@@ -477,7 +476,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			public void onClick(View arg0) {
 				Intent intent = new Intent();
 				intent.setClass(WatchActivity.this, MyGallery.class);
-				startActivity(intent);
+				startActivityForResult(intent, 1);
 			}
 		});
 
@@ -522,16 +521,18 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		if (mImageManager.getImageListSize() == 0)
 			return;
 
-		if (step > 0 && !bStarted) {
+		if (step > 0 && !bStarted || bSetAPos) {
 
-			if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
-				setClockVisibility(false);
+			if (!bSetAPos) {
+				if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
+					setClockVisibility(false);
+				}
+				initStartIndex();
 			}
 
 			mBtnNext.setText(getResources().getString(R.string.strNext));
 			mBtnPrev.setVisibility(View.VISIBLE);
 
-			initStartIndex();
 		}
 
 		mStep = step;
