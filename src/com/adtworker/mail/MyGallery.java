@@ -72,7 +72,7 @@ public class MyGallery extends Activity {
 		new AddImageTask().execute();
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adLayout);
-		Utils.setupAdLayout(this, adLayout);
+		Utils.setupAdLayout(this, adLayout, false);
 	}
 
 	class AddImageTask extends AsyncTask<Void, Void, Void> {
@@ -93,10 +93,11 @@ public class MyGallery extends Activity {
 		protected void onProgressUpdate(Void... unused) {
 			imageAdapter.notifyDataSetChanged();
 			int pos = mImageManager.getCurrent();
+			if (pos == ImageManager.INVALID_PIC_INDEX)
+				return;
+
 			if (imageAdapter.getCount() == pos + 1) {
-				if (pos != ImageManager.INVALID_PIC_INDEX) {
-					((Gallery) findViewById(R.id.Gallery)).setSelection(pos);
-				}
+				((Gallery) findViewById(R.id.Gallery)).setSelection(pos);
 			}
 		}
 

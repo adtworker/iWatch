@@ -5,7 +5,9 @@ import java.io.File;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Environment;
+import android.view.Gravity;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewInterface;
@@ -148,22 +150,29 @@ public class Utils {
 	 *            parent
 	 * @return
 	 */
-	@SuppressWarnings("unused")
-	public static void setupAdLayout(Context context, ViewGroup parent) {
-		if (android.os.Build.VERSION.SDK_INT >= 12
-				&& !(Constants.ALWAYS_SHOW_AD))
-			return;
+	public static void setupAdLayout(Activity context, ViewGroup parent,
+			boolean setAdInterface) {
+		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
 
-		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
-		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
-		// 保证每次都从服务器取配置
-		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
-		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
-		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
-		AdViewLayout adViewLayout = new AdViewLayout((Activity) context,
-				"SDK20122309480217x9sp4og4fxrj2ur");
-		adViewLayout.setAdViewInterface((AdViewInterface) context);
-		parent.addView(adViewLayout);
-		parent.invalidate();
+			/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
+			// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
+			// 保证每次都从服务器取配置
+			AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
+			/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
+			// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
+
+			FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+					FrameLayout.LayoutParams.FILL_PARENT,
+					FrameLayout.LayoutParams.WRAP_CONTENT);
+			params.gravity = Gravity.TOP | Gravity.CENTER;
+
+			AdViewLayout adViewLayout = new AdViewLayout(context,
+					"SDK20122309480217x9sp4og4fxrj2ur");
+			if (setAdInterface) {
+				adViewLayout.setAdViewInterface((AdViewInterface) context);
+			}
+			parent.addView(adViewLayout);
+			parent.invalidate();
+		}
 	}
 }

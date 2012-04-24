@@ -181,7 +181,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 
-		Utils.setupAdLayout(this, mAdLayout);
+		Utils.setupAdLayout(this, mAdLayout, true);
 	}
 
 	@SuppressWarnings("unused")
@@ -495,6 +495,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	}
 
 	private void initStartIndex() {
+		Log.d(TAG, "initStartIndex() getCurrent=" + mImageManager.getCurrent());
+		Log.d(TAG,
+				"initStartIndex() getImageListSize="
+						+ mImageManager.getImageListSize());
+
 		if (mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX)
 			return;
 		int size = mImageManager.getImageListSize();
@@ -506,11 +511,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
 			int index = mSharedPref.getInt(PREF_LAST_CODE,
 					ImageManager.INVALID_PIC_INDEX);
-
-			if (bStarted) {
-				index = (size + index - 1) % size;
-			}
-			mImageManager.setCurrent(index);
+			if (index != ImageManager.INVALID_PIC_INDEX)
+				mImageManager.setCurrent(index);
 		} else {
 			mImageManager.setCurrent(0);
 		}

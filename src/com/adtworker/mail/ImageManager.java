@@ -49,7 +49,7 @@ public class ImageManager {
 
 	public final static int INVALID_PIC_INDEX = -1;
 
-	public IMAGE_PATH_TYPE mImagePathType = IMAGE_PATH_TYPE.LOCAL_ASSETS;
+	public IMAGE_PATH_TYPE mImagePathType;
 	public ArrayList<AdtImage> mImageList = new ArrayList<AdtImage>();
 	private final ArrayList<String> mQueryKeywords = new ArrayList<String>();
 
@@ -66,6 +66,7 @@ public class ImageManager {
 		for (int i = 0; i < mCurrentIndexArray.length; i++)
 			mCurrentIndexArray[i] = INVALID_PIC_INDEX;
 
+		mImagePathType = IMAGE_PATH_TYPE.LOCAL_ASSETS;
 		setImagePathType(mImagePathType);
 	}
 
@@ -138,7 +139,6 @@ public class ImageManager {
 	}
 
 	public int getCurrent() {
-		Log.d(TAG, "current index = " + mCurrentImageIndex);
 		return mCurrentImageIndex;
 	}
 
