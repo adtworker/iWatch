@@ -14,15 +14,17 @@ import com.adview.AdViewInterface;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
 import com.adview.AdViewTargeting.RunMode;
+import com.google.ads.AdRequest;
+import com.google.ads.AdSize;
+import com.google.ads.AdView;
 
 public class Utils {
 
 	/**
 	 * Delete a specified folder and its contents
 	 * 
-	 * @param String
-	 *            folderPath
-	 * @return
+	 * @param folderPath
+	 * @return void
 	 */
 	public static void delFolder(String folderPath) {
 		try {
@@ -68,9 +70,8 @@ public class Utils {
 	/**
 	 * get total size of specified folder
 	 * 
-	 * @param String
-	 *            path
-	 * @return
+	 * @param path
+	 * @return long
 	 */
 	public static long getFolderSize(String path) {
 		File file = new File(path);
@@ -97,9 +98,8 @@ public class Utils {
 	/**
 	 * get available size of specified mount partition
 	 * 
-	 * @param String
-	 *            path
-	 * @return
+	 * @param path
+	 * @return long
 	 */
 	public static long getAvailableSize(String path) {
 		File pathFile = new File(path);
@@ -112,8 +112,7 @@ public class Utils {
 	/**
 	 * get App's cache folder path
 	 * 
-	 * @param String
-	 *            folderPath
+	 * @param folderPath
 	 * @return String
 	 */
 	public static String getAppCacheDir(Context context) {
@@ -142,13 +141,13 @@ public class Utils {
 	}
 
 	/**
-	 * 设置广告位
+	 * 设置Adview广告位
 	 * 
-	 * @param Context
-	 *            context
-	 * @param ViewGroup
-	 *            parent
-	 * @return
+	 * @param context
+	 * @param parent
+	 * @param setAdInterface
+	 *            是否重写AD接口
+	 * @return void
 	 */
 	public static void setupAdLayout(Activity context, ViewGroup parent,
 			boolean setAdInterface) {
@@ -173,6 +172,21 @@ public class Utils {
 			}
 			parent.addView(adViewLayout);
 			parent.invalidate();
+		} else if (android.os.Build.VERSION.SDK_INT >= 12) {
+			setupAdmobAdView(context, parent);
 		}
+	}
+
+	/**
+	 * 设置Admob广告位
+	 * 
+	 * @param context
+	 * @param parent
+	 * @return void
+	 */
+	public static void setupAdmobAdView(Activity context, ViewGroup parent) {
+		AdView adView = new AdView(context, AdSize.BANNER, "a14f8f669856e4e");
+		parent.addView(adView);
+		adView.loadAd(new AdRequest());
 	}
 }

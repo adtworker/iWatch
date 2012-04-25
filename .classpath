@@ -15,7 +15,6 @@
 	<classpathentry kind="lib" path="lib/AppMediaAdAndroidSdk-1.0.4.jar"/>
 	<classpathentry kind="lib" path="lib/casee-ad-sdk-2.6.jar"/>
 	<classpathentry kind="lib" path="lib/domob_android_sdk-2.0.2.jar"/>
-	<classpathentry kind="lib" path="lib/GoogleAdMobAdsSdk-4.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/gssdk_1.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/InMobiAndroidSDK.jar"/>
 	<classpathentry kind="lib" path="lib/IZPView.jar"/>
@@ -35,6 +34,7 @@
 	<classpathentry kind="lib" path="lib/wqadsdk_release.jar"/>
 	<classpathentry kind="lib" path="lib/youmi-android.jar"/>
 	<classpathentry kind="lib" path="lib/zestadz_sdk_androidv1.2.jar"/>
+	<classpathentry kind="lib" path="lib/GoogleAdMobAdsSdk-6.0.0.jar"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="lib" path="lib/htmlcleaner-2.2.jar"/>
 	<classpathentry kind="lib" path="lib/jdom-1.1.jar"/>

@@ -74,7 +74,8 @@ public class Settings extends PreferenceActivity
 		mStorageInfo.setSummary(strBuilder.toString());
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
-		Utils.setupAdLayout(this, adLayout, false);
+		// Utils.setupAdLayout(this, adLayout, false);
+		Utils.setupAdmobAdView(this, adLayout);
 	}
 
 	@Override

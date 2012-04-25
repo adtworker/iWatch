@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
 
     <uses-sdk android:minSdkVersion="8"
-              android:maxSdkVersion="12" />
+              android:maxSdkVersion="16" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.READ_OWNER_DATA"/>
@@ -98,8 +98,8 @@
 	<activity 	android:name="com.adchina.android.ads.views.AdBrowserView" />
 		
 	<!-- AdView SDK for AdMob -->
-	<activity android:name="com.google.ads.AdActivity" 
-        android:configChanges="orientation|keyboard|keyboardHidden"/>
+	<activity android:name="com.google.ads.AdActivity"
+              android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
 
 	<!-- AdView SDK for AdWo -->  
 	<activity android:name="com.adwo.adsdk.AdwoAdBrowserActivity" /> 
