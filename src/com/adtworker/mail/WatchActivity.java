@@ -526,15 +526,15 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		if (step > 0 && !bStarted || bSetAPos) {
 
 			if (!bSetAPos) {
-				if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
-					setClockVisibility(false);
-				}
 				initStartIndex();
+			}
+
+			if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
+				setClockVisibility(false);
 			}
 
 			mBtnNext.setText(getResources().getString(R.string.strNext));
 			mBtnPrev.setVisibility(View.VISIBLE);
-
 		}
 
 		mStep = step;
