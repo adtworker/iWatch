@@ -226,8 +226,10 @@ public class ImageManager {
 					url = adt.urlFull;
 					bitmap = getBitmapFromSDCard(url, 4);
 				}
-				if (tbFirst && adt.hasThumb && bitmap == null) {
+				if (!tbFirst && bitmap == null) {
 					bitmap = getBitmapFromUrl(url);
+					if (bitmap != null)
+						writeBitmap2AppCache(bitmap, url);
 				}
 			}
 		} catch (IOException e) {

@@ -38,6 +38,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
@@ -56,6 +58,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private int mImageViewCurrent = 0;
 	private final ImageView[] mImageViews = new ImageView[2];
 	private final Random mRandom = new Random(System.currentTimeMillis());
+	private CoverFlow mCoverFlow;
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
 	private TextView mBtnDisp;
@@ -126,11 +129,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		mImageViews[0] = (ImageView) findViewById(R.id.picView1);
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
+		mCoverFlow = (CoverFlow) findViewById(R.id.gallery);
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
 		mBtnDisp = (TextView) findViewById(R.id.btnDisp);
 		mBtnClock = (TextView) findViewById(R.id.btnClock);
 		mBtnPrev.setVisibility(View.GONE);
+		mBtnDisp.setEnabled(false);
+		mCoverFlow.setVisibility(View.GONE);
 
 		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
 		mAdLayout = (LinearLayout) findViewById(R.id.adLayout);
@@ -162,6 +168,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		for (ImageView iv : mImageViews) {
 			iv.setOnTouchListener(rootListener);
 		}
+		mCoverFlow.setAdapter(new ImageAdapter(this));
+		mCoverFlow.setOnItemClickListener(new OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View v,
+					int position, long id) {
+				int pos = position - 1;
+				mImageManager.setCurrent(pos);
+				WatchActivity.this.goNextorPrev(1);
+			}
+		});
 
 		setupButtons();
 
@@ -231,6 +247,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			} else {
 				bm = mImageManager.getImageBitmap(mStep);
 			}
+			mCoverFlow.setSelection(mImageManager.getCurrent());
 
 			TextView tv = (TextView) findViewById(R.id.picName);
 			tv.setText(String.format("%d/%d, %dx%d",
@@ -280,6 +297,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					Toast.makeText(WatchActivity.this,
 							getString(R.string.failed_network),
 							Toast.LENGTH_SHORT).show();
+				} else {
+					mCoverFlow.setAdapter(new ImageAdapter(WatchActivity.this));
+					mImageManager.setCurrent(mImageManager.getCurrent() - 1);
+					goNextorPrev(1);
 				}
 			} else {
 				mHandler.postDelayed(mCheckingNetworkInit, 500);
@@ -474,9 +495,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnDisp.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				Intent intent = new Intent();
-				intent.setClass(WatchActivity.this, MyGallery.class);
-				startActivityForResult(intent, 1);
+				// Intent intent = new Intent();
+				// intent.setClass(WatchActivity.this, MyGallery.class);
+				// startActivityForResult(intent, 1);
+				int visibility = mCoverFlow.getVisibility();
+				mCoverFlow.setVisibility(visibility == View.GONE
+						? View.VISIBLE
+						: View.GONE);
 			}
 		});
 
@@ -535,6 +560,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			mBtnNext.setText(getResources().getString(R.string.strNext));
 			mBtnPrev.setVisibility(View.VISIBLE);
+			mBtnDisp.setEnabled(true);
 		}
 
 		mStep = step;

@@ -79,6 +79,11 @@
 
         </LinearLayout>
 
+        <com.adtworker.mail.CoverFlow
+            android:id="@+id/gallery"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+
         <LinearLayout
             android:id="@+id/btnLayout"
             android:layout_width="fill_parent"
