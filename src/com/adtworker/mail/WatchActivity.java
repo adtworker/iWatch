@@ -963,13 +963,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			case KeyEvent.KEYCODE_BACK :
 				// alert user when key_back is pressed
+				// int whichButton) {
 				// new AlertDialog.Builder(this)
 				// .setMessage(getString(R.string.exit_msg))
 				// .setPositiveButton(getString(R.string.ok),
 				// new DialogInterface.OnClickListener() {
 				// @Override
 				// public void onClick(DialogInterface dialog,
-				// int whichButton) {
 				// finish();
 				// }
 				// })
@@ -997,8 +997,22 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} else {
 					finish();
 				}
+				break;
 
-				return false;
+			case KeyEvent.KEYCODE_DPAD_LEFT :
+			case KeyEvent.KEYCODE_DPAD_UP :
+				if (bStarted)
+					goNextorPrev(-1);
+				break;
+
+			case KeyEvent.KEYCODE_DPAD_RIGHT :
+			case KeyEvent.KEYCODE_DPAD_DOWN :
+			case KeyEvent.KEYCODE_SPACE :
+			case KeyEvent.KEYCODE_ENTER :
+				goNextorPrev(1);
+				break;
+
+			default :
 		}
 
 		return super.onKeyUp(keycode, event);
