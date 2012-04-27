@@ -81,6 +81,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 	private boolean bStarted = false;
 	private boolean bSetAPos = false;
+	private boolean bClickCoverFlow = false;
 	private int mFace = -1;
 	private int mStep = 1;
 	private int iAdClick = 0;
@@ -173,9 +174,19 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v,
 					int position, long id) {
-				int pos = position - 1;
-				mImageManager.setCurrent(pos);
-				WatchActivity.this.goNextorPrev(1);
+
+				bClickCoverFlow = true;
+				int delta = 0;
+				if (position > mImageManager.getCurrent())
+					delta = 1;
+				else if (position < mImageManager.getCurrent())
+					delta = -1;
+				else {
+					bClickCoverFlow = false;
+					return;
+				}
+				mImageManager.setCurrent(position - delta);
+				WatchActivity.this.goNextorPrev(delta);
 			}
 		});
 
@@ -247,7 +258,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			} else {
 				bm = mImageManager.getImageBitmap(mStep);
 			}
-			mCoverFlow.setSelection(mImageManager.getCurrent());
+			if (!bClickCoverFlow) {
+				mCoverFlow.setSelection(mImageManager.getCurrent());
+			} else {
+				bClickCoverFlow = false;
+			}
 
 			TextView tv = (TextView) findViewById(R.id.picName);
 			tv.setText(String.format("%d/%d, %dx%d",
