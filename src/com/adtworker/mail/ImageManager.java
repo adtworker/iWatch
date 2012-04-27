@@ -12,7 +12,9 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -50,7 +52,9 @@ public class ImageManager {
 	public final static int INVALID_PIC_INDEX = -1;
 
 	public IMAGE_PATH_TYPE mImagePathType;
-	public ArrayList<AdtImage> mImageList = new ArrayList<AdtImage>();
+	private IMAGE_PATH_TYPE mImagePathTypeLast;
+	private Map<IMAGE_PATH_TYPE, ArrayList<AdtImage>> mImageListMap = new HashMap<IMAGE_PATH_TYPE, ArrayList<AdtImage>>();
+	public ArrayList<AdtImage> mImageList = null;
 	private final ArrayList<String> mQueryKeywords = new ArrayList<String>();
 
 	private static ImageManager mImageManager = null;
@@ -72,6 +76,7 @@ public class ImageManager {
 
 	public void setImagePathType(IMAGE_PATH_TYPE type) {
 		mCurrentIndexArray[mImagePathType.ordinal()] = mCurrentImageIndex;
+		mImagePathTypeLast = mImagePathType;
 		mImagePathType = type;
 		initImageList();
 	}
@@ -240,18 +245,31 @@ public class ImageManager {
 	}
 
 	private void initImageList() {
+		if (mImageListMap.get(mImagePathType) != null) {
+			mImageList = mImageListMap.get(mImagePathType);
+			return;
+		}
 		switch (mImagePathType) {
 			case LOCAL_ASSETS :
 				mInitListFailed = true;
-				mImageList.clear();
+				ArrayList<AdtImage> tempImageList = new ArrayList<AdtImage>();
 				ArrayList<String> arrayList = getAssetsImagesList(IMAGE_SUBFOLDER_IN_ASSETS);
 				for (int i = 0; i < arrayList.size(); i++) {
 					AdtImage image = new AdtImage(arrayList.get(i), true);
-					mImageList.add(image);
+					tempImageList.add(image);
 				}
-				mCurrentImageIndex = mCurrentIndexArray[mImagePathType
-						.ordinal()];
-				mInitListFailed = false;
+				arrayList.clear();
+				if (tempImageList.size() != 0) {
+					mImageListMap.put(IMAGE_PATH_TYPE.LOCAL_ASSETS,
+							tempImageList);
+					mImageList = mImageListMap
+							.get(IMAGE_PATH_TYPE.LOCAL_ASSETS);
+					mCurrentImageIndex = mCurrentIndexArray[mImagePathType
+							.ordinal()];
+					mInitListFailed = false;
+				} else {
+					mImagePathType = mImagePathTypeLast;
+				}
 				break;
 
 			case REMOTE_HTTP_URL :
@@ -330,11 +348,11 @@ public class ImageManager {
 			activity.mProgressBar.setVisibility(View.GONE);
 
 			if (!mInitListFailed) {
-				mImageList.clear();
-				mImageList = result;
+				mImageListMap.put(IMAGE_PATH_TYPE.REMOTE_HTTP_URL, result);
+				mImageList = mImageListMap.get(mImagePathType);
 				new loadAllImageTask().execute();
 			} else {
-				mImagePathType = IMAGE_PATH_TYPE.LOCAL_ASSETS;
+				mImagePathType = mImagePathTypeLast;
 				mCurrentImageIndex = mCurrentIndexArray[mImagePathType
 						.ordinal()];
 			}
@@ -425,7 +443,6 @@ public class ImageManager {
 			// activity.EnableNextPrevButtons(true);
 		}
 	}
-
 	public Bitmap getBitmapFromUrl(String url) {
 
 		Bitmap bitmap = null;

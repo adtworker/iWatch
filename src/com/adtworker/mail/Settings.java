@@ -75,8 +75,8 @@ public class Settings extends PreferenceActivity
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
 		Utils.setupAdmobAdView(this, adLayout);
-		adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
-		Utils.setupAdLayout(this, adLayout, false);
+		// adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
+		// Utils.setupAdLayout(this, adLayout, false);
 	}
 
 	@Override

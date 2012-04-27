@@ -108,7 +108,7 @@ public class GoogleImage {
 		}
 	}
 	private static Pattern googleScriptImgRegex = Pattern
-			.compile(".*imgurl=(.*.[png|jpg|jpge])&amp.*data-src=\"(.*)\" height.*");
+			.compile(".*imgurl=(.*.[png|jpg|jpeg])&amp.*data-src=\"(.*)\" height.*");
 
 	public static Map<String, String> getImgByAjaxUrl(String keyword,
 			Integer width, Integer height, Integer page, Integer start) {
@@ -124,6 +124,9 @@ public class GoogleImage {
 				try {
 					Matcher m = googleScriptImgRegex.matcher(imageDiv);
 					if (m.matches() && m.groupCount() == 2) {
+						String url = m.group(1).trim();
+						Log.d(Constants.TAG, "imgurl=" + url);
+
 						imageMap.put(m.group(1).trim(), m.group(2).trim());
 					}
 				} catch (Exception e) {

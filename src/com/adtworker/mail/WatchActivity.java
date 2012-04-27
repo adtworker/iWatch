@@ -635,6 +635,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} else {
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
+					mCoverFlow.setAdapter(new ImageAdapter(WatchActivity.this));
+					mImageManager.setCurrent(mImageManager.getCurrent() - 1);
+					goNextorPrev(1);
 				}
 
 				break;
@@ -1003,14 +1006,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		switch (keycode) {
 
 			case KeyEvent.KEYCODE_BACK :
-				// alert user when key_back is pressed
-				// int whichButton) {
+
 				// new AlertDialog.Builder(this)
 				// .setMessage(getString(R.string.exit_msg))
 				// .setPositiveButton(getString(R.string.ok),
 				// new DialogInterface.OnClickListener() {
 				// @Override
 				// public void onClick(DialogInterface dialog,
+				// int which) {
 				// finish();
 				// }
 				// })
@@ -1019,7 +1022,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				// @Override
 				// public void onClick(DialogInterface dialog,
 				// int whichButton) {
-				//
 				// }
 				// }).create().show();
 
@@ -1038,7 +1040,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} else {
 					finish();
 				}
-				break;
+
+				return false;
 
 			case KeyEvent.KEYCODE_DPAD_LEFT :
 			case KeyEvent.KEYCODE_DPAD_UP :
