@@ -118,16 +118,14 @@ public class GoogleImage {
 		Map<String, String> imageMap = new HashMap<String, String>();
 		try {
 			String response = getHTML(requestUrl).trim();
-			Log.d(Constants.TAG, "RESPONSE: " + response + "\n");
 			String[] imageDivs = response.split("a href");
 			for (String imageDiv : imageDivs) {
 				try {
 					Matcher m = googleScriptImgRegex.matcher(imageDiv);
 					if (m.matches() && m.groupCount() == 2) {
 						String url = m.group(1).trim();
-						Log.d(Constants.TAG, "imgurl=" + url);
-
-						imageMap.put(m.group(1).trim(), m.group(2).trim());
+						url = url.substring(0, url.indexOf("&amp;"));
+						imageMap.put(url, m.group(2).trim());
 					}
 				} catch (Exception e) {
 					Log.e(Constants.TAG, "get img error", e);
