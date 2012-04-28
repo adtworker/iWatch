@@ -77,9 +77,7 @@ public class ImageManager {
 	}
 
 	public void setImagePathType(IMAGE_PATH_TYPE type) {
-		dumpCurrentIndexArray();
 		mCurrentIndexArray[mImagePathType.ordinal()] = mCurrentImageIndex;
-		dumpCurrentIndexArray();
 		mImagePathTypeLast = mImagePathType;
 		mImagePathType = type;
 		initImageList();
@@ -259,6 +257,7 @@ public class ImageManager {
 	private void initImageList() {
 		if (mImageListMap.get(mImagePathType) != null) {
 			mImageList = mImageListMap.get(mImagePathType);
+			mCurrentImageIndex = mCurrentIndexArray[mImagePathType.ordinal()];
 			return;
 		}
 		switch (mImagePathType) {
