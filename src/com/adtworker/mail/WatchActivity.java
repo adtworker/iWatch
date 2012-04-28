@@ -307,18 +307,31 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final Runnable mCheckingNetworkInit = new Runnable() {
 		@Override
 		public void run() {
+			Log.v(TAG,
+					"mCheckingNetworkInit(): imageType="
+							+ mImageManager.getImagePathType()
+							+ ", isInitInProcess="
+							+ mImageManager.isInitInProcess()
+							+ ", isInitListFailed="
+							+ mImageManager.isInitListFailed());
+
 			if (!mImageManager.isInitInProcess()) {
 				if (mImageManager.isInitListFailed()) {
 					Toast.makeText(WatchActivity.this,
 							getString(R.string.failed_network),
 							Toast.LENGTH_SHORT).show();
 				} else {
-					initStartIndex();
+
 					mCoverFlow.setAdapter(new ImageAdapter(WatchActivity.this));
-					mImageManager.setCurrent(mImageManager.getCurrent() - 1);
-					goNextorPrev(1);
+					if (bStarted) {
+						initStartIndex();
+						mImageManager
+								.setCurrent(mImageManager.getCurrent() - 1);
+						goNextorPrev(1);
+					}
 				}
 			} else {
+				mHandler.removeCallbacks(mCheckingNetworkInit);
 				mHandler.postDelayed(mCheckingNetworkInit, 500);
 			}
 		}
@@ -368,7 +381,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 
-		if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL)
+		if (bStarted
+				&& mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL)
 			mHandler.postDelayed(mCheckingNetworkInit, 500);
 	}
 
@@ -404,6 +418,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			mScreenHint.cancel();
 			mScreenHint = null;
 		}
+
+		if (mImageManager != null)
+			mImageManager.recycle();
 	}
 
 	@Override

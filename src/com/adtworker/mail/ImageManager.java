@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -60,10 +61,16 @@ public class ImageManager {
 
 	private static ImageManager mImageManager = null;
 	public static ImageManager getInstance(Context context) {
-		if (null == mImageManager && null != context) {
-			mImageManager = new ImageManager(context);
+		if (null == mImageManager) {
+			if (context != null)
+				mImageManager = new ImageManager(context);
 		}
 		return mImageManager;
+	}
+
+	public void recycle() {
+		if (mImageManager != null)
+			mImageManager = null;
 	}
 
 	public ImageManager(Context context) {
@@ -262,6 +269,7 @@ public class ImageManager {
 		}
 		switch (mImagePathType) {
 			case LOCAL_ASSETS :
+				mInitInProcess = true;
 				mInitListFailed = true;
 				ArrayList<AdtImage> tempImageList = new ArrayList<AdtImage>();
 				ArrayList<String> arrayList = getAssetsImagesList(IMAGE_SUBFOLDER_IN_ASSETS);
@@ -278,6 +286,7 @@ public class ImageManager {
 					mCurrentImageIndex = mCurrentIndexArray[mImagePathType
 							.ordinal()];
 					mInitListFailed = false;
+					mInitInProcess = false;
 				} else {
 					mImagePathType = mImagePathTypeLast;
 				}
@@ -312,10 +321,10 @@ public class ImageManager {
 					String keyword = URLEncoder.encode(mQueryKeywords.get(k),
 							"GBK");
 
-					for (int i = 0; i < mSearchPageNum; i++) {
+					for (int i = 1; i <= mSearchPageNum; i++) {
 
 						List<AdtImage> temp = ImageSearchAdapter.getImgList(
-								keyword, 480, 800, i + 1, i * mSearchPageSize);
+								keyword, 480, 800, i, tempImageList.size());
 
 						for (int j = 0; j < temp.size(); j++) {
 							activity.mProgressBar.setProgress(++count);
@@ -468,7 +477,16 @@ public class ImageManager {
 			return null;
 		}
 		try {
-			conn = (HttpURLConnection) u.openConnection();
+			String proxyHost = android.net.Proxy.getDefaultHost();
+			if (proxyHost != null) {
+				java.net.Proxy p = new java.net.Proxy(java.net.Proxy.Type.HTTP,
+						new InetSocketAddress(
+								android.net.Proxy.getDefaultHost(),
+								android.net.Proxy.getDefaultPort()));
+				conn = (HttpURLConnection) u.openConnection(p);
+			} else {
+				conn = (HttpURLConnection) u.openConnection();
+			}
 		} catch (IOException e1) {
 			Log.e(TAG, "IOException on connecting " + url);
 			e1.printStackTrace();
