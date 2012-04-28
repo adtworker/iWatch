@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -69,16 +70,27 @@ public class ImageManager {
 		mContext = context;
 		for (int i = 0; i < mCurrentIndexArray.length; i++)
 			mCurrentIndexArray[i] = INVALID_PIC_INDEX;
+		mCurrentImageIndex = INVALID_PIC_INDEX;
 
 		mImagePathType = IMAGE_PATH_TYPE.LOCAL_ASSETS;
 		setImagePathType(mImagePathType);
 	}
 
 	public void setImagePathType(IMAGE_PATH_TYPE type) {
+		dumpCurrentIndexArray();
 		mCurrentIndexArray[mImagePathType.ordinal()] = mCurrentImageIndex;
+		dumpCurrentIndexArray();
 		mImagePathTypeLast = mImagePathType;
 		mImagePathType = type;
 		initImageList();
+	}
+
+	private void dumpCurrentIndexArray() {
+		String strDump = "";
+		for (int i = 0; i < mCurrentIndexArray.length; i++) {
+			strDump += String.valueOf(mCurrentIndexArray[i]) + " ";
+		}
+		Log.v(TAG, "mCurrentIndexArray = " + strDump);
 	}
 
 	public IMAGE_PATH_TYPE getImagePathType() {
@@ -353,9 +365,8 @@ public class ImageManager {
 				new loadAllImageTask().execute();
 			} else {
 				mImagePathType = mImagePathTypeLast;
-				mCurrentImageIndex = mCurrentIndexArray[mImagePathType
-						.ordinal()];
 			}
+			mCurrentImageIndex = mCurrentIndexArray[mImagePathType.ordinal()];
 		}
 	}
 
@@ -449,23 +460,37 @@ public class ImageManager {
 		URL u = null;
 		HttpURLConnection conn = null;
 		InputStream is = null;
+
 		try {
 			u = new URL(url);
+		} catch (MalformedURLException e2) {
+			Log.e(TAG, "incorrect url " + url);
+			e2.printStackTrace();
+			return null;
+		}
+		try {
 			conn = (HttpURLConnection) u.openConnection();
-			conn.setConnectTimeout(5000);
+		} catch (IOException e1) {
+			Log.e(TAG, "IOException on connecting " + url);
+			e1.printStackTrace();
+			return null;
+		}
+		conn.setConnectTimeout(5000);
+		try {
 			is = conn.getInputStream();
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inSampleSize = 1;
 			bitmap = BitmapFactory.decodeStream(is, null, options);
 			is.close();
-			conn.disconnect();
-		} catch (Exception e) {
-			Log.e(TAG, "Failed to get image from " + url);
+		} catch (IOException e) {
+			Log.e(TAG, "IOException on loading " + url);
 			e.printStackTrace();
+			conn.disconnect();
+			return null;
 		}
+		conn.disconnect();
 		return bitmap;
 	}
-
 	public Bitmap getBitmapFromSDCard(String url) {
 		Bitmap bitmap = null;
 		try {

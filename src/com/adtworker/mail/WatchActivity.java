@@ -313,6 +313,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 							getString(R.string.failed_network),
 							Toast.LENGTH_SHORT).show();
 				} else {
+					initStartIndex();
 					mCoverFlow.setAdapter(new ImageAdapter(WatchActivity.this));
 					mImageManager.setCurrent(mImageManager.getCurrent() - 1);
 					goNextorPrev(1);
@@ -535,15 +536,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	}
 
 	private void initStartIndex() {
-		Log.d(TAG, "initStartIndex() getCurrent=" + mImageManager.getCurrent());
-		Log.d(TAG,
-				"initStartIndex() getImageListSize="
-						+ mImageManager.getImageListSize());
-
 		if (mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX)
 			return;
 		int size = mImageManager.getImageListSize();
-		if (size == 0)
+		if (0 == size)
 			return;
 
 		mImageManager.setCurrent(mRandom.nextInt(size));
@@ -635,6 +631,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} else {
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
+					initStartIndex();
 					mCoverFlow.setAdapter(new ImageAdapter(WatchActivity.this));
 					mImageManager.setCurrent(mImageManager.getCurrent() - 1);
 					goNextorPrev(1);
