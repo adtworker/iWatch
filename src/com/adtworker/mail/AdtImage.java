@@ -24,6 +24,9 @@ public class AdtImage {
 
 	public AdtImage(String url, String urlTb) {
 		urlFull = url;
+		if (urlTb.contains("&")) {
+			urlTb = urlTb.substring(0, urlTb.indexOf("&"));
+		}
 		urlThumb = urlTb;
 		hasThumb = true;
 	}
