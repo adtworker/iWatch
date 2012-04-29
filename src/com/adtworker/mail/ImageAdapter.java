@@ -45,7 +45,7 @@ public class ImageAdapter extends BaseAdapter {
 		ImageView i = new ImageView(mContext);
 		DisplayMetrics displayMetrics = mContext.getResources()
 				.getDisplayMetrics();
-		int width = displayMetrics.widthPixels / 3;
+		int width = displayMetrics.widthPixels / 4;
 
 		i.setImageBitmap(mImageManager.getPosBitmap(position, true));
 		i.setLayoutParams(new CoverFlow.LayoutParams(width, width));

@@ -382,25 +382,26 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 
 		if (bStarted
+				&& mImageManager.isInitInProcess()
 				&& mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL)
 			mHandler.postDelayed(mCheckingNetworkInit, 500);
 	}
 
 	@Override
 	public void onPause() {
-		// Log.v(TAG, "onPause()");
+		Log.v(TAG, "onPause()");
 		super.onPause();
 	}
 
 	@Override
 	public void onStop() {
-		// Log.v(TAG, "onStop()");
+		Log.v(TAG, "onStop()");
 		super.onStop();
 	}
 
 	@Override
 	public void onDestroy() {
-		// Log.v(TAG, "onDestroy()");
+		Log.v(TAG, "onDestroy()");
 		super.onDestroy();
 
 		if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS
@@ -418,9 +419,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			mScreenHint.cancel();
 			mScreenHint = null;
 		}
-
-		if (mImageManager != null)
-			mImageManager.recycle();
 	}
 
 	@Override

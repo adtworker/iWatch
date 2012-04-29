@@ -11,7 +11,6 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +24,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.SystemClock;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 
@@ -39,7 +39,7 @@ public class ImageManager {
 		IMAGE_PATH_TYPE_LEN
 	}
 
-	private final String TAG = "ImageManager";
+	private final static String TAG = "ImageManager";
 	private final String IMAGE_SUBFOLDER_IN_ASSETS = "pics";
 	private final Context mContext;
 	private boolean mInitListFailed = false;
@@ -62,8 +62,10 @@ public class ImageManager {
 	private static ImageManager mImageManager = null;
 	public static ImageManager getInstance(Context context) {
 		if (null == mImageManager) {
-			if (context != null)
+			if (context != null) {
+				Log.d(TAG, "init a ImageManager.");
 				mImageManager = new ImageManager(context);
+			}
 		}
 		return mImageManager;
 	}
@@ -88,14 +90,6 @@ public class ImageManager {
 		mImagePathTypeLast = mImagePathType;
 		mImagePathType = type;
 		initImageList();
-	}
-
-	private void dumpCurrentIndexArray() {
-		String strDump = "";
-		for (int i = 0; i < mCurrentIndexArray.length; i++) {
-			strDump += String.valueOf(mCurrentIndexArray[i]) + " ";
-		}
-		Log.v(TAG, "mCurrentIndexArray = " + strDump);
 	}
 
 	public IMAGE_PATH_TYPE getImagePathType() {
@@ -322,15 +316,17 @@ public class ImageManager {
 							"GBK");
 
 					for (int i = 1; i <= mSearchPageNum; i++) {
+						DisplayMetrics displayMetrics = mContext.getResources()
+								.getDisplayMetrics();
+						int width = displayMetrics.widthPixels;
+						int height = displayMetrics.heightPixels;
 
 						List<AdtImage> temp = ImageSearchAdapter.getImgList(
-								keyword, 480, 800, i, tempImageList.size());
+								keyword, 960, 800, i, tempImageList.size());
 
 						for (int j = 0; j < temp.size(); j++) {
 							activity.mProgressBar.setProgress(++count);
 							AdtImage img = temp.get(j);
-							img.urlFull = URLDecoder.decode(img.urlFull);
-							img.urlThumb = URLDecoder.decode(img.urlThumb);
 
 							if (img.urlFull.toLowerCase().endsWith(".gif"))
 								continue;

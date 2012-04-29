@@ -30,7 +30,6 @@ public class Settings extends PreferenceActivity
 	final static String TAG = "Settings";
 	SharedPreferences mSharedPref;
 
-	// private CheckBoxPreference mOrientation;
 	private CheckBoxPreference mAutoHideClock;
 	private CheckBoxPreference mAutoHideAD;
 	private CheckBoxPreference mAutoHideSysbar;
