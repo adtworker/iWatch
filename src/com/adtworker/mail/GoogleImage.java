@@ -148,12 +148,16 @@ public class GoogleImage {
 			// Log.d(Constants.TAG, response);
 			String[] imageDivs = response.split("a href");
 			for (String imageDiv : imageDivs) {
-				Log.d(Constants.TAG, imageDiv);
+				// Log.d(Constants.TAG, imageDiv);
 				try {
 					Matcher m = googleScriptImgRegex.matcher(imageDiv);
 					if (m.matches() && m.groupCount() == 3) {
 						String url = m.group(2).trim();
-						url = url.substring(0, url.indexOf("&amp;"));
+						int index = url.indexOf("&amp;");
+						if (index != -1) {
+							// remove trash suffix
+							url = url.substring(0, index);
+						}
 						Log.d(Constants.TAG, imageMap.size() + "):" + url);
 						// imageMap.put(url, m.group(3).trim());
 						imageMap.put(url,

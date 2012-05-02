@@ -43,6 +43,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -59,6 +60,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final ImageView[] mImageViews = new ImageView[2];
 	private final Random mRandom = new Random(System.currentTimeMillis());
 	private CoverFlow mCoverFlow;
+	private ListView mListView;
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
 	private TextView mBtnDisp;
@@ -131,13 +133,18 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mImageViews[0] = (ImageView) findViewById(R.id.picView1);
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mCoverFlow = (CoverFlow) findViewById(R.id.gallery);
+		mListView = (ListView) findViewById(R.id.list_left);
+		mCoverFlow.setVisibility(View.GONE);
+		mListView.setVisibility(View.GONE);
+
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
 		mBtnDisp = (TextView) findViewById(R.id.btnDisp);
 		mBtnClock = (TextView) findViewById(R.id.btnClock);
 		mBtnPrev.setVisibility(View.GONE);
 		mBtnDisp.setEnabled(false);
-		mCoverFlow.setVisibility(View.GONE);
+
+		mImageManager = ImageManager.getInstance(this);
 
 		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
 		mAdLayout = (LinearLayout) findViewById(R.id.adLayout);
@@ -146,7 +153,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mProgressBar.setVisibility(View.GONE);
 		mProgressIcon = (ProgressBar) findViewById(R.id.prgIcon);
 		mProgressIcon.setVisibility(View.GONE);
-		mImageManager = ImageManager.getInstance(this);
 
 		mClockGestureDetector = new GestureDetector(this,
 				new MyClockGestureListener());
@@ -169,7 +175,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		for (ImageView iv : mImageViews) {
 			iv.setOnTouchListener(rootListener);
 		}
-		mCoverFlow.setAdapter(new ImageAdapter(this));
+
 		mCoverFlow.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v,
@@ -210,7 +216,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		Utils.setupAdLayout(this, mAdLayout, true);
 	}
-
 	@SuppressWarnings("unused")
 	private final Runnable mCheck2ShowAD = new Runnable() {
 		@Override
@@ -419,6 +424,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			mScreenHint.cancel();
 			mScreenHint = null;
 		}
+
+		if (mImageManager != null) {
+			mImageManager.recycle();
+			mImageManager = null;
+		}
 	}
 
 	@Override
@@ -583,6 +593,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			if (mSharedPref.getBoolean(PREF_AUTOHIDE_CLOCK, true)) {
 				setClockVisibility(false);
 			}
+
+			mCoverFlow.setAdapter(new ImageAdapter(this));
+			// mListView.setAdapter(new ImageAdapter(this));
 
 			mBtnNext.setText(getResources().getString(R.string.strNext));
 			mBtnPrev.setVisibility(View.VISIBLE);
