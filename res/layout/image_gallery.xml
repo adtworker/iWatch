@@ -5,10 +5,12 @@
     android:orientation="vertical"
     android:layout_gravity="center" >
 
-    <ImageView android:id="@+id/GalleryView"
-        android:contentDescription="@string/ContentDesc"
+    <GridView android:id="@+id/GridView"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+        android:layout_height="fill_parent"
+        android:verticalSpacing="5dp"
+        android:numColumns="auto_fit"
+        android:gravity="center" />
 
     <LinearLayout
         android:layout_width="fill_parent"

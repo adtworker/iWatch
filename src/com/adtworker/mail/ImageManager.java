@@ -24,7 +24,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.SystemClock;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 
@@ -316,11 +315,6 @@ public class ImageManager {
 							"GBK");
 
 					for (int i = 1; i <= mSearchPageNum; i++) {
-						DisplayMetrics displayMetrics = mContext.getResources()
-								.getDisplayMetrics();
-						int width = displayMetrics.widthPixels;
-						int height = displayMetrics.heightPixels;
-
 						List<AdtImage> temp = ImageSearchAdapter.getImgList(
 								keyword, 960, 800, i, tempImageList.size());
 

@@ -43,7 +43,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,7 +59,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final ImageView[] mImageViews = new ImageView[2];
 	private final Random mRandom = new Random(System.currentTimeMillis());
 	private CoverFlow mCoverFlow;
-	private ListView mListView;
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
 	private TextView mBtnDisp;
@@ -133,9 +131,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mImageViews[0] = (ImageView) findViewById(R.id.picView1);
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mCoverFlow = (CoverFlow) findViewById(R.id.gallery);
-		mListView = (ListView) findViewById(R.id.list_left);
 		mCoverFlow.setVisibility(View.GONE);
-		mListView.setVisibility(View.GONE);
 
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
@@ -420,6 +416,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					.commit();
 		}
 
+		for (int i = 0; i < mCoverFlow.getCount(); i++) {
+			ImageView v = (ImageView) mCoverFlow.getChildAt(i);
+			if (v != null) {
+				if (v.getDrawable() != null)
+					v.getDrawable().setCallback(null);
+			}
+		}
+
 		if (mScreenHint != null) {
 			mScreenHint.cancel();
 			mScreenHint = null;
@@ -536,13 +540,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnDisp.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				// Intent intent = new Intent();
-				// intent.setClass(WatchActivity.this, MyGallery.class);
-				// startActivityForResult(intent, 1);
-				int visibility = mCoverFlow.getVisibility();
-				mCoverFlow.setVisibility(visibility == View.GONE
-						? View.VISIBLE
-						: View.GONE);
+				Intent intent = new Intent();
+				intent.setClass(WatchActivity.this, MyGallery.class);
+				startActivityForResult(intent, 1);
 			}
 		});
 
@@ -551,8 +551,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			public void onClick(View arg0) {
 				boolean bClockVisible = getClockVisibility();
 				setClockVisibility(!bClockVisible);
+
+				mCoverFlow.setVisibility(!bClockVisible
+						? View.VISIBLE
+						: View.GONE);
+
 				if (mSharedPref.getBoolean(PREF_BOSS_KEY, false)) {
 					mImageViews[mImageViewCurrent].setVisibility(bClockVisible
+							? View.VISIBLE
+							: View.GONE);
+					mCoverFlow.setVisibility(bClockVisible
 							? View.VISIBLE
 							: View.GONE);
 				}
@@ -584,7 +592,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		if (mImageManager.getImageListSize() == 0)
 			return;
 
-		if (step > 0 && !bStarted || bSetAPos) {
+		if ((step > 0 && !bStarted) || bSetAPos) {
 
 			if (!bSetAPos) {
 				initStartIndex();
@@ -595,7 +603,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 
 			mCoverFlow.setAdapter(new ImageAdapter(this));
-			// mListView.setAdapter(new ImageAdapter(this));
 
 			mBtnNext.setText(getResources().getString(R.string.strNext));
 			mBtnPrev.setVisibility(View.VISIBLE);
@@ -661,8 +668,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 							.setImagePathType(IMAGE_PATH_TYPE.LOCAL_ASSETS);
 					initStartIndex();
 					mCoverFlow.setAdapter(new ImageAdapter(WatchActivity.this));
-					mImageManager.setCurrent(mImageManager.getCurrent() - 1);
-					goNextorPrev(1);
+					if (bStarted) {
+						mImageManager
+								.setCurrent(mImageManager.getCurrent() - 1);
+						goNextorPrev(1);
+					}
 				}
 
 				break;
@@ -786,6 +796,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnPrev.setEnabled(enabled);
 		mBtnNext.setEnabled(enabled);
 		mBtnDisp.setEnabled(enabled);
+		if (!bStarted)
+			mBtnDisp.setEnabled(false);
 	}
 
 	private void setWallpaper() {
