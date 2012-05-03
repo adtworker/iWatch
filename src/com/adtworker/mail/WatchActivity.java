@@ -553,15 +553,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				boolean bClockVisible = getClockVisibility();
 				setClockVisibility(!bClockVisible);
 
-				mCoverFlow.setVisibility(!bClockVisible
-						? View.VISIBLE
-						: View.GONE);
-
 				if (mSharedPref.getBoolean(PREF_BOSS_KEY, false)) {
 					mImageViews[mImageViewCurrent].setVisibility(bClockVisible
-							? View.VISIBLE
-							: View.GONE);
-					mCoverFlow.setVisibility(bClockVisible
 							? View.VISIBLE
 							: View.GONE);
 				}

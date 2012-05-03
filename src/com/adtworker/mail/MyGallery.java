@@ -141,6 +141,7 @@ public class MyGallery extends Activity {
 			int height = (int) (width / (float) bitmap.getWidth() * bitmap
 					.getHeight());
 			i.setLayoutParams(new AbsListView.LayoutParams(width, height));
+			i.setPadding(2, 2, 2, 2);
 			i.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
 			return i;
