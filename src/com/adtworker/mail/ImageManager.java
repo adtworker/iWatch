@@ -227,11 +227,15 @@ public class ImageManager {
 			if (mImagePathType == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
 				InputStream is = mContext.getAssets().open(url);
 				BitmapFactory.Options opt = new BitmapFactory.Options();
+				opt.inPurgeable = true;
+				opt.inTempStorage = new byte[16 * 1000];
 				if (tbFirst)
 					opt.inSampleSize = 4;
 				else
 					opt.inSampleSize = 1;
 				bitmap = BitmapFactory.decodeStream(is, null, opt);
+				is.close();
+				is = null;
 			} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
 				bitmap = getBitmapFromSDCard(url);
 				if (bitmap == null) {
@@ -489,6 +493,7 @@ public class ImageManager {
 			options.inSampleSize = 1;
 			bitmap = BitmapFactory.decodeStream(is, null, options);
 			is.close();
+			is = null;
 		} catch (IOException e) {
 			Log.e(TAG, "IOException on loading " + url);
 			e.printStackTrace();
@@ -504,6 +509,7 @@ public class ImageManager {
 			FileInputStream fis = new FileInputStream(getFile(url));
 			bitmap = BitmapFactory.decodeStream(fis);
 			fis.close();
+			fis = null;
 		} catch (Exception e) {
 			return bitmap;
 		}
@@ -518,6 +524,7 @@ public class ImageManager {
 			opt.inSampleSize = inSampleSize;
 			bitmap = BitmapFactory.decodeStream(fis, null, opt);
 			fis.close();
+			fis = null;
 		} catch (Exception e) {
 			return bitmap;
 		}

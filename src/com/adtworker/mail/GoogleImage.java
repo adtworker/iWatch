@@ -158,7 +158,7 @@ public class GoogleImage {
 							// remove trash suffix
 							url = url.substring(0, index);
 						}
-						Log.d(Constants.TAG, imageMap.size() + "):" + url);
+						Log.d(Constants.TAG, imageMap.size() + ") " + url);
 						// imageMap.put(url, m.group(3).trim());
 						imageMap.put(url,
 								"http://images.google.com/images?q=tbn:"

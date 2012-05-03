@@ -48,12 +48,18 @@ public class ImageAdapter extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
+
 		SoftReference<ImageView> imgReference = mCached.get(position);
 		if (imgReference != null && imgReference.get() != null) {
 			return imgReference.get();
 		}
 
-		ImageView i = new ImageView(mContext);
+		ImageView i = null;
+		if (convertView == null) {
+			i = new ImageView(mContext);
+		} else {
+			i = (ImageView) convertView;
+		}
 		Bitmap bitmap = mImageManager.getPosBitmap(position, true);
 		DisplayMetrics displayMetrics = mContext.getResources()
 				.getDisplayMetrics();

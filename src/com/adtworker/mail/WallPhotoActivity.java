@@ -1,5 +1,6 @@
 package com.adtworker.mail;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -82,11 +83,15 @@ public class WallPhotoActivity extends Activity {
 			if (photoWallWidth == 0) {
 				photoWallWidth = getResources().getDisplayMetrics().widthPixels / 3;
 			}
-			List<String> imgInfoUrl = BaiduImage.getImgUrlFromScript("MM", 1,
-					240, 400);
-			for (int i = 0; i < imgInfoUrl.size(); i++) {
 
-				ImageView imageView = generateWallImage(imgInfoUrl.get(i));
+			List<AdtImage> temp = ImageSearchAdapter.getImgList(
+					URLEncoder.encode("美女"), 480, 800, 1, 0);
+			// List<String> imgInfoUrl = BaiduImage.getImgUrlFromScript("MM", 1,
+			// 240, 400);
+
+			for (int i = 0; i < temp.size(); i++) {
+
+				ImageView imageView = generateWallImage(temp.get(i).urlThumb);
 				addImageViewToList(imageView);
 				updateImageOfProduct(imageView, false);
 				addImageViewToLayout(imageView, photoWallWidth);
@@ -137,6 +142,7 @@ public class WallPhotoActivity extends Activity {
 		superScrollView.setVisibility(View.VISIBLE);
 		superScrollView.setScrollViewListener(new ScrollViewListener() {
 
+			@Override
 			public void onScrollChanged(SuperScrollView scrollView, int x,
 					int y, int oldx, int oldy) {
 				if (!isChecking) {

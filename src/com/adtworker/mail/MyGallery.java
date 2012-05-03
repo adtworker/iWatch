@@ -13,11 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.GestureDetector.SimpleOnGestureListener;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -37,7 +33,6 @@ public class MyGallery extends Activity {
 	private ImageManager mImageManager;
 	private HashMap<Integer, SoftReference<Bitmap>> mDataCache;
 	private GridView mGridView;
-	private GestureDetector mGestureDetector;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -60,22 +55,6 @@ public class MyGallery extends Activity {
 			}
 		});
 
-		mGestureDetector = new GestureDetector(this,
-				new SimpleOnGestureListener() {
-					@Override
-					public boolean onScroll(MotionEvent e1, MotionEvent e2,
-							float distanceX, float distanceY) {
-						// MyGallery.this.releaseBitmap();
-						return super.onScroll(e1, e2, distanceX, distanceY);
-					}
-				});
-		mGridView.setOnTouchListener(new OnTouchListener() {
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				return mGestureDetector.onTouchEvent(event);
-			}
-		});
-
 		int pos = mImageManager.getCurrent();
 		if (pos != ImageManager.INVALID_PIC_INDEX) {
 			mGridView.setSelection(pos);
@@ -84,36 +63,6 @@ public class MyGallery extends Activity {
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adLayout);
 		Utils.setupAdLayout(this, adLayout, false);
-	}
-
-	private void releaseBitmap() {
-		int start = mGridView.getFirstVisiblePosition() - 6;
-		int end = mGridView.getLastVisiblePosition() + 6;
-
-		Bitmap delBitmap = null;
-		for (int del = 0; del < start; del++) {
-			if (mDataCache.get(del) != null)
-				delBitmap = mDataCache.get(del).get();
-
-			if (delBitmap != null) {
-				Log.v(Constants.TAG, "release position:" + del);
-				mDataCache.remove(del);
-				delBitmap.recycle();
-				delBitmap = null;
-			}
-		}
-
-		for (int del = end + 1; del < mDataCache.size(); del++) {
-			if (mDataCache.get(del) != null)
-				delBitmap = mDataCache.get(del).get();
-
-			if (delBitmap != null) {
-				Log.v(Constants.TAG, "release position:" + del);
-				mDataCache.remove(del);
-				delBitmap.recycle();
-				delBitmap = null;
-			}
-		}
 	}
 
 	@Override
@@ -128,6 +77,16 @@ public class MyGallery extends Activity {
 					v.getDrawable().setCallback(null);
 			}
 		}
+		for (int i = 0; i < mDataCache.size(); i++) {
+			SoftReference<Bitmap> ref = mDataCache.get(i);
+			if (ref != null && ref.get() != null) {
+				Bitmap b = ref.get();
+				b.recycle();
+				b = null;
+			}
+		}
+		mDataCache.clear();
+
 		super.onDestroy();
 	}
 
@@ -156,16 +115,15 @@ public class MyGallery extends Activity {
 			return position;
 		}
 
-		HashMap<Integer, SoftReference<ImageView>> mCached = new HashMap<Integer, SoftReference<ImageView>>();
-
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			SoftReference<ImageView> imgReference = mCached.get(position);
-			if (imgReference != null && imgReference.get() != null) {
-				return imgReference.get();
+			ImageView i = null;
+			if (convertView == null) {
+				i = new ImageView(mContext);
+			} else {
+				i = (ImageView) convertView;
 			}
 
-			ImageView i = new ImageView(mContext);
 			DisplayMetrics displayMetrics = mContext.getResources()
 					.getDisplayMetrics();
 
@@ -177,7 +135,6 @@ public class MyGallery extends Activity {
 				bitmap = mImageManager.getPosBitmap(position, true);
 				mDataCache.put(position, new SoftReference<Bitmap>(bitmap));
 			}
-
 			i.setImageBitmap(bitmap);
 
 			int width = displayMetrics.widthPixels / 3;
@@ -186,7 +143,6 @@ public class MyGallery extends Activity {
 			i.setLayoutParams(new AbsListView.LayoutParams(width, height));
 			i.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
-			mCached.put(position, new SoftReference<ImageView>(i));
 			return i;
 		}
 	}
