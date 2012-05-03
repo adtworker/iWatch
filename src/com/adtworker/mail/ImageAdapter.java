@@ -1,7 +1,11 @@
 package com.adtworker.mail;
 
+import java.lang.ref.SoftReference;
+import java.util.HashMap;
+
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -40,19 +44,28 @@ public class ImageAdapter extends BaseAdapter {
 		return position;
 	}
 
+	HashMap<Integer, SoftReference<ImageView>> mCached = new HashMap<Integer, SoftReference<ImageView>>();
+
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
+		SoftReference<ImageView> imgReference = mCached.get(position);
+		if (imgReference != null && imgReference.get() != null) {
+			return imgReference.get();
+		}
+
 		ImageView i = new ImageView(mContext);
+		Bitmap bitmap = mImageManager.getPosBitmap(position, true);
 		DisplayMetrics displayMetrics = mContext.getResources()
 				.getDisplayMetrics();
 		int width = displayMetrics.widthPixels / 4;
-		int height = displayMetrics.heightPixels / 4;
-
-		i.setImageBitmap(mImageManager.getPosBitmap(position, true));
+		int height = (int) (width / (float) bitmap.getWidth() * bitmap
+				.getHeight());
+		i.setImageBitmap(bitmap);
 		i.setLayoutParams(new CoverFlow.LayoutParams(width, height));
 		i.setScaleType(ImageView.ScaleType.FIT_CENTER);
 		// i.setBackgroundResource(mGalleryItemBackground);
 
+		mCached.put(position, new SoftReference<ImageView>(i));
 		return i;
 	}
 }

@@ -3,6 +3,9 @@
  */
 package com.adtworker.mail;
 
+import java.lang.ref.SoftReference;
+import java.util.HashMap;
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -10,7 +13,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -28,6 +35,9 @@ import com.adtworker.mail.constants.Constants;
  */
 public class MyGallery extends Activity {
 	private ImageManager mImageManager;
+	private HashMap<Integer, SoftReference<Bitmap>> mDataCache;
+	private GridView mGridView;
+	private GestureDetector mGestureDetector;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -35,23 +45,40 @@ public class MyGallery extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.image_gallery);
 		mImageManager = ImageManager.getInstance(null);
+		mDataCache = new HashMap<Integer, SoftReference<Bitmap>>();
 
-		final GridView gv = (GridView) findViewById(R.id.GridView);
-		gv.setAdapter(new ImageAdapter(this));
-		gv.setOnItemClickListener(new OnItemClickListener() {
-
+		mGridView = (GridView) findViewById(R.id.GridView);
+		mGridView.setAdapter(new ImageAdapter(this));
+		mGridView.setOnItemClickListener(new OnItemClickListener() {
 			@Override
-			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-					long arg3) {
-				if (arg2 != ImageManager.INVALID_PIC_INDEX) {
-					setResult(arg2);
+			public void onItemClick(AdapterView<?> arg0, View view,
+					int position, long id) {
+				if (position != ImageManager.INVALID_PIC_INDEX) {
+					setResult(position);
 					finish();
 				}
 			}
 		});
+
+		mGestureDetector = new GestureDetector(this,
+				new SimpleOnGestureListener() {
+					@Override
+					public boolean onScroll(MotionEvent e1, MotionEvent e2,
+							float distanceX, float distanceY) {
+						// MyGallery.this.releaseBitmap();
+						return super.onScroll(e1, e2, distanceX, distanceY);
+					}
+				});
+		mGridView.setOnTouchListener(new OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				return mGestureDetector.onTouchEvent(event);
+			}
+		});
+
 		int pos = mImageManager.getCurrent();
 		if (pos != ImageManager.INVALID_PIC_INDEX) {
-			gv.setSelection(pos);
+			mGridView.setSelection(pos);
 		}
 		setResult(pos);
 
@@ -59,10 +86,34 @@ public class MyGallery extends Activity {
 		Utils.setupAdLayout(this, adLayout, false);
 	}
 
-	@Override
-	protected void onPause() {
-		Log.d(Constants.TAG, "MyGallery onPause()");
-		super.onPause();
+	private void releaseBitmap() {
+		int start = mGridView.getFirstVisiblePosition() - 6;
+		int end = mGridView.getLastVisiblePosition() + 6;
+
+		Bitmap delBitmap = null;
+		for (int del = 0; del < start; del++) {
+			if (mDataCache.get(del) != null)
+				delBitmap = mDataCache.get(del).get();
+
+			if (delBitmap != null) {
+				Log.v(Constants.TAG, "release position:" + del);
+				mDataCache.remove(del);
+				delBitmap.recycle();
+				delBitmap = null;
+			}
+		}
+
+		for (int del = end + 1; del < mDataCache.size(); del++) {
+			if (mDataCache.get(del) != null)
+				delBitmap = mDataCache.get(del).get();
+
+			if (delBitmap != null) {
+				Log.v(Constants.TAG, "release position:" + del);
+				mDataCache.remove(del);
+				delBitmap.recycle();
+				delBitmap = null;
+			}
+		}
 	}
 
 	@Override
@@ -80,7 +131,7 @@ public class MyGallery extends Activity {
 		super.onDestroy();
 	}
 
-	public class ImageAdapter extends BaseAdapter {
+	private class ImageAdapter extends BaseAdapter {
 
 		private final Context mContext;
 		private final ImageManager mImageManager;
@@ -105,19 +156,37 @@ public class MyGallery extends Activity {
 			return position;
 		}
 
+		HashMap<Integer, SoftReference<ImageView>> mCached = new HashMap<Integer, SoftReference<ImageView>>();
+
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
+			SoftReference<ImageView> imgReference = mCached.get(position);
+			if (imgReference != null && imgReference.get() != null) {
+				return imgReference.get();
+			}
+
 			ImageView i = new ImageView(mContext);
 			DisplayMetrics displayMetrics = mContext.getResources()
 					.getDisplayMetrics();
-			Bitmap bitmap = mImageManager.getPosBitmap(position, true);
+
+			Bitmap bitmap = null;
+			if (mDataCache.get(position) != null)
+				bitmap = mDataCache.get(position).get();
+
+			if (bitmap == null) {
+				bitmap = mImageManager.getPosBitmap(position, true);
+				mDataCache.put(position, new SoftReference<Bitmap>(bitmap));
+			}
+
+			i.setImageBitmap(bitmap);
+
 			int width = displayMetrics.widthPixels / 3;
 			int height = (int) (width / (float) bitmap.getWidth() * bitmap
 					.getHeight());
-			i.setImageBitmap(bitmap);
 			i.setLayoutParams(new AbsListView.LayoutParams(width, height));
 			i.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
+			mCached.put(position, new SoftReference<ImageView>(i));
 			return i;
 		}
 	}

@@ -74,10 +74,13 @@ public class Settings extends PreferenceActivity
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
 		Utils.setupAdmobAdView(this, adLayout);
-		// adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
-		// Utils.setupAdLayout(this, adLayout, false);
+		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTOHIDE_SB, false)) {
+			// adLayout = (ViewGroup) findViewById(R.id.adPrefLayout1);
+			// Utils.setupSuizongAdView(this, adLayout);
+			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
+			Utils.setupAdLayout(this, adLayout, false);
+		}
 	}
-
 	@Override
 	protected void onResume() {
 		super.onResume();

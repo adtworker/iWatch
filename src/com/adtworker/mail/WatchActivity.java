@@ -168,6 +168,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				return true;
 			}
 		};
+
 		for (ImageView iv : mImageViews) {
 			iv.setOnTouchListener(rootListener);
 		}
@@ -658,7 +659,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case R.id.menu_toggle_mode :
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					mImageManager.setQueryKeyword("美女");
+					mImageManager.setQueryKeyword("性感美女");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
 					mHandler.postDelayed(mCheckingNetworkInit, 500);
@@ -1032,9 +1033,19 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		public boolean onSingleTapConfirmed(MotionEvent e) {
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
+			} else {
+				mCoverFlow
+						.setVisibility(mCoverFlow.getVisibility() == View.GONE
+								? View.VISIBLE
+								: View.GONE);
 			}
 
-			return true;
+			return false;
+		}
+
+		@Override
+		public void onLongPress(MotionEvent e) {
+			super.onLongPress(e);
 		}
 	}
 
