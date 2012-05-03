@@ -132,6 +132,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mCoverFlow = (CoverFlow) findViewById(R.id.gallery);
 		mCoverFlow.setVisibility(View.GONE);
+		mCoverFlow.setMaxRotationAngle(75);
 
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
@@ -173,6 +174,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			iv.setOnTouchListener(rootListener);
 		}
 
+		mScreenHint = OnScreenHint.makeText(this, "");
 		mCoverFlow.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v,
@@ -186,10 +188,19 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					delta = -1;
 				else {
 					bClickCoverFlow = false;
+					mCoverFlow
+							.startAnimation(makeInAnimation(R.anim.transition_out));
+					mCoverFlow.setVisibility(View.GONE);
 					return;
 				}
 				mImageManager.setCurrent(position - delta);
 				WatchActivity.this.goNextorPrev(delta);
+				mCoverFlow
+						.startAnimation(makeInAnimation(R.anim.transition_out));
+				mCoverFlow.setVisibility(View.GONE);
+
+				if (mScreenHint != null)
+					mScreenHint.cancel();
 			}
 		});
 
@@ -271,6 +282,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mImageManager.getCurrent() + 1,
 					mImageManager.getImageListSize(), bm.getWidth(),
 					bm.getHeight()));
+			if (mScreenHint != null) {
+				mScreenHint.setText(String.format("%d/%d",
+						mImageManager.getCurrent() + 1,
+						mImageManager.getImageListSize()));
+			}
 
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
 				mScaleType = DEFAULT_SCALETYPE;
@@ -652,7 +668,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case R.id.menu_toggle_mode :
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					mImageManager.setQueryKeyword("性感美女");
+					mImageManager.setQueryKeyword("美女");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
 					mHandler.postDelayed(mCheckingNetworkInit, 500);
@@ -1027,15 +1043,25 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
 			} else {
-				mCoverFlow
-						.setVisibility(mCoverFlow.getVisibility() == View.GONE
-								? View.VISIBLE
-								: View.GONE);
+				if (mCoverFlow.getVisibility() == View.GONE) {
+					mCoverFlow
+							.startAnimation(makeInAnimation(R.anim.slide_in_vertical));
+					mCoverFlow.setVisibility(View.VISIBLE);
+					mScreenHint.show();
+				} else {
+					mCoverFlow
+							.startAnimation(makeInAnimation(R.anim.slide_out_vertical_r));
+					mCoverFlow.setVisibility(View.GONE);
+					mScreenHint.cancel();
+				}
+				// mCoverFlow
+				// .setVisibility(mCoverFlow.getVisibility() == View.GONE
+				// ? View.VISIBLE
+				// : View.GONE);
 			}
 
 			return false;
 		}
-
 		@Override
 		public void onLongPress(MotionEvent e) {
 			super.onLongPress(e);
