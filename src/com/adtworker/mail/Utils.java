@@ -198,7 +198,7 @@ public class Utils {
 	 * @return void
 	 */
 	public static void setupSuizongAdView(Activity context, ViewGroup parent) {
-		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
+		if (android.os.Build.VERSION.SDK_INT < 12 /* || Constants.ALWAYS_SHOW_AD */) {
 			com.suizong.mobplate.ads.AdView adView = new com.suizong.mobplate.ads.AdView(
 					context, com.suizong.mobplate.ads.AdSize.BANNER,
 					"4f46e9bc7c6e1848b8d48e61");

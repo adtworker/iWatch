@@ -27,6 +27,7 @@ import android.app.WallpaperManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -90,6 +91,19 @@ public class CropImage extends MonitoredActivity {
 	private IImageList mAllImages;
 	private IImage mImage;
 	private String mImgStr;
+
+	@Override
+	public void onStart() {
+		Log.v(TAG, "onStart()");
+		super.onStart();
+
+		if (getSharedPreferences("iWatch", Context.MODE_PRIVATE).getBoolean(
+				"auto_rotate", false)) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+		} else {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		}
+	}
 
 	@Override
 	public void onCreate(Bundle icicle) {

@@ -8,6 +8,8 @@ import java.util.HashMap;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -33,6 +35,7 @@ public class MyGallery extends Activity {
 	private ImageManager mImageManager;
 	private HashMap<Integer, SoftReference<Bitmap>> mDataCache;
 	private GridView mGridView;
+	private SharedPreferences mSharedPref;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -40,6 +43,8 @@ public class MyGallery extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.image_gallery);
 		mImageManager = ImageManager.getInstance(null);
+		mSharedPref = getSharedPreferences(WatchActivity.PREFERENCES,
+				Context.MODE_PRIVATE);
 		mDataCache = new HashMap<Integer, SoftReference<Bitmap>>();
 
 		mGridView = (GridView) findViewById(R.id.GridView);
@@ -63,6 +68,18 @@ public class MyGallery extends Activity {
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adLayout);
 		Utils.setupAdLayout(this, adLayout, false);
+	}
+
+	@Override
+	public void onStart() {
+		Log.v(Constants.TAG, "onStart()");
+		super.onStart();
+
+		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTO_ROTATE, false)) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+		} else {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		}
 	}
 
 	@Override

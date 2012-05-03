@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
@@ -75,12 +76,25 @@ public class Settings extends PreferenceActivity
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
 		Utils.setupAdmobAdView(this, adLayout);
 		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTOHIDE_SB, false)) {
-			// adLayout = (ViewGroup) findViewById(R.id.adPrefLayout1);
-			// Utils.setupSuizongAdView(this, adLayout);
+			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout1);
+			Utils.setupSuizongAdView(this, adLayout);
 			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
 			Utils.setupAdLayout(this, adLayout, false);
 		}
 	}
+
+	@Override
+	public void onStart() {
+		Log.v(TAG, "onStart()");
+		super.onStart();
+
+		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTO_ROTATE, false)) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+		} else {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		}
+	}
+
 	@Override
 	protected void onResume() {
 		super.onResume();

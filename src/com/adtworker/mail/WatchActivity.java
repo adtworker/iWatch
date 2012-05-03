@@ -668,7 +668,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case R.id.menu_toggle_mode :
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					mImageManager.setQueryKeyword("美女");
+					mImageManager.setQueryKeyword("美女 豪车 风景 动漫");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
 					mHandler.postDelayed(mCheckingNetworkInit, 500);
