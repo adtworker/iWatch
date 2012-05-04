@@ -668,7 +668,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case R.id.menu_toggle_mode :
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-					mImageManager.setQueryKeyword("美女 豪车 风景 动漫");
+					mImageManager.setQueryKeyword("美女");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
 					mHandler.postDelayed(mCheckingNetworkInit, 500);
@@ -1043,6 +1043,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
 			} else {
+				if (mImageManager.isInitInProcess())
+					return false;
+
 				if (mCoverFlow.getVisibility() == View.GONE) {
 					mCoverFlow
 							.startAnimation(makeInAnimation(R.anim.slide_in_vertical));

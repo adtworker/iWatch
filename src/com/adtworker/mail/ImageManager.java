@@ -301,9 +301,10 @@ public class ImageManager {
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			activity.mProgressBar.setProgress(0);
-			activity.mProgressBar.setVisibility(View.VISIBLE);
-			activity.mProgressBar.setMax(100);
+			// activity.mProgressBar.setProgress(0);
+			// activity.mProgressBar.setVisibility(View.VISIBLE);
+			// activity.mProgressBar.setMax(100);
+			activity.mProgressIcon.setVisibility(View.VISIBLE);
 			activity.EnableNextPrevButtons(false);
 			mInitListFailed = true;
 			mInitInProcess = true;
@@ -340,8 +341,8 @@ public class ImageManager {
 				}
 				Log.d(TAG, "image list size = " + tempImageList.size());
 
-				activity.mProgressBar.setProgress(mSearchPageNum
-						* mSearchPageSize);
+				// activity.mProgressBar.setProgress(mSearchPageNum
+				// * mSearchPageSize);
 				if (tempImageList.size() != 0) {
 					mInitListFailed = false;
 				}
@@ -359,7 +360,8 @@ public class ImageManager {
 			mInitInProcess = false;
 			activity.EnableNextPrevButtons(true);
 			SystemClock.sleep(200);
-			activity.mProgressBar.setVisibility(View.GONE);
+			// activity.mProgressBar.setVisibility(View.GONE);
+			activity.mProgressIcon.setVisibility(View.GONE);
 
 			if (!mInitListFailed) {
 				mImageListMap.put(IMAGE_PATH_TYPE.REMOTE_HTTP_URL, result);
