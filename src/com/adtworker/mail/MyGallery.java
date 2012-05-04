@@ -42,7 +42,7 @@ public class MyGallery extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.image_gallery);
-		mImageManager = ImageManager.getInstance(null);
+		mImageManager = ImageManager.getInstance(this);
 		mSharedPref = getSharedPreferences(WatchActivity.PREFERENCES,
 				Context.MODE_PRIVATE);
 		mDataCache = new HashMap<Integer, SoftReference<Bitmap>>();

@@ -26,6 +26,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Intent;
 import android.net.Proxy;
 import android.util.Log;
 
@@ -147,8 +148,13 @@ public class GoogleImage {
 			String response = getHTML(requestUrl).trim();
 			// Log.d(Constants.TAG, response);
 			String[] imageDivs = response.split("a href");
+			int count = 0;
 			for (String imageDiv : imageDivs) {
 				// Log.d(Constants.TAG, imageDiv);
+				Intent intent = new Intent("com.adtworker.mail.SetProgress");
+				intent.putExtra("progress", ++count * 100 / imageDivs.length);
+				if (count % 5 == 0)
+					WatchApp.getInstance().sendBroadcast(intent);
 				try {
 					Matcher m = googleScriptImgRegex.matcher(imageDiv);
 					if (m.matches() && m.groupCount() == 3) {

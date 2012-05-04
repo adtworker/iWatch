@@ -23,7 +23,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 
@@ -70,8 +69,14 @@ public class ImageManager {
 	}
 
 	public void recycle() {
-		if (mImageManager != null)
+		if (mImageManager != null) {
+			for (int i = 0; i < mImageListMap.size(); i++) {
+				if (mImageListMap.get(i) != null)
+					mImageListMap.get(i).clear();
+			}
+			mImageListMap.clear();
 			mImageManager = null;
+		}
 	}
 
 	public ImageManager(Context context) {
@@ -264,6 +269,7 @@ public class ImageManager {
 			mCurrentImageIndex = mCurrentIndexArray[mImagePathType.ordinal()];
 			return;
 		}
+
 		switch (mImagePathType) {
 			case LOCAL_ASSETS :
 				mInitInProcess = true;
@@ -301,14 +307,14 @@ public class ImageManager {
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			// activity.mProgressBar.setProgress(0);
-			// activity.mProgressBar.setVisibility(View.VISIBLE);
-			// activity.mProgressBar.setMax(100);
-			activity.mProgressIcon.setVisibility(View.VISIBLE);
+			activity.mProgressBar.setProgress(0);
+			activity.mProgressBar.setVisibility(View.VISIBLE);
+			// activity.mProgressIcon.setVisibility(View.VISIBLE);
 			activity.EnableNextPrevButtons(false);
 			mInitListFailed = true;
 			mInitInProcess = true;
 		}
+
 		@Override
 		protected ArrayList<AdtImage> doInBackground(Void... params) {
 			int count = 0;
@@ -354,14 +360,14 @@ public class ImageManager {
 
 			return tempImageList;
 		}
+
 		@Override
 		protected void onPostExecute(ArrayList<AdtImage> result) {
 			super.onPostExecute(result);
 			mInitInProcess = false;
 			activity.EnableNextPrevButtons(true);
-			SystemClock.sleep(200);
-			// activity.mProgressBar.setVisibility(View.GONE);
-			activity.mProgressIcon.setVisibility(View.GONE);
+			activity.mProgressBar.setVisibility(View.GONE);
+			// activity.mProgressIcon.setVisibility(View.GONE);
 
 			if (!mInitListFailed) {
 				mImageListMap.put(IMAGE_PATH_TYPE.REMOTE_HTTP_URL, result);
@@ -375,12 +381,22 @@ public class ImageManager {
 	}
 
 	private class loadAllImageTask extends AsyncTask<Void, Void, Void> {
+		WatchActivity activity = (WatchActivity) mContext;
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			activity.mProgressBar.setProgress(0);
+			activity.mProgressBar.setVisibility(View.VISIBLE);
+		}
+
 		@Override
 		protected Void doInBackground(Void... params) {
 			if (getImageListSize() == 0)
 				return null;
 
 			for (int i = 0; i < mImageList.size(); i++) {
+				activity.mProgressBar.setProgress(i * 100 / mImageList.size());
+
 				AdtImage img = mImageList.get(i);
 				String url;
 				if (img.hasThumb) {
@@ -402,6 +418,12 @@ public class ImageManager {
 			return null;
 		}
 
+		@Override
+		protected void onPostExecute(Void result) {
+			super.onPostExecute(result);
+			activity.mProgressBar.setProgress(100);
+			activity.mProgressBar.setVisibility(View.GONE);
+		}
 	}
 
 	private class loadImageTask extends AsyncTask<String, Integer, Bitmap> {
@@ -445,9 +467,11 @@ public class ImageManager {
 		protected void onProgressUpdate(Integer... progress) {
 			activity.mProgressIcon.setProgress(progress[0]);
 		}
+
 		@Override
 		protected void onPostExecute(Bitmap result) {
 			super.onPostExecute(result);
+
 			if (result != null && loadingImgID == mCurrentImageIndex) {
 				activity.setImageView(result);
 				mCurrentBitmap = result;
@@ -488,7 +512,7 @@ public class ImageManager {
 			e1.printStackTrace();
 			return null;
 		}
-		conn.setConnectTimeout(5000);
+		conn.setConnectTimeout(2000);
 		try {
 			is = conn.getInputStream();
 			BitmapFactory.Options options = new BitmapFactory.Options();

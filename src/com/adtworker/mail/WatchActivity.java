@@ -9,8 +9,10 @@ import java.util.Random;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.app.WallpaperManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
@@ -58,6 +60,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private int mImageViewCurrent = 0;
 	private final ImageView[] mImageViews = new ImageView[2];
 	private final Random mRandom = new Random(System.currentTimeMillis());
+	private final ProgressBarReceiver mProgressbarRecv = new ProgressBarReceiver();
 	private CoverFlow mCoverFlow;
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
@@ -191,6 +194,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mCoverFlow
 							.startAnimation(makeInAnimation(R.anim.transition_out));
 					mCoverFlow.setVisibility(View.GONE);
+					if (mScreenHint != null)
+						mScreenHint.cancel();
 					return;
 				}
 				mImageManager.setCurrent(position - delta);
@@ -234,7 +239,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	};
 
 	public void setImageView(Bitmap bm) {
-		if (bm == null)
+		if (bm == null || mImageManager == null)
 			return;
 
 		mImageViews[mImageViewCurrent].setImageBitmap(bm);
@@ -334,6 +339,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 							+ mImageManager.isInitListFailed());
 
 			if (!mImageManager.isInitInProcess()) {
+
 				if (mImageManager.isInitListFailed()) {
 					Toast.makeText(WatchActivity.this,
 							getString(R.string.failed_network),
@@ -365,6 +371,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		} else {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		}
+
+		IntentFilter filter = new IntentFilter("com.adtworker.mail.SetProgress");
+		registerReceiver(mProgressbarRecv, filter);
 	}
 
 	@Override
@@ -415,6 +424,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public void onStop() {
 		Log.v(TAG, "onStop()");
 		super.onStop();
+
+		unregisterReceiver(mProgressbarRecv);
 	}
 
 	@Override
@@ -668,6 +679,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case R.id.menu_toggle_mode :
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
+
 					mImageManager.setQueryKeyword("美女");
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
@@ -1149,5 +1161,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private Animation makeOutAnimation(int id) {
 		Animation outAnimation = AnimationUtils.loadAnimation(this, id);
 		return outAnimation;
+	}
+
+	private class ProgressBarReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			int progress = intent.getIntExtra("progress", 0);
+			// Log.d(TAG, "progress: " + progress);
+			mProgressBar.setProgress(progress);
+		}
 	}
 }

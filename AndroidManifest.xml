@@ -21,6 +21,7 @@
     <uses-feature android:name="android.software.live_wallpaper" />
 
     <application
+        android:name=".WatchApp"
         android:icon="@drawable/icon"
         android:label="@string/app_name" >
 
