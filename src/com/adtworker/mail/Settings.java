@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
@@ -18,6 +19,7 @@ import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
 import com.adview.AdViewTargeting.RunMode;
@@ -29,7 +31,6 @@ public class Settings extends PreferenceActivity
 	final static String TAG = "Settings";
 	SharedPreferences mSharedPref;
 
-	// private CheckBoxPreference mOrientation;
 	private CheckBoxPreference mAutoHideClock;
 	private CheckBoxPreference mAutoHideAD;
 	private CheckBoxPreference mAutoHideSysbar;
@@ -45,9 +46,6 @@ public class Settings extends PreferenceActivity
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.prefs);
 		setContentView(R.layout.pref_adview);
-		if (android.os.Build.VERSION.SDK_INT < 12) {
-			setupAdLayout();
-		}
 
 		mSharedPref = getSharedPreferences(WatchActivity.PREFERENCES,
 				Context.MODE_PRIVATE);
@@ -75,6 +73,26 @@ public class Settings extends PreferenceActivity
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
 
+		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
+		Utils.setupAdmobAdView(this, adLayout);
+		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTOHIDE_SB, false)) {
+			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout1);
+			Utils.setupSuizongAdView(this, adLayout);
+			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
+			Utils.setupAdLayout(this, adLayout, false);
+		}
+	}
+
+	@Override
+	public void onStart() {
+		Log.v(TAG, "onStart()");
+		super.onStart();
+
+		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTO_ROTATE, false)) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+		} else {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		}
 	}
 
 	@Override
@@ -136,7 +154,7 @@ public class Settings extends PreferenceActivity
 			StringBuilder strBuilder = new StringBuilder();
 			strBuilder
 					.append(getString(R.string.used_bufsize))
-					.append(String.format("%.3f",
+					.append(String.format("%.1f",
 							(float) Utils.getFolderSize(Utils
 									.getAppCacheDir(this)) / 1024 / 1024))
 					.append("M").append(getString(R.string.sure_to_clean));
@@ -248,23 +266,23 @@ public class Settings extends PreferenceActivity
 		return true;
 	}
 
-	private void setupAdLayout() {
-		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
-		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
-		// 保证每次都从服务器取配置
-		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
-		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
-		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
+	protected void setupAdLayout(ViewGroup parent) {
+		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
 
-		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-				FrameLayout.LayoutParams.FILL_PARENT,
-				FrameLayout.LayoutParams.WRAP_CONTENT);
-		params.gravity = Gravity.TOP | Gravity.CENTER;
-
-		AdViewLayout adViewLayout = new AdViewLayout(this,
-				"SDK20122309480217x9sp4og4fxrj2ur");
-		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
-		adLayout.addView(adViewLayout, params);
-		adLayout.invalidate();
+			FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+					FrameLayout.LayoutParams.FILL_PARENT,
+					FrameLayout.LayoutParams.WRAP_CONTENT);
+			params.gravity = Gravity.TOP | Gravity.CENTER;
+			/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
+			// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
+			// 保证每次都从服务器取配置
+			AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
+			/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
+			// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
+			AdViewLayout adViewLayout = new AdViewLayout(this,
+					"SDK20122309480217x9sp4og4fxrj2ur");
+			parent.addView(adViewLayout, params);
+			parent.invalidate();
+		}
 	}
 }

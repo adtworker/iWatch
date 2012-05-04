@@ -18,6 +18,7 @@ package com.android.camera;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -26,6 +27,7 @@ import android.app.WallpaperManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -88,6 +90,20 @@ public class CropImage extends MonitoredActivity {
 
 	private IImageList mAllImages;
 	private IImage mImage;
+	private String mImgStr;
+
+	@Override
+	public void onStart() {
+		Log.v(TAG, "onStart()");
+		super.onStart();
+
+		if (getSharedPreferences("iWatch", Context.MODE_PRIVATE).getBoolean(
+				"auto_rotate", false)) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+		} else {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		}
+	}
 
 	@Override
 	public void onCreate(Bundle icicle) {
@@ -128,11 +144,31 @@ public class CropImage extends MonitoredActivity {
 			mScaleUp = extras.getBoolean("scaleUpIfNeeded", true);
 			mDoFaceDetection = extras.containsKey("noFaceDetection") ? !extras
 					.getBoolean("noFaceDetection") : true;
+			mImgStr = extras.getString("imgUrl");
 
 			if (intent.hasExtra("data")) {
 				mBitmap = BitmapFactory.decodeByteArray(getIntent()
 						.getByteArrayExtra("data"), 0, getIntent()
 						.getByteArrayExtra("data").length);
+			} else {
+				com.adtworker.mail.ImageManager imgManager = com.adtworker.mail.ImageManager
+						.getInstance(this);
+				if (mImgStr != null && mImgStr.length() != 0) {
+					if (mImgStr.startsWith("/")
+							|| mImgStr.startsWith("http://")) {
+						mBitmap = imgManager.getBitmapFromSDCard(mImgStr);
+					} else {
+						// local assets
+						InputStream is = null;
+						try {
+							is = this.getAssets().open(mImgStr);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						if (is != null)
+							mBitmap = BitmapFactory.decodeStream(is);
+					}
+				}
 			}
 		}
 

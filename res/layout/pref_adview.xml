@@ -15,4 +15,16 @@
             android:layout_height="wrap_content"
             android:gravity= "center"
             android:background="@color/black" />
+    <LinearLayout
+            android:id="@+id/adPrefLayout1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity= "center"
+            android:background="@color/black" />
+    <LinearLayout
+            android:id="@+id/adPrefLayout2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity= "center"
+            android:background="@color/black" />
 </LinearLayout>

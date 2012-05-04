@@ -24,7 +24,7 @@ public class SplashScreen extends Activity {
 		setContentView(view);
 
 		// set time to splash out
-		final int nWelcomeScreenDisplay = 2000;
+		final int nWelcomeScreenDisplay = 1000;
 		new Handler().postDelayed(new Runnable() {
 			@Override
 			public void run() {

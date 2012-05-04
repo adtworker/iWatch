@@ -38,7 +38,7 @@ public class MyGallery extends Activity {
 		mImageManager = ImageManager.getInstance(null);
 
 		imageAdapter = new ImageAdapter(this);
-		final ImageView imgView = (ImageView) findViewById(R.id.GalleryView);
+		final ImageView imgView = (ImageView) findViewById(R.id.GridView);
 		Gallery g = (Gallery) findViewById(R.id.Gallery);
 		g.setAdapter(imageAdapter);
 		g.setOnItemClickListener(new OnItemClickListener() {

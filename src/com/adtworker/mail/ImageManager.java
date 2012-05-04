@@ -434,7 +434,7 @@ public class ImageManager {
 		}
 		return bitmap;
 	}
-	private Bitmap getBitmapFromSDCard(String url) {
+	public Bitmap getBitmapFromSDCard(String url) {
 		Bitmap bitmap = null;
 		try {
 			FileInputStream fis = new FileInputStream(getFile(url));
