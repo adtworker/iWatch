@@ -1181,7 +1181,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					ImageManager.INVALID_PIC_INDEX);
 			// Log.d(TAG, "progress1: " + progress1 + ", progress2 = " +
 			// progress2);
+
+			if (progress1 != 0 || progress2 != 0) {
+				mProgressBar.setVisibility(View.VISIBLE);
+			}
 			mProgressBar.setProgress(progress1);
+			int current = mImageManager.getCurrent();
+			if (current != ImageManager.INVALID_PIC_INDEX
+					&& mImageManager.mImageList.get(current).isCached()) {
+				mProgressBar.setVisibility(View.GONE);
+			}
 
 			if (pos != ImageManager.INVALID_PIC_INDEX
 					&& pos == mImageManager.getCurrent()) {
@@ -1198,6 +1207,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				if (progress2 == 100) {
 					Bitmap bitmap = mImageManager.getPosBitmap(pos, false);
 					mImageViews[mImageViewCurrent].setImageBitmap(bitmap);
+					mImageManager.mImageList.get(mImageManager.getCurrent())
+							.setCached(true);
 				}
 			}
 
@@ -1208,8 +1219,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				mProgressBar.setVisibility(View.GONE);
 				mProgressBar.setProgress(0);
 				mProgressBar.setSecondaryProgress(0);
-			} else {
-				mProgressBar.setVisibility(View.VISIBLE);
 			}
 		}
 	}

@@ -11,6 +11,7 @@ public class AdtImage {
 	private String urlFull;
 	private String urlThumb;
 	private String idThumb;
+	private boolean bCached = false;
 
 	public AdtImage() {
 
@@ -66,5 +67,13 @@ public class AdtImage {
 			url = URLDecoder.decode(url);
 		}
 		return url;
+	}
+
+	public boolean isCached() {
+		return bCached;
+	}
+
+	public void setCached(boolean cached) {
+		bCached = cached;
 	}
 }
