@@ -418,10 +418,10 @@ public class ImageManager {
 					}
 				}
 
-				int progress = (i + 1) * 100 / mImageList.size();
-				Intent intent = new Intent(Constants.SET_PROGRESSBAR);
-				intent.putExtra("progress", progress);
-				WatchApp.getInstance().sendBroadcast(intent);
+				// int progress = (i + 1) * 100 / mImageList.size();
+				// Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+				// intent.putExtra("progress", progress);
+				// WatchApp.getInstance().sendBroadcast(intent);
 
 			}
 			return null;
