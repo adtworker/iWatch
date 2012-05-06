@@ -20,11 +20,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.view.View;
+
+import com.adtworker.mail.DownloadManager.DownloadItem;
+import com.adtworker.mail.constants.Constants;
 
 public class ImageManager {
 
@@ -47,6 +50,8 @@ public class ImageManager {
 			.ordinal()];
 	private final int mSearchPageNum = 1;
 	private final int mSearchPageSize = 80;
+	private int mSearchImageWidth = 960;
+	private int mSearchImageHeight = 800;
 	private Bitmap mCurrentBitmap = null;
 
 	public final static int INVALID_PIC_INDEX = -1;
@@ -57,13 +62,13 @@ public class ImageManager {
 	public ArrayList<AdtImage> mImageList = null;
 	private final ArrayList<String> mQueryKeywords = new ArrayList<String>();
 
+	private DownloadManager mDownloadManager = null;
+
 	private static ImageManager mImageManager = null;
-	public static ImageManager getInstance(Context context) {
+	public static ImageManager getInstance() {
 		if (null == mImageManager) {
-			if (context != null) {
-				Log.d(TAG, "init a ImageManager.");
-				mImageManager = new ImageManager(context);
-			}
+			Log.d(TAG, "Initizing an ImageManager.");
+			mImageManager = new ImageManager();
 		}
 		return mImageManager;
 	}
@@ -76,11 +81,20 @@ public class ImageManager {
 			}
 			mImageListMap.clear();
 			mImageManager = null;
+
+			if (mDownloadManager != null) {
+				if (!mDownloadManager.isStop())
+					mDownloadManager.stop();
+				mDownloadManager = null;
+			}
 		}
 	}
 
-	public ImageManager(Context context) {
-		mContext = context;
+	public ImageManager() {
+		mContext = WatchApp.getInstance();
+		mDownloadManager = DownloadManager.getInstance();
+		mDownloadManager.start();
+
 		for (int i = 0; i < mCurrentIndexArray.length; i++)
 			mCurrentIndexArray[i] = INVALID_PIC_INDEX;
 		mCurrentImageIndex = INVALID_PIC_INDEX;
@@ -115,6 +129,12 @@ public class ImageManager {
 			mQueryKeywords.add(word);
 		}
 	}
+
+	public void setQueryImgSize(int width, int height) {
+		mSearchImageWidth = width;
+		mSearchImageHeight = height;
+	}
+
 	public int getImageListSize() {
 		return mImageList.size();
 	}
@@ -142,15 +162,16 @@ public class ImageManager {
 	}
 
 	public String getCurrentStr() {
-		return mImageList.get(mCurrentImageIndex).urlFull;
+		return mImageList.get(mCurrentImageIndex).getFullUrl();
 	}
 
 	public String getCurrentStrTb() {
-		return mImageList.get(mCurrentImageIndex).urlThumb;
+		return mImageList.get(mCurrentImageIndex).getTbnUrl();
 	}
 
 	public String getCurrentStrLocal() {
-		return getCachedFilename(mImageList.get(mCurrentImageIndex).urlFull);
+		return Utils.getCachedFilename(mImageList.get(mCurrentImageIndex)
+				.getFullUrl(), false);
 	}
 
 	public String getImageStr(int step) {
@@ -182,20 +203,20 @@ public class ImageManager {
 				InputStream is = mContext.getAssets().open(strImage);
 				bitmap = BitmapFactory.decodeStream(is);
 			} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-				bitmap = getBitmapFromSDCard(strImage);
+				bitmap = getBitmapFromSDCard(strImage, false);
 
 				if (bitmap == null) {
 					String tbUrl = getCurrentStrTb();
-					Bitmap bm = getBitmapFromSDCard(tbUrl);
+					Bitmap bm = getBitmapFromSDCard(tbUrl, true);
 					if (bm == null) {
 						bm = getBitmapFromUrl(tbUrl);
 					}
-					new loadImageTask().execute(strImage,
-							Integer.toString(mCurrentImageIndex));
+
+					DownloadItem item = new DownloadItem(mCurrentImageIndex,
+							new AdtImage(strImage));
+					mDownloadManager.addTask(item);
+
 					bitmap = bm;
-				} else {
-					((WatchActivity) mContext).mProgressIcon
-							.setVisibility(View.GONE);
 				}
 			}
 		} catch (IOException e) {
@@ -203,7 +224,6 @@ public class ImageManager {
 		}
 		return bitmap;
 	}
-
 	public Bitmap getCurrentBitmap() {
 		if (mCurrentBitmap == null) {
 			String imgstr = getCurrentStr();
@@ -223,9 +243,9 @@ public class ImageManager {
 			return null;
 
 		AdtImage adt = mImageList.get(pos);
-		String url = adt.urlFull;
+		String url = adt.getFullUrl();
 		if (tbFirst && adt.hasThumb) {
-			url = adt.urlThumb;
+			url = adt.getTbnUrl();
 		}
 		Bitmap bitmap = null;
 		try {
@@ -242,18 +262,18 @@ public class ImageManager {
 				is.close();
 				is = null;
 			} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-				bitmap = getBitmapFromSDCard(url);
+				bitmap = getBitmapFromSDCard(url, false);
 				if (bitmap == null) {
 					bitmap = getBitmapFromUrl(url);
 				}
 				if (tbFirst && adt.hasThumb && bitmap == null) {
-					url = adt.urlFull;
-					bitmap = getBitmapFromSDCard(url, 4);
+					url = adt.getFullUrl();
+					bitmap = getBitmapFromSDCard(url, 4, false);
 				}
 				if (!tbFirst && bitmap == null) {
 					bitmap = getBitmapFromUrl(url);
 					if (bitmap != null)
-						writeBitmap2AppCache(bitmap, url);
+						writeBitmap2AppCache(bitmap, url, false);
 				}
 			}
 		} catch (IOException e) {
@@ -303,21 +323,20 @@ public class ImageManager {
 	private class getImagesTask
 			extends
 				AsyncTask<Void, Void, ArrayList<AdtImage>> {
-		WatchActivity activity = (WatchActivity) mContext;
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			activity.mProgressBar.setProgress(0);
-			activity.mProgressBar.setVisibility(View.VISIBLE);
-			// activity.mProgressIcon.setVisibility(View.VISIBLE);
-			activity.EnableNextPrevButtons(false);
+
+			Intent intent = new Intent(Constants.SET_BUTTONSTATE);
+			intent.putExtra("buttonState", false);
+			mContext.sendBroadcast(intent);
+
 			mInitListFailed = true;
 			mInitInProcess = true;
 		}
 
 		@Override
 		protected ArrayList<AdtImage> doInBackground(Void... params) {
-			int count = 0;
 			ArrayList<AdtImage> tempImageList = new ArrayList<AdtImage>();
 			try {
 				for (int k = 0; k < mQueryKeywords.size(); k++) {
@@ -327,28 +346,20 @@ public class ImageManager {
 
 					for (int i = 1; i <= mSearchPageNum; i++) {
 						List<AdtImage> temp = ImageSearchAdapter.getImgList(
-								keyword, 960, 800, i, tempImageList.size());
+								keyword, mSearchImageWidth, mSearchImageHeight,
+								i, tempImageList.size());
 
 						for (int j = 0; j < temp.size(); j++) {
-							activity.mProgressBar.setProgress(++count);
 							AdtImage img = temp.get(j);
-
-							if (img.urlFull.toLowerCase().endsWith(".gif"))
+							if (img.getFullUrl().toLowerCase().endsWith(".gif"))
 								continue;
 
-							if (count % 50 == 0) {
-								Log.d(TAG, "Adding " + count + ") url="
-										+ img.urlFull + ", tbUrl="
-										+ img.urlThumb);
-							}
 							tempImageList.add(img);
 						}
 					}
 				}
 				Log.d(TAG, "image list size = " + tempImageList.size());
 
-				// activity.mProgressBar.setProgress(mSearchPageNum
-				// * mSearchPageSize);
 				if (tempImageList.size() != 0) {
 					mInitListFailed = false;
 				}
@@ -365,9 +376,10 @@ public class ImageManager {
 		protected void onPostExecute(ArrayList<AdtImage> result) {
 			super.onPostExecute(result);
 			mInitInProcess = false;
-			activity.EnableNextPrevButtons(true);
-			activity.mProgressBar.setVisibility(View.GONE);
-			// activity.mProgressIcon.setVisibility(View.GONE);
+
+			Intent intent = new Intent(Constants.SET_BUTTONSTATE);
+			intent.putExtra("buttonState", true);
+			mContext.sendBroadcast(intent);
 
 			if (!mInitListFailed) {
 				mImageListMap.put(IMAGE_PATH_TYPE.REMOTE_HTTP_URL, result);
@@ -381,108 +393,53 @@ public class ImageManager {
 	}
 
 	private class loadAllImageTask extends AsyncTask<Void, Void, Void> {
-		WatchActivity activity = (WatchActivity) mContext;
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			activity.mProgressBar.setProgress(0);
-			activity.mProgressBar.setVisibility(View.VISIBLE);
-		}
-
 		@Override
 		protected Void doInBackground(Void... params) {
 			if (getImageListSize() == 0)
 				return null;
 
 			for (int i = 0; i < mImageList.size(); i++) {
-				activity.mProgressBar.setProgress(i * 100 / mImageList.size());
 
 				AdtImage img = mImageList.get(i);
 				String url;
 				if (img.hasThumb) {
-					url = img.urlThumb;
+					url = img.getTbnUrl();
 				} else {
-					url = img.urlFull;
+					url = img.getFullUrl();
 				}
 
-				Bitmap bitmap = getBitmapFromSDCard(url);
+				Bitmap bitmap = getBitmapFromSDCard(url, img.hasThumb);
 				if (bitmap == null) {
 					bitmap = getBitmapFromUrl(url);
 					if (bitmap != null) {
-						writeBitmap2AppCache(bitmap, url);
+						writeBitmap2AppCache(bitmap, url, img.hasThumb);
 					} else {
-						Log.e(TAG, "image " + i + " is null.");
+						Log.e(TAG, "thumbnail image " + i + " is null.");
 					}
 				}
+
+				int progress = (i + 1) * 100 / mImageList.size();
+				Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+				intent.putExtra("progress", progress);
+				WatchApp.getInstance().sendBroadcast(intent);
+
 			}
 			return null;
 		}
-
-		@Override
-		protected void onPostExecute(Void result) {
-			super.onPostExecute(result);
-			activity.mProgressBar.setProgress(100);
-			activity.mProgressBar.setVisibility(View.GONE);
-		}
 	}
 
-	private class loadImageTask extends AsyncTask<String, Integer, Bitmap> {
-		WatchActivity activity = (WatchActivity) mContext;
-		int loadingImgID = INVALID_PIC_INDEX;
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			activity.mProgressIcon.setVisibility(View.VISIBLE);
-			// activity.EnableNextPrevButtons(false);
-		}
-
-		@Override
-		protected Bitmap doInBackground(String... params) {
-			loadingImgID = Integer.parseInt(params[1]);
-			publishProgress(0);
-			Bitmap bitmap;
-			String url = params[0];
-			// bitmap = getBitMapFromSDCard(url);
-			// if (bitmap != null) {
-			// Log.d(TAG, "got bitmap from AppCache.");
-			// publishProgress(100);
-			// return bitmap;
-			// }
-			bitmap = getBitmapFromUrl(url);
-			if (bitmap != null) {
-				Log.d(TAG, "got bitmap from Remote: " + url);
-				writeBitmap2AppCache(bitmap, url);
-				publishProgress(100);
-				return bitmap;
-			}
-
-			// Log.e(TAG, "failed to get image " + url
-			// + ", Using default instead.");
-			// bitmap = BitmapFactory.decodeResource(mContext.getResources(),
-			// R.drawable.no_image);
-			publishProgress(100);
-			return bitmap;
-		}
-		@Override
-		protected void onProgressUpdate(Integer... progress) {
-			activity.mProgressIcon.setProgress(progress[0]);
-		}
-
-		@Override
-		protected void onPostExecute(Bitmap result) {
-			super.onPostExecute(result);
-
-			if (result != null && loadingImgID == mCurrentImageIndex) {
-				activity.setImageView(result);
-				mCurrentBitmap = result;
-			}
-			if (loadingImgID == mCurrentImageIndex) {
-				activity.mProgressIcon.setVisibility(View.GONE);
-			}
-			// activity.EnableNextPrevButtons(true);
-		}
-	}
 	public Bitmap getBitmapFromUrl(String url) {
+		return getBitmapFromUrl(url, false);
+	}
+
+	public Bitmap getBitmapFromUrl(String url, boolean background) {
+
+		if (background) {
+			DownloadItem item = new DownloadItem(mCurrentImageIndex,
+					new AdtImage(url));
+			mDownloadManager.addTask(item);
+			return null;
+		}
 
 		Bitmap bitmap = null;
 		URL u = null;
@@ -512,7 +469,7 @@ public class ImageManager {
 			e1.printStackTrace();
 			return null;
 		}
-		conn.setConnectTimeout(2000);
+		conn.setConnectTimeout(5000);
 		try {
 			is = conn.getInputStream();
 			BitmapFactory.Options options = new BitmapFactory.Options();
@@ -529,10 +486,12 @@ public class ImageManager {
 		conn.disconnect();
 		return bitmap;
 	}
-	public Bitmap getBitmapFromSDCard(String url) {
+
+	public Bitmap getBitmapFromSDCard(String url, boolean isThumb) {
 		Bitmap bitmap = null;
 		try {
-			FileInputStream fis = new FileInputStream(getFile(url));
+			FileInputStream fis = new FileInputStream(Utils.getFile(url,
+					isThumb));
 			bitmap = BitmapFactory.decodeStream(fis);
 			fis.close();
 			fis = null;
@@ -542,10 +501,12 @@ public class ImageManager {
 		return bitmap;
 	}
 
-	public Bitmap getBitmapFromSDCard(String url, int inSampleSize) {
+	public Bitmap getBitmapFromSDCard(String url, int inSampleSize,
+			boolean isThumb) {
 		Bitmap bitmap = null;
 		try {
-			FileInputStream fis = new FileInputStream(getFile(url));
+			FileInputStream fis = new FileInputStream(Utils.getFile(url,
+					isThumb));
 			BitmapFactory.Options opt = new BitmapFactory.Options();
 			opt.inSampleSize = inSampleSize;
 			bitmap = BitmapFactory.decodeStream(fis, null, opt);
@@ -557,9 +518,11 @@ public class ImageManager {
 		return bitmap;
 	}
 
-	private void writeInputStream2AppCache(InputStream is, String url) {
+	private void writeInputStream2AppCache(InputStream is, String url,
+			boolean isThumb) {
 		try {
-			FileOutputStream fos = new FileOutputStream(getFile(url), false);
+			FileOutputStream fos = new FileOutputStream(Utils.getFile(url,
+					isThumb), false);
 			int len = 0;
 			byte[] b = new byte[is.available()];
 
@@ -578,12 +541,13 @@ public class ImageManager {
 		}
 	}
 
-	private void writeBitmap2AppCache(Bitmap bitmap, String url) {
+	private void writeBitmap2AppCache(Bitmap bitmap, String url, boolean isThumb) {
 		if (bitmap == null)
 			return;
 
 		try {
-			FileOutputStream fos = new FileOutputStream(getFile(url), false);
+			FileOutputStream fos = new FileOutputStream(Utils.getFile(url,
+					isThumb), false);
 			byte[] bitmapByte = Bitmap2Byte(bitmap);
 			ByteArrayInputStream bis = new ByteArrayInputStream(bitmapByte);
 			int len = 0;
@@ -600,24 +564,6 @@ public class ImageManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private File getFile(String url) {
-		File file = null;
-		try {
-			file = new File(getCachedFilename(url));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return file;
-	}
-
-	private String getCachedFilename(String url) {
-		String path = Utils.getAppCacheDir(mContext);
-		return path + File.separator + url.hashCode();
-
-		// return path + File.separator + getHostname(url) + "."
-		// + getImageFilename(url);
 	}
 
 	private String getHostname(String imgPath) {
@@ -759,7 +705,7 @@ public class ImageManager {
 	private byte[] Bitmap2Byte(Bitmap bm) {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
+		bm.compress(Bitmap.CompressFormat.JPEG, 80, baos);
 		return baos.toByteArray();
 	}
 

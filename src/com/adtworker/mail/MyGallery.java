@@ -17,6 +17,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -42,7 +43,10 @@ public class MyGallery extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.image_gallery);
-		mImageManager = ImageManager.getInstance(this);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+		mImageManager = ImageManager.getInstance();
 		mSharedPref = getSharedPreferences(WatchActivity.PREFERENCES,
 				Context.MODE_PRIVATE);
 		mDataCache = new HashMap<Integer, SoftReference<Bitmap>>();
@@ -114,7 +118,7 @@ public class MyGallery extends Activity {
 
 		public ImageAdapter(Context context) {
 			mContext = context;
-			mImageManager = ImageManager.getInstance(null);
+			mImageManager = ImageManager.getInstance();
 		}
 
 		@Override
@@ -154,11 +158,12 @@ public class MyGallery extends Activity {
 			}
 			i.setImageBitmap(bitmap);
 
-			int width = displayMetrics.widthPixels / 3;
+			int width = displayMetrics.widthPixels * 5 / 12;
 			int height = (int) (width / (float) bitmap.getWidth() * bitmap
 					.getHeight());
+			height = width;
 			i.setLayoutParams(new AbsListView.LayoutParams(width, height));
-			i.setPadding(2, 2, 2, 2);
+			i.setPadding(4, 4, 4, 4);
 			i.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
 			return i;

@@ -69,7 +69,7 @@ public class Settings extends PreferenceActivity
 		StringBuilder strBuilder = new StringBuilder();
 		strBuilder
 				.append(getString(R.string.available_bufsize))
-				.append(Utils.getAvailableSize(Utils.getAppCacheDir(this)) / 1024 / 1024)
+				.append(Utils.getAvailableSize(Utils.getAppCacheDir()) / 1024 / 1024)
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
 
@@ -154,9 +154,9 @@ public class Settings extends PreferenceActivity
 			StringBuilder strBuilder = new StringBuilder();
 			strBuilder
 					.append(getString(R.string.used_bufsize))
-					.append(String.format("%.1f",
-							(float) Utils.getFolderSize(Utils
-									.getAppCacheDir(this)) / 1024 / 1024))
+					.append(String.format(
+							"%.1f",
+							(float) Utils.getFolderSize(Utils.getAppCacheDir()) / 1024 / 1024))
 					.append("M").append(getString(R.string.sure_to_clean));
 
 			new AlertDialog.Builder(this)
@@ -168,8 +168,7 @@ public class Settings extends PreferenceActivity
 								@Override
 								public void onClick(DialogInterface dialog,
 										int which) {
-									Utils.delFolder(Utils
-											.getAppCacheDir(Settings.this));
+									Utils.delFolder(Utils.getAppCacheDir());
 									update_storage_sum();
 								}
 							})
@@ -244,7 +243,7 @@ public class Settings extends PreferenceActivity
 		StringBuilder strBuilder = new StringBuilder();
 		strBuilder
 				.append(getResources().getString(R.string.available_bufsize))
-				.append(Utils.getAvailableSize(Utils.getAppCacheDir(this)) / 1024 / 1024)
+				.append(Utils.getAvailableSize(Utils.getAppCacheDir()) / 1024 / 1024)
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
 	}

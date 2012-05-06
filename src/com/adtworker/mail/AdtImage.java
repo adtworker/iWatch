@@ -8,8 +8,9 @@ public class AdtImage {
 	boolean hasThumb = false;
 	boolean isCached = false;
 
-	String urlFull;
-	String urlThumb;
+	private String urlFull;
+	private String urlThumb;
+	private String idThumb;
 
 	public AdtImage() {
 
@@ -31,6 +32,33 @@ public class AdtImage {
 		}
 		urlThumb = decode(urlTb);
 		hasThumb = true;
+	}
+
+	public void setThumbId(String tbnid) {
+		if (tbnid == null || tbnid.isEmpty())
+			return;
+		idThumb = tbnid;
+		hasThumb = true;
+	}
+
+	public String getTbnUrl() {
+		if (!hasThumb || isAsset)
+			return null;
+
+		if (!urlThumb.isEmpty())
+			return urlThumb;
+		else if (!idThumb.isEmpty())
+			return "http://images.google.com/images?q=tbn:" + idThumb + ":"
+					+ urlFull;
+		else
+			return null;
+	}
+
+	public String getFullUrl() {
+		if (!urlFull.isEmpty())
+			return urlFull;
+		else
+			return null;
 	}
 
 	private String decode(String url) {

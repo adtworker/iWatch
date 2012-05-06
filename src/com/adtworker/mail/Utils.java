@@ -3,7 +3,6 @@ package com.adtworker.mail;
 import java.io.File;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Environment;
 import android.view.Gravity;
 import android.view.ViewGroup;
@@ -115,7 +114,7 @@ public class Utils {
 	 * @param folderPath
 	 * @return String
 	 */
-	public static String getAppCacheDir(Context context) {
+	public static String getAppCacheDir() {
 		final String APP_SUBFOLDER = ".adtwkr";
 		final String APP_CACHE = "AppCache";
 		String path = Environment.getExternalStorageDirectory()
@@ -128,7 +127,8 @@ public class Utils {
 		if (!file.exists()) {
 			// Environment.getExternalStorageState() !=
 			// Environment.MEDIA_MOUNTED
-			path = context.getFilesDir().getPath() + File.separator + APP_CACHE;
+			path = WatchApp.getInstance().getFilesDir().getPath()
+					+ File.separator + APP_CACHE;
 			file = new File(path);
 			if (!file.exists())
 				file.mkdir();
@@ -206,5 +206,30 @@ public class Utils {
 			com.suizong.mobplate.ads.AdRequest adRequest = new com.suizong.mobplate.ads.AdRequest();
 			adView.loadAd(adRequest);
 		}
+	}
+
+	public static String getCachedFilename(String url, boolean isThumb) {
+		String path = getAppCacheDir();
+		if (isThumb) {
+			path += File.separator + ".thumbnails";
+			File file = new File(path);
+			if (!file.exists())
+				file.mkdirs();
+		}
+		path += File.separator + url.hashCode();
+		if (isThumb) {
+			path = path + ".jpg";
+		}
+		return path;
+	}
+
+	public static File getFile(String url, boolean isThumb) {
+		File file = null;
+		try {
+			file = new File(getCachedFilename(url, isThumb));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return file;
 	}
 }

@@ -152,11 +152,12 @@ public class CropImage extends MonitoredActivity {
 						.getByteArrayExtra("data").length);
 			} else {
 				com.adtworker.mail.ImageManager imgManager = com.adtworker.mail.ImageManager
-						.getInstance(this);
+						.getInstance();
 				if (mImgStr != null && mImgStr.length() != 0) {
 					if (mImgStr.startsWith("/")
 							|| mImgStr.startsWith("http://")) {
-						mBitmap = imgManager.getBitmapFromSDCard(mImgStr);
+						mBitmap = imgManager
+								.getBitmapFromSDCard(mImgStr, false);
 					} else {
 						// local assets
 						InputStream is = null;

@@ -50,6 +50,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
+import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewInterface;
 import com.android.camera.CropImage;
 import com.android.camera.OnScreenHint;
@@ -61,6 +62,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final ImageView[] mImageViews = new ImageView[2];
 	private final Random mRandom = new Random(System.currentTimeMillis());
 	private final ProgressBarReceiver mProgressbarRecv = new ProgressBarReceiver();
+	private final ButtonStateReceiver mButtonStateRecv = new ButtonStateReceiver();
 	private CoverFlow mCoverFlow;
 	private TextView mBtnPrev;
 	private TextView mBtnNext;
@@ -144,7 +146,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnPrev.setVisibility(View.GONE);
 		mBtnDisp.setEnabled(false);
 
-		mImageManager = ImageManager.getInstance(this);
+		mImageManager = ImageManager.getInstance();
 
 		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
 		mAdLayout = (LinearLayout) findViewById(R.id.adLayout);
@@ -330,13 +332,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final Runnable mCheckingNetworkInit = new Runnable() {
 		@Override
 		public void run() {
-			Log.v(TAG,
-					"mCheckingNetworkInit(): imageType="
-							+ mImageManager.getImagePathType()
-							+ ", isInitInProcess="
-							+ mImageManager.isInitInProcess()
-							+ ", isInitListFailed="
-							+ mImageManager.isInitListFailed());
 
 			if (!mImageManager.isInitInProcess()) {
 
@@ -344,6 +339,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					Toast.makeText(WatchActivity.this,
 							getString(R.string.failed_network),
 							Toast.LENGTH_SHORT).show();
+					mProgressBar.setVisibility(View.GONE);
 				} else {
 
 					mCoverFlow.setAdapter(new ImageAdapter(WatchActivity.this));
@@ -372,8 +368,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		}
 
-		IntentFilter filter = new IntentFilter("com.adtworker.mail.SetProgress");
-		registerReceiver(mProgressbarRecv, filter);
+		registerReceiver(mProgressbarRecv, new IntentFilter(
+				Constants.SET_PROGRESSBAR));
+		registerReceiver(mButtonStateRecv, new IntentFilter(
+				Constants.SET_BUTTONSTATE));
 	}
 
 	@Override
@@ -426,6 +424,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		super.onStop();
 
 		unregisterReceiver(mProgressbarRecv);
+		unregisterReceiver(mButtonStateRecv);
 	}
 
 	@Override
@@ -681,9 +680,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
 
 					mImageManager.setQueryKeyword("美女");
+					// mImageManager.setQueryImgSize(0, 0);
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
-					mHandler.postDelayed(mCheckingNetworkInit, 500);
+					mHandler.postDelayed(mCheckingNetworkInit, 0);
 
 				} else {
 					mImageManager
@@ -814,7 +814,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		setLayoutVisibility(R.id.adLayout, bVisibility);
 	}
 
-	public void EnableNextPrevButtons(boolean enabled) {
+	private void EnableNextPrevButtons(boolean enabled) {
 		mBtnPrev.setEnabled(enabled);
 		mBtnNext.setEnabled(enabled);
 		mBtnDisp.setEnabled(enabled);
@@ -1127,7 +1127,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			case KeyEvent.KEYCODE_DPAD_LEFT :
 			case KeyEvent.KEYCODE_DPAD_UP :
-				if (bStarted)
+				if (bStarted && !mImageManager.isInitInProcess())
 					goNextorPrev(-1);
 				break;
 
@@ -1135,7 +1135,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			case KeyEvent.KEYCODE_DPAD_DOWN :
 			case KeyEvent.KEYCODE_SPACE :
 			case KeyEvent.KEYCODE_ENTER :
-				goNextorPrev(1);
+				if (!mImageManager.isInitInProcess())
+					goNextorPrev(1);
 				break;
 
 			default :
@@ -1163,12 +1164,53 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		return outAnimation;
 	}
 
+	private class ButtonStateReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			boolean enabled = intent.getBooleanExtra("buttonState", true);
+			EnableNextPrevButtons(enabled);
+		}
+	}
+
 	private class ProgressBarReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			int progress = intent.getIntExtra("progress", 0);
-			// Log.d(TAG, "progress: " + progress);
-			mProgressBar.setProgress(progress);
+			int progress1 = intent.getIntExtra("progress", 0);
+			int progress2 = intent.getIntExtra("progress2", 0);
+			int pos = intent.getIntExtra("fileId",
+					ImageManager.INVALID_PIC_INDEX);
+			// Log.d(TAG, "progress1: " + progress1 + ", progress2 = " +
+			// progress2);
+			mProgressBar.setProgress(progress1);
+
+			if (pos != ImageManager.INVALID_PIC_INDEX
+					&& pos == mImageManager.getCurrent()) {
+
+				mProgressBar.setSecondaryProgress(progress2);
+				TextView tv = (TextView) findViewById(R.id.picName);
+				String tmpString = tv.getText().toString();
+				if (tmpString.contains("%"))
+					tmpString = tmpString.substring(0,
+							tmpString.lastIndexOf(" "));
+				tmpString += String.format(" %d%%", progress2);
+				tv.setText(tmpString);
+
+				if (progress2 == 100) {
+					Bitmap bitmap = mImageManager.getPosBitmap(pos, false);
+					mImageViews[mImageViewCurrent].setImageBitmap(bitmap);
+				}
+			}
+
+			if ((progress1 == 0 && progress2 == 0)
+					|| (progress1 == 0 && progress2 == 100)
+					|| (progress1 == 100 && progress2 == 0)
+					|| (progress1 == 100 && progress2 == 100)) {
+				mProgressBar.setVisibility(View.GONE);
+				mProgressBar.setProgress(0);
+				mProgressBar.setSecondaryProgress(0);
+			} else {
+				mProgressBar.setVisibility(View.VISIBLE);
+			}
 		}
 	}
 }

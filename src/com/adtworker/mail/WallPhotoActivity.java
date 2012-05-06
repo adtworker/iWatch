@@ -91,7 +91,7 @@ public class WallPhotoActivity extends Activity {
 
 			for (int i = 0; i < temp.size(); i++) {
 
-				ImageView imageView = generateWallImage(temp.get(i).urlThumb);
+				ImageView imageView = generateWallImage(temp.get(i).getTbnUrl());
 				addImageViewToList(imageView);
 				updateImageOfProduct(imageView, false);
 				addImageViewToLayout(imageView, photoWallWidth);

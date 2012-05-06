@@ -21,7 +21,7 @@ public class ImageAdapter extends BaseAdapter {
 
 	public ImageAdapter(Context context) {
 		mContext = context;
-		mImageManager = ImageManager.getInstance(null);
+		mImageManager = ImageManager.getInstance();
 		TypedArray a = mContext
 				.obtainStyledAttributes(R.styleable.GalleryTheme);
 		mGalleryItemBackground = a.getResourceId(
