@@ -333,6 +333,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		@Override
 		public void run() {
 
+                        if (mImageManager == null) {
+                            mHandler.removeCallbacks(mCheckingNetworkInit);
+                            return;
+                        }
+
 			if (!mImageManager.isInitInProcess()) {
 
 				if (mImageManager.isInitListFailed()) {
