@@ -34,7 +34,7 @@ import com.adtworker.mail.constants.Constants;
 
 public class GoogleImage {
 	static String REQUEST_TEMPLATE = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q={0}&start={1}&rsz={2}&imgsz=medium&imgtype=photo";
-	private static String GOOGLE_AJAX_URL_TEMPLATE = "http://www.google.com.hk/search?q={0}&hl=zh-CN&newwindow=1&safe=strict&tbs=isz:ex,iszw:{1},iszh:{2}&biw=1399&bih=347&tbm=isch&ijn=2&ei=PyCKT8DJAavimAWUiJjgCQ&sprg={3}&page={4}&start={5}&ijn={6}";
+	private static String GOOGLE_AJAX_URL_TEMPLATE = "http://www.google.com.hk/search?q={0}&hl=zh-CN&newwindow=1&safe=strict&biw=1399&bih=347&tbm=isch&ijn=2&ei=PyCKT8DJAavimAWUiJjgCQ&page={1}&start={2}&ijn={3}";
 
 	private static String GOOGLE_IMG_URL_TEMPLATE = "http://images.google.com.hk/images?q={0}&ndsp={1}&start={2}&filter=1&safe=strict";
 	// http://www.codeproject.com/Articles/11876/An-API-for-Google-Image-Search
@@ -141,7 +141,7 @@ public class GoogleImage {
 	public static Map<String, String> getImgByAjaxUrl(String keyword,
 			Integer width, Integer height, Integer page, Integer start) {
 		String requestUrl = MessageFormat.format(GOOGLE_AJAX_URL_TEMPLATE,
-				keyword, width, height, page, start, page);
+				keyword, page, start, page);
 		if (width != 0 && height != 0) {
 			requestUrl += String.format("&tbs=isz:ex,iszw:%d,iszh:%d", width,
 					height);
@@ -207,6 +207,7 @@ public class GoogleImage {
 			String response = getHTML(requestUrl).trim();
 			// Log.d(Constants.TAG, response);
 			String[] imageDivs = response.split("/imgres?");
+			Log.d(Constants.TAG, "divs = " + imageDivs.length);
 			for (String imageDiv : imageDivs) {
 				try {
 					Log.d(Constants.TAG, "div: " + imageDiv);

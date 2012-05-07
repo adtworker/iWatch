@@ -25,14 +25,13 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 
-import com.adtworker.mail.constants.Constants;
-
 /**
  * MyGallery.java
  * 
  * @author baojun
  */
 public class MyGallery extends Activity {
+	private static final String TAG = "MyGallery";
 	private ImageManager mImageManager;
 	private HashMap<Integer, SoftReference<Bitmap>> mDataCache;
 	private GridView mGridView;
@@ -76,7 +75,7 @@ public class MyGallery extends Activity {
 
 	@Override
 	public void onStart() {
-		Log.v(Constants.TAG, "onStart()");
+		Log.v(TAG, "onStart()");
 		super.onStart();
 
 		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTO_ROTATE, false)) {
@@ -88,7 +87,7 @@ public class MyGallery extends Activity {
 
 	@Override
 	protected void onDestroy() {
-		Log.d(Constants.TAG, "MyGallery onDestroy()");
+		Log.d(TAG, "onDestroy()");
 		GridView gridView = (GridView) findViewById(R.id.GridView);
 		int count = gridView.getCount();
 		for (int i = 0; i < count; i++) {
