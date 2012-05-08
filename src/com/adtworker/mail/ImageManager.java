@@ -106,11 +106,20 @@ public class ImageManager {
 				Intent intent = new Intent(Constants.SET_BUTTONSTATE);
 				intent.putExtra("buttonState", true);
 				mContext.sendBroadcast(intent);
+
+				intent = new Intent(Constants.SET_PROGRESSBAR);
+				intent.putExtra("progress", 100);
+				mContext.sendBroadcast(intent);
+
+				mImagePathType = mImagePathTypeLast;
+
+				return;
 			}
 		}
 
 		initImageList();
 	}
+
 	public IMAGE_PATH_TYPE getImagePathType() {
 		return mImagePathType;
 	}
@@ -213,8 +222,14 @@ public class ImageManager {
 						bm = getBitmapFromUrl(tbUrl);
 					}
 
-					int i = getCurrent();
-					DownloadItem item = new DownloadItem(i, mImageList.get(i));
+					// for (int i = 0; i < mImageList.size(); i++) {
+					// if (mImageList.get(i).getFullUrl().equals(strImage)) {
+					// DownloadItem item = new DownloadItem(i,
+					// mImageList.get(i));
+					// WatchApp.getDownloadManager().addTask(item);
+					// }
+					// }
+					DownloadItem item = new DownloadItem(strImage, false);
 					WatchApp.getDownloadManager().addTask(item);
 
 					bitmap = bm;
@@ -371,6 +386,10 @@ public class ImageManager {
 
 							tempImageList.add(img);
 						}
+						if (tempImageList.size() == 0) {
+							mInitListFailed = true;
+							return null;
+						}
 					}
 				}
 				Log.d(TAG, "image list size = " + tempImageList.size());
@@ -517,6 +536,7 @@ public class ImageManager {
 		conn.disconnect();
 		return bitmap;
 	}
+
 	public Bitmap getBitmapFromSDCard(String url, boolean isThumb) {
 		Bitmap bitmap = null;
 		if (!isThumb) {
@@ -541,6 +561,7 @@ public class ImageManager {
 		}
 		return bitmap;
 	}
+
 	public Bitmap getBitmapFromSDCard(String url, int inSampleSize,
 			boolean isThumb) {
 		Bitmap bitmap = null;

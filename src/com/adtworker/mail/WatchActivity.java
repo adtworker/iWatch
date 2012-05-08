@@ -136,8 +136,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mCoverFlow = (CoverFlow) findViewById(R.id.gallery);
 		mCoverFlow.setVisibility(View.GONE);
-		mCoverFlow.setMaxZoom(-100);
-		mCoverFlow.setMaxRotationAngle(90);
+		mCoverFlow.setMaxZoom(-150);
+		mCoverFlow.setMaxRotationAngle(0);
 
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);

@@ -155,7 +155,7 @@ public class GoogleImage {
 			String response = getHTML(requestUrl).trim();
 			// Log.d(Constants.TAG, response);
 			String[] imageDivs = response.split("a href");
-			Log.d(Constants.TAG, "divs" + imageDivs.length);
+			Log.d(Constants.TAG, "divs=" + imageDivs.length);
 			Intent intent = new Intent(Constants.SET_PROGRESSBAR);
 			intent.putExtra("prg_items", imageDivs.length);
 			WatchApp.getInstance().sendBroadcast(intent);

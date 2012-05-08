@@ -2,7 +2,6 @@ package com.adtworker.mail;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +21,6 @@ import android.content.Intent;
 import android.net.Proxy;
 import android.util.Log;
 
-import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
 import com.adtworker.mail.constants.Constants;
 
 public class DownloadManager {
@@ -46,6 +44,8 @@ public class DownloadManager {
 	}
 
 	public void addTask(DownloadItem item) {
+		Log.d(TAG, "addTask: " + item.id + ") " + item.image.getFullUrl());
+
 		if (!idList.contains(item.getFileId())) {
 			idList.add(item.getFileId());
 			executorService.submit(new DownloadThread(item));
@@ -67,22 +67,54 @@ public class DownloadManager {
 	public static class DownloadItem {
 		private int id;
 		private long length;
-		private AdtImage image;
+		private AdtImage image = null;
+		private String url;
+		private boolean bThumb = false;
+
+		public DownloadItem(String url, boolean isThumb) {
+			this.url = url;
+			this.bThumb = isThumb;
+			this.length = 0;
+
+			for (int i = 0; i < WatchApp.getImageManager().getImageListSize(); i++) {
+				AdtImage img = WatchApp.getImageManager().mImageList.get(i);
+				String urlTmp = bThumb ? img.getTbnUrl() : img.getFullUrl();
+				if (urlTmp.equals(url)) {
+					id = i;
+					image = img;
+					break;
+				}
+			}
+		}
 
 		public DownloadItem(int id, AdtImage adt) {
 			this.id = id;
 			this.image = adt;
 			this.length = 0;
+			this.bThumb = false;
 		}
 
 		public int getFileId() {
 			return id;
 		}
-		public long getFileLength() {
-			return length;
-		}
+
 		public AdtImage getImage() {
 			return image;
+		}
+
+		public long getFileLength() {
+			if (!bThumb) {
+				File file = Utils.getFile(image.getFullUrl(), bThumb);
+				if (file.exists()) {
+					length = file.length();
+				}
+			}
+
+			return length;
+		}
+
+		public boolean isThumb() {
+			return bThumb;
 		}
 	}
 
@@ -92,29 +124,19 @@ public class DownloadManager {
 		private int fileId;
 		private File downloadFile;
 		private AdtImage image;
+		private boolean bThumb;
 
 		public DownloadThread(DownloadItem item) {
 			fileId = item.getFileId();
 			finished = item.getFileLength();
 			image = item.getImage();
+			bThumb = item.isThumb();
 
-			downloadFile = Utils.getFile(image.getFullUrl(), false);
-			if (!downloadFile.exists()) {
-				try {
-					downloadFile.createNewFile();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			} else {
-				WatchApp.getImageManager().mImageList.get(fileId).byteLocal = downloadFile
-						.length();
-			}
+			image.byteLocal = finished;
 		}
 
 		@Override
 		public void run() {
-			AdtImage image = WatchApp.getImageManager().mImageList.get(fileId);
-			Log.v(TAG, "file id=" + fileId + ", byteLocal=" + image.byteLocal);
 
 			// // Create and initialize HTTP parameters
 			// HttpParams params = new BasicHttpParams();
@@ -147,21 +169,56 @@ public class DownloadManager {
 						ConnRoutePNames.DEFAULT_PROXY, proxy);
 			}
 
+			if (bThumb) {
+				downloadFile = Utils.getFile(image.getTbnUrl(), true);
+				try {
+					HttpGet httpGet = new HttpGet(image.getTbnUrl());
+					HttpResponse httpResponse = httpClient.execute(httpGet);
+					HttpEntity httpEntity = httpResponse.getEntity();
+					InputStream inputStream = httpEntity.getContent();
+					FileOutputStream outputStream = new FileOutputStream(
+							downloadFile, false);
+					int len = 0;
+					byte[] b = new byte[inputStream.available()];
+					while ((len = inputStream.read(b)) != -1) {
+						outputStream.write(b, 0, len);
+					}
+					inputStream.close();
+					outputStream.close();
+
+					Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+					intent.putExtra("fileId", fileId);
+					intent.putExtra("progress3", 100);
+					DownloadManager.this.mContext.sendBroadcast(intent);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				DownloadManager.this.idList.remove(fileId);
+				httpClient.getConnectionManager().shutdown();
+				return;
+
+			} else {
+				downloadFile = Utils.getFile(image.getFullUrl(), false);
+			}
+
+			Log.v(TAG, fileId + ") " + image.getFullUrl() + ", byteLocal="
+					+ image.byteLocal);
+
 			try {
 				HttpGet httpGet = new HttpGet(image.getFullUrl());
 				HttpResponse httpResponse = httpClient.execute(httpGet);
 				HttpEntity httpEntity = httpResponse.getEntity();
 				fileLength = httpEntity.getContentLength();
-				if (WatchApp.getImageManager().getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-					image.byteRemote = fileLength;
-				}
+				image.byteRemote = fileLength;
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
-			Log.v(TAG, "byteLocal=" + image.byteLocal + ", byteRemote="
-					+ image.byteRemote);
+			Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
+					+ ", byteRemote=" + image.byteRemote);
 			if (image.byteLocal < image.byteRemote) {
 				try {
 					HttpGet httpGet = new HttpGet(image.getFullUrl());
@@ -208,8 +265,8 @@ public class DownloadManager {
 				}
 			}
 			image.byteLocal = finished;
-			Log.v(TAG, "byteLocal=" + image.byteLocal + ", byteRemote="
-					+ image.byteRemote);
+			Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
+					+ ", byteRemote=" + image.byteRemote);
 			httpClient.getConnectionManager().shutdown();
 			Intent intent = new Intent(Constants.SET_PROGRESSBAR);
 			intent.putExtra("fileId", fileId);

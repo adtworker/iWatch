@@ -7,10 +7,13 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+
+import com.adtworker.mail.constants.Constants;
 
 public class ImageAdapter extends BaseAdapter {
 
@@ -59,6 +62,7 @@ public class ImageAdapter extends BaseAdapter {
 				.getDisplayMetrics();
 		int width = displayMetrics.widthPixels;
 		int height = displayMetrics.heightPixels;
+		Log.d(Constants.TAG, width + "x" + height);
 
 		i.setImageBitmap(bitmap);
 		i.setLayoutParams(new CoverFlow.LayoutParams(width, height));
