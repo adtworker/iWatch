@@ -24,6 +24,8 @@ import android.content.Context;
 import android.graphics.Camera;
 import android.graphics.Matrix;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Transformation;
 import android.widget.Gallery;
@@ -203,5 +205,24 @@ public class CoverFlow extends Gallery {
 		imageMatrix.preTranslate(-(imageWidth / 2), -(imageHeight / 2));
 		imageMatrix.postTranslate((imageWidth / 2), (imageHeight / 2));
 		mCamera.restore();
+	}
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+			float velocityY) {
+		int kEvent;
+		if (isScrollingLeft(e1, e2)) {
+			// Check if scrolling left
+			kEvent = KeyEvent.KEYCODE_DPAD_LEFT;
+		} else {
+			// Otherwise scrolling right
+			kEvent = KeyEvent.KEYCODE_DPAD_RIGHT;
+		}
+		onKeyDown(kEvent, null);
+		return true;
+	}
+
+	private boolean isScrollingLeft(MotionEvent e1, MotionEvent e2) {
+		return e2.getX() > e1.getX();
 	}
 }

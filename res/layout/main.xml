@@ -24,6 +24,11 @@
         android:contentDescription="@string/ContentDesc"
         android:scaleType="centerInside" />
 
+    <com.adtworker.mail.CoverFlow
+            android:id="@+id/gallery"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+
     <LinearLayout
         android:id="@+id/clockLayout"
         android:layout_width="fill_parent"
@@ -51,29 +56,6 @@
         android:layout_height="fill_parent"
         android:gravity="bottom"
         android:orientation="vertical" >
-
-        <com.adtworker.mail.CoverFlow
-            android:id="@+id/gallery"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
-
-        <LinearLayout
-            android:id="@+id/prgLayout"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal" >
-
-            <ProgressBar
-                android:id="@+id/prgbar"
-                android:layout_width="fill_parent"
-                android:layout_height="4dp"
-                android:max="100"
-                android:progressDrawable="@drawable/progressbar_style"
-                style="@android:style/Widget.ProgressBar.Horizontal"
-                android:layout_marginBottom="0dp" />
-
-        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/btnLayout"
@@ -122,6 +104,30 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:background="@color/black" />
+
+        <ProgressBar
+            android:id="@+id/prgbar1"
+            android:layout_width="fill_parent"
+            android:layout_height="4dp"
+            android:max="100"
+            android:progressDrawable="@drawable/progressbar_darkstyle"
+            style="@android:style/Widget.ProgressBar.Horizontal" />
+
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="bottom"
+        android:orientation="vertical" >
+
+            <ProgressBar
+                android:id="@+id/prgbar2"
+                android:layout_width="fill_parent"
+                android:layout_height="4dp"
+                android:max="100"
+                android:progressDrawable="@drawable/progressbar_darkstyle"
+                style="@android:style/Widget.ProgressBar.Horizontal" />
+
+    </LinearLayout>
 </FrameLayout>

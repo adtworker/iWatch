@@ -4,7 +4,6 @@ import java.lang.ref.SoftReference;
 import java.util.HashMap;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
@@ -22,11 +21,6 @@ public class ImageAdapter extends BaseAdapter {
 	public ImageAdapter(Context context) {
 		mContext = context;
 		mImageManager = ImageManager.getInstance();
-		TypedArray a = mContext
-				.obtainStyledAttributes(R.styleable.GalleryTheme);
-		mGalleryItemBackground = a.getResourceId(
-				R.styleable.GalleryTheme_android_galleryItemBackground, 0);
-		a.recycle();
 	}
 
 	@Override
@@ -63,16 +57,12 @@ public class ImageAdapter extends BaseAdapter {
 		Bitmap bitmap = mImageManager.getPosBitmap(position, true);
 		DisplayMetrics displayMetrics = mContext.getResources()
 				.getDisplayMetrics();
-		int width = displayMetrics.widthPixels * 5 / 12;
-		int height = displayMetrics.heightPixels * 5 / 12;
-		if (bitmap != null) {
-			height = (int) (width / (float) bitmap.getWidth() * bitmap
-					.getHeight());
-		}
+		int width = displayMetrics.widthPixels;
+		int height = displayMetrics.heightPixels;
+
 		i.setImageBitmap(bitmap);
 		i.setLayoutParams(new CoverFlow.LayoutParams(width, height));
 		i.setScaleType(ImageView.ScaleType.FIT_CENTER);
-		// i.setBackgroundResource(mGalleryItemBackground);
 
 		mCached.put(position, new SoftReference<ImageView>(i));
 		return i;

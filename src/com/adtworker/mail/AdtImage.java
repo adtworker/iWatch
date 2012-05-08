@@ -4,9 +4,10 @@ import java.net.URLDecoder;
 
 public class AdtImage {
 
+	long byteLocal = 0;
+	long byteRemote = 0;
 	boolean isAsset = false;
 	boolean hasThumb = false;
-	boolean isCached = false;
 
 	private String urlFull;
 	private String urlThumb;

@@ -53,7 +53,6 @@ import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
 import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewInterface;
 import com.android.camera.CropImage;
-import com.android.camera.OnScreenHint;
 
 public class WatchActivity extends Activity implements AdViewInterface {
 
@@ -96,9 +95,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private GestureDetector mClockGestureDetector;
 	private ProgressDialog mProcessDialog;
 	public ProgressBar mProgressBar;
+	public ProgressBar mProgressBar2;
 	public ProgressBar mProgressIcon;
 	private SharedPreferences mSharedPref;
-	private OnScreenHint mScreenHint;
 
 	final static String PREFERENCES = "iWatch";
 	final static String PREF_CLOCK_FACE = "face";
@@ -137,7 +136,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mCoverFlow = (CoverFlow) findViewById(R.id.gallery);
 		mCoverFlow.setVisibility(View.GONE);
-		mCoverFlow.setMaxRotationAngle(75);
+		mCoverFlow.setMaxZoom(-100);
+		mCoverFlow.setMaxRotationAngle(90);
 
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
@@ -151,8 +151,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
 		mAdLayout = (LinearLayout) findViewById(R.id.adLayout);
 		mClockLayout = (ViewGroup) findViewById(R.id.clockLayout);
-		mProgressBar = (ProgressBar) findViewById(R.id.prgbar);
-		mProgressBar.setVisibility(View.GONE);
+		mProgressBar = (ProgressBar) findViewById(R.id.prgbar1);
+		mProgressBar2 = (ProgressBar) findViewById(R.id.prgbar2);
+		// mProgressBar.setVisibility(View.GONE);
+		mProgressBar2.setVisibility(View.GONE);
 		mProgressIcon = (ProgressBar) findViewById(R.id.prgIcon);
 		mProgressIcon.setVisibility(View.GONE);
 
@@ -179,7 +181,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			iv.setOnTouchListener(rootListener);
 		}
 
-		mScreenHint = OnScreenHint.makeText(this, "");
 		mCoverFlow.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View v,
@@ -196,8 +197,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mCoverFlow
 							.startAnimation(makeInAnimation(R.anim.transition_out));
 					mCoverFlow.setVisibility(View.GONE);
-					if (mScreenHint != null)
-						mScreenHint.cancel();
 					return;
 				}
 				mImageManager.setCurrent(position - delta);
@@ -205,9 +204,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				mCoverFlow
 						.startAnimation(makeInAnimation(R.anim.transition_out));
 				mCoverFlow.setVisibility(View.GONE);
-
-				if (mScreenHint != null)
-					mScreenHint.cancel();
 			}
 		});
 
@@ -284,15 +280,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				bClickCoverFlow = false;
 			}
 
-			TextView tv = (TextView) findViewById(R.id.picName);
-			tv.setText(String.format("%d/%d, %dx%d",
-					mImageManager.getCurrent() + 1,
-					mImageManager.getImageListSize(), bm.getWidth(),
-					bm.getHeight()));
-			if (mScreenHint != null) {
-				mScreenHint.setText(String.format("%d/%d",
+			if (bm != null) {
+				TextView tv = (TextView) findViewById(R.id.picName);
+				tv.setText(String.format("%d/%d, %dx%d",
 						mImageManager.getCurrent() + 1,
-						mImageManager.getImageListSize()));
+						mImageManager.getImageListSize(), bm.getWidth(),
+						bm.getHeight()));
 			}
 
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
@@ -333,10 +326,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		@Override
 		public void run() {
 
-                        if (mImageManager == null) {
-                            mHandler.removeCallbacks(mCheckingNetworkInit);
-                            return;
-                        }
+			if (mImageManager == null) {
+				mHandler.removeCallbacks(mCheckingNetworkInit);
+				return;
+			}
 
 			if (!mImageManager.isInitInProcess()) {
 
@@ -454,11 +447,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				if (v.getDrawable() != null)
 					v.getDrawable().setCallback(null);
 			}
-		}
-
-		if (mScreenHint != null) {
-			mScreenHint.cancel();
-			mScreenHint = null;
 		}
 
 		if (mImageManager != null) {
@@ -658,7 +646,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS
 								? R.string.remote_mode
 								: R.string.local_mode);
-		menu.findItem(R.id.menu_toggle_mode).setEnabled(mBtnNext.isEnabled());
 
 		menu.findItem(R.id.menu_full_screen).setTitle(
 				getMLVisibility()
@@ -967,7 +954,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		private void ChangeClockFace(int step) {
-			int face = (mFace + step) % CLOCKS.length;
+			int face = (mFace + step + CLOCKS.length) % CLOCKS.length;
 			if (mFace != face) {
 				if (face < 0 || face >= CLOCKS.length) {
 					mFace = 0;
@@ -1000,6 +987,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 				float velocityY) {
 			if (mScaleType == ScaleType.CENTER) {
+				return false;
+			}
+
+			if (mImageManager.isInitInProcess()) {
 				return false;
 			}
 
@@ -1067,12 +1058,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mCoverFlow
 							.startAnimation(makeInAnimation(R.anim.slide_in_vertical));
 					mCoverFlow.setVisibility(View.VISIBLE);
-					mScreenHint.show();
 				} else {
 					mCoverFlow
 							.startAnimation(makeInAnimation(R.anim.slide_out_vertical_r));
 					mCoverFlow.setVisibility(View.GONE);
-					mScreenHint.cancel();
 				}
 				// mCoverFlow
 				// .setVisibility(mCoverFlow.getVisibility() == View.GONE
@@ -1177,30 +1166,65 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 	}
 
+	static int total = 0;
+	static int pages = 0;
+	static int key = -1;
+	static int page = -1;
+	static int items = 0;
+	static int item = -1;
+
 	private class ProgressBarReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			int progress1 = intent.getIntExtra("progress", 0);
-			int progress2 = intent.getIntExtra("progress2", 0);
+			int progress1 = intent.getIntExtra("progress", -1);
+			int progress2 = intent.getIntExtra("progress2", -1);
 			int pos = intent.getIntExtra("fileId",
 					ImageManager.INVALID_PIC_INDEX);
-			// Log.d(TAG, "progress1: " + progress1 + ", progress2 = " +
-			// progress2);
+			// Log.d(TAG, "prg1: " + progress1 + ", prg2 = " + progress2);
 
-			if (progress1 != 0 || progress2 != 0) {
-				mProgressBar.setVisibility(View.VISIBLE);
+			int tmp = intent.getIntExtra("prg_total", -1);
+			if (tmp >= 0)
+				total = tmp;
+			if ((tmp = intent.getIntExtra("prg_key", -1)) != -1) {
+				key = tmp;
+				page = 0;
 			}
-			mProgressBar.setProgress(progress1);
-			int current = mImageManager.getCurrent();
-			if (current != ImageManager.INVALID_PIC_INDEX
-					&& mImageManager.mImageList.get(current).isCached()) {
-				mProgressBar.setVisibility(View.GONE);
+			if ((tmp = intent.getIntExtra("prg_pages", 0)) > 0)
+				pages = tmp;
+			if ((tmp = intent.getIntExtra("prg_page", -1)) != -1) {
+				page = tmp;
+				item = 0;
+			}
+			if ((tmp = intent.getIntExtra("prg_items", 0)) > 0)
+				items = tmp;
+			if ((tmp = intent.getIntExtra("prg_item", -1)) != -1)
+				item = tmp;
+			if (pages != 0 && total != 0 && items != 0) {
+				int i = 100 * (key * pages + page) / pages;
+				int j = 100 * item / items / total;
+				mProgressBar.setVisibility(View.VISIBLE);
+				mProgressBar.setProgress(i + j);
+			}
+
+			if (progress1 != 0 && progress1 != -1) {
+				mProgressBar.setVisibility(View.VISIBLE);
+				mProgressBar.setProgress(progress1);
+			}
+			if (progress2 != 0 && progress2 != -1) {
+				int current = mImageManager.getCurrent();
+				if (current != ImageManager.INVALID_PIC_INDEX
+						&& mImageManager.mImageList.get(current).isCached()) {
+					mProgressBar2.setVisibility(View.GONE);
+				} else {
+					mProgressBar2.setVisibility(View.VISIBLE);
+				}
 			}
 
 			if (pos != ImageManager.INVALID_PIC_INDEX
 					&& pos == mImageManager.getCurrent()) {
 
-				mProgressBar.setSecondaryProgress(progress2);
+				mProgressBar2.setSecondaryProgress(progress2);
+
 				TextView tv = (TextView) findViewById(R.id.picName);
 				String tmpString = tv.getText().toString();
 				if (tmpString.contains("%"))
@@ -1217,13 +1241,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				}
 			}
 
-			if ((progress1 == 0 && progress2 == 0)
-					|| (progress1 == 0 && progress2 == 100)
-					|| (progress1 == 100 && progress2 == 0)
-					|| (progress1 == 100 && progress2 == 100)) {
-				mProgressBar.setVisibility(View.GONE);
+			if (progress1 == 0 || progress1 == 100) {
+				// mProgressBar.setVisibility(View.GONE);
 				mProgressBar.setProgress(0);
-				mProgressBar.setSecondaryProgress(0);
+			}
+			if (progress2 == 0 || progress2 == 100) {
+				mProgressBar2.setVisibility(View.GONE);
+				mProgressBar2.setSecondaryProgress(0);
 			}
 		}
 	}

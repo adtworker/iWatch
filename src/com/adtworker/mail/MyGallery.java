@@ -70,7 +70,7 @@ public class MyGallery extends Activity {
 		setResult(pos);
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adLayout);
-		Utils.setupAdLayout(this, adLayout, false);
+		// Utils.setupAdLayout(this, adLayout, false);
 	}
 
 	@Override
@@ -160,7 +160,7 @@ public class MyGallery extends Activity {
 			int width = displayMetrics.widthPixels * 5 / 12;
 			int height = (int) (width / (float) bitmap.getWidth() * bitmap
 					.getHeight());
-			height = width;
+			// height = width;
 			i.setLayoutParams(new AbsListView.LayoutParams(width, height));
 			i.setPadding(4, 4, 4, 4);
 			i.setScaleType(ImageView.ScaleType.FIT_CENTER);

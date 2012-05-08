@@ -48,8 +48,7 @@ public class ImageManager {
 	private int mCurrentImageIndex = INVALID_PIC_INDEX;
 	private final int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
-	private final int mSearchPageNum = 3;
-	private final int mSearchPageSize = 80;
+	private final int mSearchPageNum = 5;
 	private int mSearchImageWidth = 960;
 	private int mSearchImageHeight = 800;
 	private Bitmap mCurrentBitmap = null;
@@ -61,8 +60,7 @@ public class ImageManager {
 	private Map<IMAGE_PATH_TYPE, ArrayList<AdtImage>> mImageListMap = new HashMap<IMAGE_PATH_TYPE, ArrayList<AdtImage>>();
 	public ArrayList<AdtImage> mImageList = null;
 	private final ArrayList<String> mQueryKeywords = new ArrayList<String>();
-
-	private DownloadManager mDownloadManager = null;
+	private AsyncTask<Void, Void, ArrayList<AdtImage>> mInitListTask = null;
 
 	private static ImageManager mImageManager = null;
 	public static ImageManager getInstance() {
@@ -81,19 +79,11 @@ public class ImageManager {
 			}
 			mImageListMap.clear();
 			mImageManager = null;
-
-			if (mDownloadManager != null) {
-				if (!mDownloadManager.isStop())
-					mDownloadManager.stop();
-				mDownloadManager = null;
-			}
 		}
 	}
 
 	public ImageManager() {
 		mContext = WatchApp.getInstance();
-		mDownloadManager = DownloadManager.getInstance();
-		mDownloadManager.start();
 
 		for (int i = 0; i < mCurrentIndexArray.length; i++)
 			mCurrentIndexArray[i] = INVALID_PIC_INDEX;
@@ -107,9 +97,20 @@ public class ImageManager {
 		mCurrentIndexArray[mImagePathType.ordinal()] = mCurrentImageIndex;
 		mImagePathTypeLast = mImagePathType;
 		mImagePathType = type;
+		if (mImagePathTypeLast == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+			if (mInitInProcess) {
+				mInitListTask.cancel(true);
+				mInitInProcess = false;
+				mInitListFailed = false;
+
+				Intent intent = new Intent(Constants.SET_BUTTONSTATE);
+				intent.putExtra("buttonState", true);
+				mContext.sendBroadcast(intent);
+			}
+		}
+
 		initImageList();
 	}
-
 	public IMAGE_PATH_TYPE getImagePathType() {
 		return mImagePathType;
 	}
@@ -212,9 +213,9 @@ public class ImageManager {
 						bm = getBitmapFromUrl(tbUrl);
 					}
 
-					DownloadItem item = new DownloadItem(mCurrentImageIndex,
-							new AdtImage(strImage));
-					mDownloadManager.addTask(item);
+					int i = getCurrent();
+					DownloadItem item = new DownloadItem(i, mImageList.get(i));
+					WatchApp.getDownloadManager().addTask(item);
 
 					bitmap = bm;
 				}
@@ -242,15 +243,11 @@ public class ImageManager {
 		if (pos < 0 || pos >= getImageListSize())
 			return null;
 
-		AdtImage adt = mImageList.get(pos);
-		String url = adt.getFullUrl();
-		if (tbFirst && adt.hasThumb) {
-			url = adt.getTbnUrl();
-		}
+		AdtImage img = mImageList.get(pos);
 		Bitmap bitmap = null;
 		try {
 			if (mImagePathType == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
-				InputStream is = mContext.getAssets().open(url);
+				InputStream is = mContext.getAssets().open(img.getFullUrl());
 				BitmapFactory.Options opt = new BitmapFactory.Options();
 				opt.inPurgeable = true;
 				opt.inTempStorage = new byte[16 * 1000];
@@ -262,15 +259,20 @@ public class ImageManager {
 				is.close();
 				is = null;
 			} else if (mImagePathType == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
-				bitmap = getBitmapFromSDCard(url, false);
-				if (bitmap == null) {
-					bitmap = getBitmapFromUrl(url);
-				}
-				if (tbFirst && adt.hasThumb && bitmap == null) {
-					url = adt.getFullUrl();
+				String url = img.getFullUrl();
+				if (tbFirst && img.hasThumb) {
+					bitmap = getBitmapFromSDCard(img.getTbnUrl(), true);
+					if (bitmap == null) {
+						bitmap = getBitmapFromUrl(img.getTbnUrl());
+					}
+				} else if (tbFirst && !img.hasThumb) {
 					bitmap = getBitmapFromSDCard(url, 4, false);
+				} else if (!tbFirst) {
+					bitmap = getBitmapFromSDCard(url, false);
+				} else {
+					// should not be here
 				}
-				if (!tbFirst && bitmap == null) {
+				if (bitmap == null) {
 					bitmap = getBitmapFromUrl(url);
 					if (bitmap != null)
 						writeBitmap2AppCache(bitmap, url, false);
@@ -282,7 +284,6 @@ public class ImageManager {
 
 		return bitmap;
 	}
-
 	private void initImageList() {
 		if (mImageListMap.get(mImagePathType) != null) {
 			mImageList = mImageListMap.get(mImagePathType);
@@ -316,10 +317,11 @@ public class ImageManager {
 				break;
 
 			case REMOTE_HTTP_URL :
-				new getImagesTask().execute();
+				mInitListTask = new getImagesTask().execute();
 				break;
 		}
 	}
+
 	private class getImagesTask
 			extends
 				AsyncTask<Void, Void, ArrayList<AdtImage>> {
@@ -339,15 +341,28 @@ public class ImageManager {
 		protected ArrayList<AdtImage> doInBackground(Void... params) {
 			ArrayList<AdtImage> tempImageList = new ArrayList<AdtImage>();
 			try {
+				Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+				intent.putExtra("prg_total", mQueryKeywords.size()
+						* mSearchPageNum);
+				mContext.sendBroadcast(intent);
+
 				for (int k = 0; k < mQueryKeywords.size(); k++) {
 					Log.d(TAG, "querying word " + mQueryKeywords.get(k));
 					String keyword = URLEncoder.encode(mQueryKeywords.get(k),
 							"GBK");
+					Intent intent0 = new Intent(Constants.SET_PROGRESSBAR);
+					intent0.putExtra("prg_key", k);
+					intent0.putExtra("prg_pages", mSearchPageNum);
+					mContext.sendBroadcast(intent0);
 
-					for (int i = 1; i <= mSearchPageNum; i++) {
+					for (int i = 0; i < mSearchPageNum; i++) {
+						Intent intent1 = new Intent(Constants.SET_PROGRESSBAR);
+						intent1.putExtra("prg_page", i);
+						mContext.sendBroadcast(intent1);
+
 						List<AdtImage> temp = ImageSearchAdapter.getImgList(
 								keyword, mSearchImageWidth, mSearchImageHeight,
-								i, tempImageList.size());
+								i + 1, tempImageList.size());
 
 						for (int j = 0; j < temp.size(); j++) {
 							AdtImage img = temp.get(j);
@@ -362,6 +377,10 @@ public class ImageManager {
 
 				if (tempImageList.size() != 0) {
 					mInitListFailed = false;
+					Intent intent0 = new Intent(Constants.SET_PROGRESSBAR);
+					intent0.putExtra("progress", 100);
+					intent0.putExtra("prg_total", 0);
+					mContext.sendBroadcast(intent0);
 				}
 
 			} catch (Exception e) {
@@ -418,13 +437,21 @@ public class ImageManager {
 					}
 				}
 
-				// int progress = (i + 1) * 100 / mImageList.size();
-				// Intent intent = new Intent(Constants.SET_PROGRESSBAR);
-				// intent.putExtra("progress", progress);
-				// WatchApp.getInstance().sendBroadcast(intent);
+				int progress = (i + 1) * 100 / mImageList.size();
+				Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+				intent.putExtra("progress", progress);
+				WatchApp.getInstance().sendBroadcast(intent);
 
 			}
 			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			super.onPostExecute(result);
+			Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+			intent.putExtra("progress", 100);
+			WatchApp.getInstance().sendBroadcast(intent);
 		}
 	}
 
@@ -435,10 +462,14 @@ public class ImageManager {
 	public Bitmap getBitmapFromUrl(String url, boolean background) {
 
 		if (background) {
-			DownloadItem item = new DownloadItem(mCurrentImageIndex,
-					new AdtImage(url));
-			mDownloadManager.addTask(item);
-			return null;
+			for (int i = 0; i < mImageList.size(); i++) {
+				AdtImage img = mImageList.get(i);
+				if (url.equals(img.getFullUrl())) {
+					DownloadItem item = new DownloadItem(i, mImageList.get(i));
+					WatchApp.getDownloadManager().addTask(item);
+					return null;
+				}
+			}
 		}
 
 		Bitmap bitmap = null;
@@ -486,9 +517,19 @@ public class ImageManager {
 		conn.disconnect();
 		return bitmap;
 	}
-
 	public Bitmap getBitmapFromSDCard(String url, boolean isThumb) {
 		Bitmap bitmap = null;
+		if (!isThumb) {
+			for (int i = 0; i < mImageList.size(); i++) {
+				AdtImage img = mImageList.get(i);
+				if (img.getFullUrl().equals(url)) {
+					if (img.byteRemote == 0)
+						break;
+					if (img.byteRemote > 0 && img.byteLocal < img.byteRemote)
+						return null;
+				}
+			}
+		}
 		try {
 			FileInputStream fis = new FileInputStream(Utils.getFile(url,
 					isThumb));
@@ -496,11 +537,10 @@ public class ImageManager {
 			fis.close();
 			fis = null;
 		} catch (Exception e) {
-			return bitmap;
+			e.printStackTrace();
 		}
 		return bitmap;
 	}
-
 	public Bitmap getBitmapFromSDCard(String url, int inSampleSize,
 			boolean isThumb) {
 		Bitmap bitmap = null;
@@ -513,7 +553,7 @@ public class ImageManager {
 			fis.close();
 			fis = null;
 		} catch (Exception e) {
-			return bitmap;
+			e.printStackTrace();
 		}
 		return bitmap;
 	}

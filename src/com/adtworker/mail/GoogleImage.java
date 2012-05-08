@@ -155,13 +155,19 @@ public class GoogleImage {
 			String response = getHTML(requestUrl).trim();
 			// Log.d(Constants.TAG, response);
 			String[] imageDivs = response.split("a href");
+			Log.d(Constants.TAG, "divs" + imageDivs.length);
+			Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+			intent.putExtra("prg_items", imageDivs.length);
+			WatchApp.getInstance().sendBroadcast(intent);
 			int count = 0;
 			for (String imageDiv : imageDivs) {
 				// Log.d(Constants.TAG, imageDiv);
-				Intent intent = new Intent(Constants.SET_PROGRESSBAR);
-				intent.putExtra("progress", ++count * 100 / imageDivs.length);
-				if (count % 5 == 0)
-					WatchApp.getInstance().sendBroadcast(intent);
+
+				Intent intent0 = new Intent(Constants.SET_PROGRESSBAR);
+				intent0.putExtra("prg_item", ++count);
+				if (count % 10 == 0)
+					WatchApp.getInstance().sendBroadcast(intent0);
+
 				try {
 					Matcher m = googleScriptImgRegex.matcher(imageDiv);
 					if (m.matches() && m.groupCount() == 3) {
@@ -187,9 +193,6 @@ public class GoogleImage {
 			return imageMap;
 		}
 
-		Intent intent = new Intent(Constants.SET_PROGRESSBAR);
-		intent.putExtra("progress", 100);
-		WatchApp.getInstance().sendBroadcast(intent);
 		return imageMap;
 	}
 

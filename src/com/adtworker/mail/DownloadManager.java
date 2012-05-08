@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,6 +22,7 @@ import android.content.Intent;
 import android.net.Proxy;
 import android.util.Log;
 
+import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
 import com.adtworker.mail.constants.Constants;
 
 public class DownloadManager {
@@ -28,6 +31,7 @@ public class DownloadManager {
 	private static DownloadManager mDownloadManager = null;
 	private ExecutorService executorService;
 	private Context mContext;
+	private List<Integer> idList;
 
 	public static DownloadManager getInstance() {
 		if (null == mDownloadManager) {
@@ -38,10 +42,14 @@ public class DownloadManager {
 
 	public DownloadManager(Context context) {
 		mContext = context;
+		idList = new ArrayList<Integer>();
 	}
 
 	public void addTask(DownloadItem item) {
-		executorService.submit(new DownloadThread(item));
+		if (!idList.contains(item.getFileId())) {
+			idList.add(item.getFileId());
+			executorService.submit(new DownloadThread(item));
+		}
 	}
 
 	public void stop() {
@@ -97,12 +105,16 @@ public class DownloadManager {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			} else {
+				WatchApp.getImageManager().mImageList.get(fileId).byteLocal = downloadFile
+						.length();
 			}
 		}
 
 		@Override
 		public void run() {
-			Log.v(TAG, "fileId=" + fileId + ", fileLength=" + fileLength);
+			AdtImage image = WatchApp.getImageManager().mImageList.get(fileId);
+			Log.v(TAG, "file id=" + fileId + ", byteLocal=" + image.byteLocal);
 
 			// // Create and initialize HTTP parameters
 			// HttpParams params = new BasicHttpParams();
@@ -140,54 +152,71 @@ public class DownloadManager {
 				HttpResponse httpResponse = httpClient.execute(httpGet);
 				HttpEntity httpEntity = httpResponse.getEntity();
 				fileLength = httpEntity.getContentLength();
-				Log.v(TAG, "Download size will be " + fileLength);
-				// httpClient.getConnectionManager().shutdown();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			try {
-				HttpGet httpGet = new HttpGet(image.getFullUrl());
-				httpGet.addHeader("Range", "bytes=" + finished + "-"
-						+ (fileLength - 1));
-				HttpResponse httpResponse = httpClient.execute(httpGet);
-				HttpEntity httpEntity = httpResponse.getEntity();
-				FileOutputStream outputStream = new FileOutputStream(
-						downloadFile, true);
-				int count = 0;
-				int deltaCount = 0;
-				byte[] tmp = new byte[8 * 1024];
-				InputStream inputStream = httpEntity.getContent();
-				while (finished < fileLength) {
-					if (DownloadManager.this.executorService.isShutdown()) {
-						return;
-					}
-					count = inputStream.read(tmp);
-					finished += count;
-					deltaCount += count;
-					outputStream.write(tmp, 0, count);
-					if (deltaCount / (float) fileLength > 0.02) {
-						deltaCount = 0;
-						int progress = (int) (finished * 100 / fileLength);
-						if (progress != 100) {
-							Intent intent = new Intent(
-									Constants.SET_PROGRESSBAR);
-							intent.putExtra("fileId", fileId);
-							intent.putExtra("progress2", progress);
-							DownloadManager.this.mContext.sendBroadcast(intent);
-						}
-					}
-
+				if (WatchApp.getImageManager().getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL) {
+					image.byteRemote = fileLength;
 				}
-				outputStream.close();
-				httpClient.getConnectionManager().shutdown();
-				Intent intent = new Intent(Constants.SET_PROGRESSBAR);
-				intent.putExtra("fileId", fileId);
-				intent.putExtra("progress2", 100);
-				DownloadManager.this.mContext.sendBroadcast(intent);
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
+			Log.v(TAG, "byteLocal=" + image.byteLocal + ", byteRemote="
+					+ image.byteRemote);
+			if (image.byteLocal < image.byteRemote) {
+				try {
+					HttpGet httpGet = new HttpGet(image.getFullUrl());
+					httpGet.addHeader("Range", "bytes=" + finished + "-"
+							+ (fileLength - 1));
+					HttpResponse httpResponse = httpClient.execute(httpGet);
+					HttpEntity httpEntity = httpResponse.getEntity();
+					FileOutputStream outputStream = new FileOutputStream(
+							downloadFile, true);
+					int count = 0;
+					int deltaCount = 0;
+					byte[] tmp = new byte[4 * 1024];
+					InputStream inputStream = httpEntity.getContent();
+					while (finished < fileLength) {
+						if (DownloadManager.this.executorService.isShutdown()) {
+							return;
+						}
+						count = inputStream.read(tmp);
+						finished += count;
+						deltaCount += count;
+
+						// to support resuming from last break point
+						if (finished > image.byteLocal) {
+							outputStream.write(tmp, 0, count);
+						}
+
+						if (deltaCount / (float) fileLength > 0.02) {
+							deltaCount = 0;
+							int progress = (int) (finished * 100 / fileLength);
+							if (progress != 100) {
+								Intent intent = new Intent(
+										Constants.SET_PROGRESSBAR);
+								intent.putExtra("fileId", fileId);
+								intent.putExtra("progress2", progress);
+								DownloadManager.this.mContext
+										.sendBroadcast(intent);
+							}
+						}
+
+					}
+					outputStream.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			image.byteLocal = finished;
+			Log.v(TAG, "byteLocal=" + image.byteLocal + ", byteRemote="
+					+ image.byteRemote);
+			httpClient.getConnectionManager().shutdown();
+			Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+			intent.putExtra("fileId", fileId);
+			intent.putExtra("progress2", 100);
+			DownloadManager.this.mContext.sendBroadcast(intent);
+
+			DownloadManager.this.idList.remove(fileId);
 
 			httpClient.getConnectionManager().shutdown();
 		}
