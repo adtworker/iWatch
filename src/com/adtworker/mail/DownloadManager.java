@@ -9,27 +9,24 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.params.ConnRoutePNames;
-import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Proxy;
 import android.util.Log;
 
 import com.adtworker.mail.constants.Constants;
+import com.adtworker.mail.util.HttpUtils;
 
 public class DownloadManager {
 
 	private static final String TAG = "iDownloadManager";
 	private static DownloadManager mDownloadManager = null;
 	private ExecutorService executorService;
-	private Context mContext;
-	private List<Integer> idList;
+	private final Context mContext;
+	private final List<Integer> idList;
 
 	public static DownloadManager getInstance() {
 		if (null == mDownloadManager) {
@@ -121,10 +118,10 @@ public class DownloadManager {
 	class DownloadThread implements Runnable {
 		private long finished;
 		private long fileLength;
-		private int fileId;
+		private final int fileId;
 		private File downloadFile;
-		private AdtImage image;
-		private boolean bThumb;
+		private final AdtImage image;
+		private final boolean bThumb;
 
 		public DownloadThread(DownloadItem item) {
 			fileId = item.getFileId();
@@ -157,17 +154,7 @@ public class DownloadManager {
 			//
 			// HttpClient httpClient = new DefaultHttpClient(cm, params);
 
-			HttpClient httpClient = new DefaultHttpClient();
-
-			// set proxy if needed
-			if (Proxy.getDefaultHost() != null) {
-				Log.d(TAG, "using proxy: " + Proxy.getDefaultHost() + ":"
-						+ Proxy.getDefaultPort());
-				HttpHost proxy = new HttpHost(Proxy.getDefaultHost(),
-						Proxy.getDefaultPort());
-				httpClient.getParams().setParameter(
-						ConnRoutePNames.DEFAULT_PROXY, proxy);
-			}
+			HttpClient httpClient = HttpUtils.getHttpClient();
 
 			if (bThumb) {
 				downloadFile = Utils.getFile(image.getTbnUrl(), true);
