@@ -336,7 +336,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					Toast.makeText(WatchActivity.this,
 							getString(R.string.failed_network),
 							Toast.LENGTH_SHORT).show();
-					mProgressBar.setVisibility(View.GONE);
+					mProgressBar.setProgress(0);
 				} else {
 
 					mCoverFlow.setAdapter(new ImageAdapter(WatchActivity.this));
@@ -1233,7 +1233,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					tmpString = tmpString.substring(0,
 							tmpString.lastIndexOf(" "));
 				tmpString += String.format(" %d%%", progress2);
-				tv.setText(tmpString);
+                                if (progress2 != 100)
+				        tv.setText(tmpString);
 
 				if (progress2 == 100) {
 					Bitmap bitmap = mImageManager.getPosBitmap(pos, false);
