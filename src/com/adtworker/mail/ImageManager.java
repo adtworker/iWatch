@@ -48,7 +48,7 @@ public class ImageManager {
 	private int mCurrentImageIndex = INVALID_PIC_INDEX;
 	private final int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
-	private final int mSearchPageNum = 5;
+	private final int mSearchPageNum = 4;
 	private int mSearchImageWidth = 960;
 	private int mSearchImageHeight = 800;
 	private Bitmap mCurrentBitmap = null;

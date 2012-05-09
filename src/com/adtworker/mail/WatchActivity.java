@@ -136,8 +136,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mCoverFlow = (CoverFlow) findViewById(R.id.gallery);
 		mCoverFlow.setVisibility(View.GONE);
-		mCoverFlow.setMaxZoom(-150);
-		mCoverFlow.setMaxRotationAngle(0);
+		mCoverFlow.setMaxRotationAngle(75);
 
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
@@ -672,7 +671,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
 
 					mImageManager.setQueryKeyword("美女");
-					// mImageManager.setQueryImgSize(0, 0);
+					mImageManager.setQueryImgSize(960, 800);
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
 					mHandler.postDelayed(mCheckingNetworkInit, 0);
@@ -1176,6 +1175,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private class ProgressBarReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
+			if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS)
+				return;
+
 			int progress1 = intent.getIntExtra("progress", -1);
 			int progress2 = intent.getIntExtra("progress2", -1);
 			int pos = intent.getIntExtra("fileId",
