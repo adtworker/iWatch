@@ -8,9 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +25,7 @@ import android.util.Log;
 
 import com.adtworker.mail.DownloadManager.DownloadItem;
 import com.adtworker.mail.constants.Constants;
+import com.adtworker.mail.util.HttpUtils;
 
 public class ImageManager {
 
@@ -57,7 +55,7 @@ public class ImageManager {
 
 	public IMAGE_PATH_TYPE mImagePathType;
 	private IMAGE_PATH_TYPE mImagePathTypeLast;
-	private Map<IMAGE_PATH_TYPE, ArrayList<AdtImage>> mImageListMap = new HashMap<IMAGE_PATH_TYPE, ArrayList<AdtImage>>();
+	private final Map<IMAGE_PATH_TYPE, ArrayList<AdtImage>> mImageListMap = new HashMap<IMAGE_PATH_TYPE, ArrayList<AdtImage>>();
 	public ArrayList<AdtImage> mImageList = null;
 	private final ArrayList<String> mQueryKeywords = new ArrayList<String>();
 	private AsyncTask<Void, Void, ArrayList<AdtImage>> mInitListTask = null;
@@ -475,10 +473,15 @@ public class ImageManager {
 	}
 
 	public Bitmap getBitmapFromUrl(String url) {
-		return getBitmapFromUrl(url, false);
+		try {
+			return getBitmapFromUrl(url, false);
+		} catch (IOException e) {
+			Log.e(TAG, "getBitmapFromUrl error", e);
+			return null;
+		}
 	}
-
-	public Bitmap getBitmapFromUrl(String url, boolean background) {
+	public Bitmap getBitmapFromUrl(String url, boolean background)
+			throws IOException {
 
 		if (background) {
 			for (int i = 0; i < mImageList.size(); i++) {
@@ -492,48 +495,26 @@ public class ImageManager {
 		}
 
 		Bitmap bitmap = null;
-		URL u = null;
 		HttpURLConnection conn = null;
 		InputStream is = null;
 
 		try {
-			u = new URL(url);
-		} catch (MalformedURLException e2) {
-			Log.e(TAG, "incorrect url " + url);
-			e2.printStackTrace();
-			return null;
-		}
-		try {
-			String proxyHost = android.net.Proxy.getDefaultHost();
-			if (proxyHost != null) {
-				java.net.Proxy p = new java.net.Proxy(java.net.Proxy.Type.HTTP,
-						new InetSocketAddress(
-								android.net.Proxy.getDefaultHost(),
-								android.net.Proxy.getDefaultPort()));
-				conn = (HttpURLConnection) u.openConnection(p);
-			} else {
-				conn = (HttpURLConnection) u.openConnection();
-			}
-		} catch (IOException e1) {
-			Log.e(TAG, "IOException on connecting " + url);
-			e1.printStackTrace();
-			return null;
-		}
-		conn.setConnectTimeout(5000);
-		try {
+			conn = HttpUtils.getConnection(url);
 			is = conn.getInputStream();
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inSampleSize = 1;
 			bitmap = BitmapFactory.decodeStream(is, null, options);
-			is.close();
-			is = null;
-		} catch (IOException e) {
-			Log.e(TAG, "IOException on loading " + url);
-			e.printStackTrace();
+		} catch (Exception e) {
+			Log.e(TAG, "IOException on loading " + url, e);
 			conn.disconnect();
 			return null;
+		} finally {
+			if (is != null) {
+				is.close();
+			}
+			conn.disconnect();
 		}
-		conn.disconnect();
+
 		return bitmap;
 	}
 
