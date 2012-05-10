@@ -46,6 +46,8 @@ public class HttpUtils {
 		httpGet.addHeader(
 				"Referer",
 				"http://www.google.com.hk/search?hl=zh-CN&newwindow=1&safe=strict&biw=1399&bih=725&tbs=isz%3Aex%2Ciszw%3A480%2Ciszh%3A800&tbm=isch&sa=1&q=MM+%E5%A3%81%E7%BA%B8&oq=MM+%E5%A3%81%E7%BA%B8&aq=f&aqi=&aql=&gs_l=img.3...680499l683087l0l683551l5l5l0l0l0l0l0l0ll0l0.frgbld.");
+
+		httpClient.getConnectionManager().closeExpiredConnections();
 		HttpResponse response = httpClient.execute(httpGet);
 		StatusLine statusLine = response.getStatusLine();
 		if (200 == statusLine.getStatusCode()) {
@@ -55,6 +57,7 @@ public class HttpUtils {
 			return "";
 		}
 	}
+
 	public static HttpURLConnection getConnection(String url) throws Exception {
 		URL u = new URL(url);
 		HttpURLConnection connection = null;
