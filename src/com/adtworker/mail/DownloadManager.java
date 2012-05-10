@@ -244,24 +244,22 @@ public class DownloadManager {
 										.sendBroadcast(intent);
 							}
 						}
-
 					}
 					outputStream.close();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+
+				Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+				intent.putExtra("fileId", fileId);
+				intent.putExtra("progress2", 100);
+				DownloadManager.this.mContext.sendBroadcast(intent);
 			}
 			image.byteLocal = finished;
 			Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
 					+ ", byteRemote=" + image.byteRemote);
-			httpClient.getConnectionManager().shutdown();
-			Intent intent = new Intent(Constants.SET_PROGRESSBAR);
-			intent.putExtra("fileId", fileId);
-			intent.putExtra("progress2", 100);
-			DownloadManager.this.mContext.sendBroadcast(intent);
 
 			DownloadManager.this.idList.remove(fileId);
-
 			httpClient.getConnectionManager().shutdown();
 		}
 	}

@@ -217,6 +217,7 @@ public class ImageManager {
 					String tbUrl = getCurrentStrTb();
 					Bitmap bm = getBitmapFromSDCard(tbUrl, true);
 					if (bm == null) {
+						Log.d(TAG, "get thumbnail directly from internet.");
 						bm = getBitmapFromUrl(tbUrl);
 					}
 
@@ -238,6 +239,7 @@ public class ImageManager {
 		}
 		return bitmap;
 	}
+
 	public Bitmap getCurrentBitmap() {
 		if (mCurrentBitmap == null) {
 			String imgstr = getCurrentStr();
@@ -286,6 +288,7 @@ public class ImageManager {
 					// should not be here
 				}
 				if (bitmap == null) {
+					Log.d(TAG, "Download img directly from internet.");
 					bitmap = getBitmapFromUrl(url);
 					if (bitmap != null)
 						writeBitmap2AppCache(bitmap, url, false);

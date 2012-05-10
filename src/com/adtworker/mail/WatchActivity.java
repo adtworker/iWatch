@@ -1233,8 +1233,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					tmpString = tmpString.substring(0,
 							tmpString.lastIndexOf(" "));
 				tmpString += String.format(" %d%%", progress2);
-                                if (progress2 != 100)
-				        tv.setText(tmpString);
+				if (progress2 != 100)
+					tv.setText(tmpString);
 
 				if (progress2 == 100) {
 					Bitmap bitmap = mImageManager.getPosBitmap(pos, false);

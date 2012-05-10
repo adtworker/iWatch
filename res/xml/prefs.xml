@@ -51,10 +51,10 @@
         android:defaultValue="0"
     />
 
-    <PreferenceCategory android:title="@string/about">
-
     <Preference android:key="storage_info"
         android:title="@string/clean_buf" />
+
+    <PreferenceCategory android:title="@string/about">
 
     <Preference android:key="version"
         android:title="@string/build_version" />
