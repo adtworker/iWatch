@@ -185,7 +185,7 @@ public class Utils {
 	 * @return void
 	 */
 	public static void setupAdmobAdView(Activity context, ViewGroup parent) {
-		AdView adView = new AdView(context, AdSize.BANNER, "a14f8f669856e4e");
+		AdView adView = new AdView(context, AdSize.BANNER, "a14fab3d9421605");
 		parent.addView(adView);
 		adView.loadAd(new AdRequest());
 	}
