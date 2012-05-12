@@ -6,11 +6,21 @@ import java.net.URL;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.util.EntityUtils;
 
 import android.net.Proxy;
@@ -20,7 +30,26 @@ public class HttpUtils {
 	private static HttpClient httpClient;
 
 	public static void initHttpClient() {
-		httpClient = new DefaultHttpClient();
+
+		// Create and initialize HTTP parameters
+		HttpParams params = new BasicHttpParams();
+		ConnManagerParams.setMaxTotalConnections(params, 100);
+		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+
+		// Create and initialize scheme registry
+		SchemeRegistry schemeRegistry = new SchemeRegistry();
+		schemeRegistry.register(new Scheme("http", PlainSocketFactory
+				.getSocketFactory(), 80));
+
+		// Create an HttpClient with the ThreadSafeClientConnManager.
+		// This connection manager must be used if more than one thread will
+		// be using the HttpClient.
+		ClientConnectionManager cm = new ThreadSafeClientConnManager(params,
+				schemeRegistry);
+
+		httpClient = new DefaultHttpClient(cm, params);
+		// httpClient = new DefaultHttpClient();
+
 		// 判断是否使用代理
 		if (Proxy.getDefaultHost() != null) {
 			HttpHost proxy = new HttpHost(Proxy.getDefaultHost(),
