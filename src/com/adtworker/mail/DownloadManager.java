@@ -27,6 +27,7 @@ public class DownloadManager {
 	private ExecutorService executorService;
 	private final Context mContext;
 	private final List<Integer> idList;
+	private final List<Integer> idTbList;
 
 	public static DownloadManager getInstance() {
 		if (null == mDownloadManager) {
@@ -38,14 +39,27 @@ public class DownloadManager {
 	public DownloadManager(Context context) {
 		mContext = context;
 		idList = new ArrayList<Integer>();
+		idTbList = new ArrayList<Integer>();
 	}
 
 	public void addTask(DownloadItem item) {
-		Log.d(TAG, "addTask: " + item.id + ") " + item.image.getFullUrl());
+		if (item == null || item.image == null) {
+			Log.e(TAG, "failed to add null task.");
+			return;
+		}
 
-		if (!idList.contains(item.getFileId())) {
-			idList.add(item.getFileId());
-			executorService.submit(new DownloadThread(item));
+		Log.d(TAG, "addTask: " + item.getFileId() + ") " + item.getUrl());
+
+		if (item.isThumb()) {
+			if (!idTbList.contains(item.getFileId())) {
+				idTbList.add(item.getFileId());
+				executorService.submit(new DownloadThread(item));
+			}
+		} else {
+			if (!idList.contains(item.getFileId())) {
+				idList.add(item.getFileId());
+				executorService.submit(new DownloadThread(item));
+			}
 		}
 	}
 
@@ -62,37 +76,39 @@ public class DownloadManager {
 	}
 
 	public static class DownloadItem {
-		private int id;
+		private int fileid;
 		private long length;
 		private AdtImage image = null;
 		private String url;
 		private boolean bThumb = false;
 
-		public DownloadItem(String url, boolean isThumb) {
-			this.url = url;
-			this.bThumb = isThumb;
-			this.length = 0;
+		public DownloadItem(String szUrl, boolean isThumb) {
+			url = szUrl;
+			bThumb = isThumb;
+			length = 0;
 
 			for (int i = 0; i < WatchApp.getImageManager().getImageListSize(); i++) {
 				AdtImage img = WatchApp.getImageManager().mImageList.get(i);
 				String urlTmp = bThumb ? img.getTbnUrl() : img.getFullUrl();
 				if (urlTmp.equals(url)) {
-					id = i;
+					Log.d(TAG, "new DownloadItem, id=" + i + ", url=" + url);
+					fileid = i;
 					image = img;
 					break;
 				}
 			}
+			assert (image != null);
 		}
 
 		public DownloadItem(int id, AdtImage adt) {
-			this.id = id;
-			this.image = adt;
-			this.length = 0;
-			this.bThumb = false;
+			fileid = id;
+			image = adt;
+			length = 0;
+			bThumb = false;
 		}
 
 		public int getFileId() {
-			return id;
+			return fileid;
 		}
 
 		public AdtImage getImage() {
@@ -101,7 +117,7 @@ public class DownloadManager {
 
 		public long getFileLength() {
 			if (!bThumb) {
-				File file = Utils.getFile(image.getFullUrl(), bThumb);
+				File file = Utils.getTempFile(image.getFullUrl(), bThumb);
 				if (file.exists()) {
 					length = file.length();
 				}
@@ -112,6 +128,10 @@ public class DownloadManager {
 
 		public boolean isThumb() {
 			return bThumb;
+		}
+
+		public String getUrl() {
+			return url;
 		}
 	}
 
@@ -136,18 +156,21 @@ public class DownloadManager {
 		public void run() {
 
 			HttpClient httpClient = HttpUtils.getHttpClient();
+			String url = image.getFullUrl();
 
 			if (bThumb) {
-				downloadFile = Utils.getFile(image.getTbnUrl(), true);
+
+				url = image.getTbnUrl();
+				downloadFile = Utils.getFile(url, bThumb);
 				try {
-					HttpGet httpGet = new HttpGet(image.getTbnUrl());
+					HttpGet httpGet = new HttpGet(url);
 					HttpResponse httpResponse = httpClient.execute(httpGet);
 					HttpEntity httpEntity = httpResponse.getEntity();
 					InputStream inputStream = httpEntity.getContent();
 					FileOutputStream outputStream = new FileOutputStream(
 							downloadFile, false);
 					int len = 0;
-					byte[] b = new byte[inputStream.available()];
+					byte[] b = new byte[8 * 1024];
 					while ((len = inputStream.read(b)) != -1) {
 						outputStream.write(b, 0, len);
 					}
@@ -163,12 +186,12 @@ public class DownloadManager {
 					e.printStackTrace();
 				}
 
-				DownloadManager.this.idList.remove(fileId);
+				DownloadManager.this.idTbList.remove(fileId);
 				httpClient.getConnectionManager().shutdown();
 				return;
 
 			} else {
-				downloadFile = Utils.getFile(image.getFullUrl(), false);
+				downloadFile = Utils.getTempFile(url, bThumb);
 			}
 
 			Log.v(TAG, fileId + ") " + image.getFullUrl() + ", byteLocal="
@@ -189,7 +212,7 @@ public class DownloadManager {
 					+ ", byteRemote=" + image.byteRemote);
 			if (image.byteLocal < image.byteRemote) {
 				try {
-					HttpGet httpGet = new HttpGet(image.getFullUrl());
+					HttpGet httpGet = new HttpGet(url);
 					httpGet.addHeader("Range", "bytes=" + finished + "-"
 							+ (fileLength - 1));
 					HttpResponse httpResponse = httpClient.execute(httpGet);
@@ -198,7 +221,7 @@ public class DownloadManager {
 							downloadFile, true);
 					int count = 0;
 					int deltaCount = 0;
-					byte[] tmp = new byte[4 * 1024];
+					byte[] tmp = new byte[8 * 1024];
 					InputStream inputStream = httpEntity.getContent();
 					while (finished < fileLength) {
 						if (DownloadManager.this.executorService.isShutdown()) {
@@ -227,6 +250,8 @@ public class DownloadManager {
 						}
 					}
 					outputStream.close();
+					Utils.renameTempFile(url, bThumb);
+
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

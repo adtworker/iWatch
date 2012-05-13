@@ -7,12 +7,6 @@
         android:defaultValue="true"
     />
 
-    <CheckBoxPreference android:key="autohide_ad"
-        android:title="@string/pref_autohide_ad"
-        android:summary="@string/pref_autohide_ad_sum"
-        android:defaultValue="false"
-    />
-
     <CheckBoxPreference android:key="autohide_sb"
         android:title="@string/pref_autohide_sb"
         android:summary="@string/pref_autohide_sb_sum"
@@ -60,4 +54,10 @@
         android:title="@string/build_version" />
 
     </PreferenceCategory>
+
+    <CheckBoxPreference android:key="autohide_ad"
+        android:title="@string/pref_autohide_ad"
+        android:summary="@string/pref_autohide_ad_sum"
+        android:defaultValue="false"
+    />
 </PreferenceScreen>

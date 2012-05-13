@@ -27,7 +27,8 @@
     <com.adtworker.mail.CoverFlow
             android:id="@+id/gallery"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent" />
+            android:layout_height="wrap_content"
+            android:layout_gravity="top" />
 
     <LinearLayout
         android:id="@+id/clockLayout"
@@ -40,13 +41,14 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:gravity="center"
+        android:gravity="top|right"
         android:orientation="vertical" >
 
         <ProgressBar
             android:id="@+id/prgIcon"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content" 
+            style="@android:style/Widget.ProgressBar.Small" />
 
     </LinearLayout>
 

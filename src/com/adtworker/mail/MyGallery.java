@@ -7,7 +7,10 @@ import java.lang.ref.SoftReference;
 import java.util.HashMap;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
@@ -25,6 +28,8 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 
+import com.adtworker.mail.constants.Constants;
+
 /**
  * MyGallery.java
  * 
@@ -35,6 +40,7 @@ public class MyGallery extends Activity {
 	private ImageManager mImageManager;
 	private HashMap<Integer, SoftReference<Bitmap>> mDataCache;
 	private GridView mGridView;
+	private ImageAdapter mImageAdapter;
 	private SharedPreferences mSharedPref;
 
 	/** Called when the activity is first created. */
@@ -51,7 +57,8 @@ public class MyGallery extends Activity {
 		mDataCache = new HashMap<Integer, SoftReference<Bitmap>>();
 
 		mGridView = (GridView) findViewById(R.id.GridView);
-		mGridView.setAdapter(new ImageAdapter(this));
+		mImageAdapter = new ImageAdapter(this);
+		mGridView.setAdapter(mImageAdapter);
 		mGridView.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View view,
@@ -70,7 +77,7 @@ public class MyGallery extends Activity {
 		setResult(pos);
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adLayout);
-		// Utils.setupAdLayout(this, adLayout, false);
+		Utils.setupAdLayout(this, adLayout, false);
 	}
 
 	@Override
@@ -83,8 +90,25 @@ public class MyGallery extends Activity {
 		} else {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		}
-	}
 
+		registerReceiver(new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				int progress = intent.getIntExtra("progress3", -1);
+				int pos = intent.getIntExtra("fileId", -1);
+				if (pos != -1 && progress == 100) {
+					SoftReference<Bitmap> ref = mDataCache.get(pos);
+					if (ref != null && ref.get() != null) {
+						Bitmap bitmap = mImageManager.getPosBitmap(pos, true);
+						mDataCache.remove(pos);
+						mDataCache.put(pos, new SoftReference<Bitmap>(bitmap));
+						mImageAdapter.notifyDataSetChanged();
+					}
+				}
+			}
+
+		}, new IntentFilter(Constants.SET_PROGRESSBAR));
+	}
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy()");
@@ -164,8 +188,11 @@ public class MyGallery extends Activity {
 						.getHeight());
 			}
 			i.setLayoutParams(new AbsListView.LayoutParams(width, height));
-			i.setPadding(4, 4, 4, 4);
-			i.setScaleType(ImageView.ScaleType.FIT_CENTER);
+			i.setPadding(2, 2, 2, 2);
+			if (bitmap != null & bitmap.getWidth() < 100)
+				i.setScaleType(ImageView.ScaleType.CENTER);
+			else
+				i.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
 			return i;
 		}

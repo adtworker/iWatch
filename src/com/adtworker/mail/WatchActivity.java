@@ -3,6 +3,7 @@ package com.adtworker.mail;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.sql.Time;
 import java.util.Random;
 
@@ -193,16 +194,18 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					delta = -1;
 				else {
 					bClickCoverFlow = false;
-					mCoverFlow
-							.startAnimation(makeInAnimation(R.anim.transition_out));
-					mCoverFlow.setVisibility(View.GONE);
+					// mCoverFlow.setVisibility(View.GONE);
+					// mCoverFlow
+					// .startAnimation(makeInAnimation(R.anim.transition_out));
+
 					return;
 				}
 				mImageManager.setCurrent(position - delta);
 				WatchActivity.this.goNextorPrev(delta);
-				mCoverFlow
-						.startAnimation(makeInAnimation(R.anim.transition_out));
-				mCoverFlow.setVisibility(View.GONE);
+				// mCoverFlow.setVisibility(View.GONE);
+				// mCoverFlow
+				// .startAnimation(makeInAnimation(R.anim.transition_out));
+
 			}
 		});
 
@@ -386,6 +389,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		check2showAD();
+
 		if (mSharedPref.getBoolean(PREF_AUTOHIDE_SB, false)) {
 			setSBVisibility(false);
 		} else {
@@ -407,6 +411,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				&& mImageManager.isInitInProcess()
 				&& mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL)
 			mHandler.postDelayed(mCheckingNetworkInit, 500);
+
+		if (mProgressBar.getProgress() != 0)
+			mProgressBar.setProgress(0);
 	}
 
 	@Override
@@ -1046,33 +1053,29 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		@Override
+		public void onShowPress(MotionEvent e) {
+			if (mCoverFlow.getVisibility() == View.GONE) {
+				mCoverFlow
+						.startAnimation(makeInAnimation(R.anim.slide_in_vertical));
+				mCoverFlow.setVisibility(View.VISIBLE);
+			} else {
+				mCoverFlow.setVisibility(View.GONE);
+				mCoverFlow
+						.startAnimation(makeInAnimation(R.anim.slide_out_vertical_r));
+			}
+
+			super.onShowPress(e);
+		}
+
+		@Override
 		public boolean onSingleTapConfirmed(MotionEvent e) {
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
 			} else {
-				if (mImageManager.isInitInProcess())
-					return false;
-
-				if (mCoverFlow.getVisibility() == View.GONE) {
-					mCoverFlow
-							.startAnimation(makeInAnimation(R.anim.slide_in_vertical));
-					mCoverFlow.setVisibility(View.VISIBLE);
-				} else {
-					mCoverFlow
-							.startAnimation(makeInAnimation(R.anim.slide_out_vertical_r));
-					mCoverFlow.setVisibility(View.GONE);
-				}
-				// mCoverFlow
-				// .setVisibility(mCoverFlow.getVisibility() == View.GONE
-				// ? View.VISIBLE
-				// : View.GONE);
+				setMLVisibility(!getMLVisibility());
 			}
 
 			return false;
-		}
-		@Override
-		public void onLongPress(MotionEvent e) {
-			super.onLongPress(e);
 		}
 	}
 
@@ -1180,9 +1183,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			int progress1 = intent.getIntExtra("progress", -1);
 			int progress2 = intent.getIntExtra("progress2", -1);
+			int progress3 = intent.getIntExtra("progress3", -1);
 			int pos = intent.getIntExtra("fileId",
 					ImageManager.INVALID_PIC_INDEX);
-			// Log.d(TAG, "prg1: " + progress1 + ", prg2 = " + progress2);
+			Log.d(TAG, pos + ") prg1: " + progress1 + ", prg2 = " + progress2
+					+ ", prg3 = " + progress3);
 
 			int tmp = intent.getIntExtra("prg_total", -1);
 			if (tmp >= 0)
@@ -1232,9 +1237,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				if (tmpString.contains("%"))
 					tmpString = tmpString.substring(0,
 							tmpString.lastIndexOf(" "));
-				tmpString += String.format(" %d%%", progress2);
+
 				if (progress2 != 100)
-					tv.setText(tmpString);
+					tmpString += String.format(" %d%%", progress2);
+
+				tv.setText(tmpString);
 
 				if (progress2 == 100) {
 					Bitmap bitmap = mImageManager.getPosBitmap(pos, false);
@@ -1242,15 +1249,38 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					mImageManager.mImageList.get(mImageManager.getCurrent())
 							.setCached(true);
 				}
+
+				if (progress3 == 100) {
+					Bitmap bitmap = mImageManager.getPosBitmap(pos, true);
+					mImageViews[mImageViewCurrent].setImageBitmap(bitmap);
+				}
 			}
 
 			if (progress1 == 0 || progress1 == 100) {
 				// mProgressBar.setVisibility(View.GONE);
 				mProgressBar.setProgress(0);
 			}
+
 			if (progress2 == 0 || progress2 == 100) {
 				mProgressBar2.setVisibility(View.GONE);
 				mProgressBar2.setSecondaryProgress(0);
+				mProgressIcon.setVisibility(View.GONE);
+			} else if (progress2 != -1) {
+				mProgressIcon.setVisibility(View.VISIBLE);
+			}
+
+			if (pos != ImageManager.INVALID_PIC_INDEX && progress3 == 100) {
+				ImageAdapter imageAdapter = (ImageAdapter) mCoverFlow
+						.getAdapter();
+				SoftReference<ImageView> imgView = imageAdapter.mCached
+						.get(pos);
+				if (imgView != null && imgView.get() != null) {
+					imgView.get().setImageBitmap(
+							mImageManager.getPosBitmap(pos, true));
+					imageAdapter.mCached.remove(pos);
+					imageAdapter.mCached.put(pos, imgView);
+					imageAdapter.notifyDataSetChanged();
+				}
 			}
 		}
 	}

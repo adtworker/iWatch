@@ -223,6 +223,10 @@ public class Utils {
 		return path;
 	}
 
+	public static String getTempCachedFilename(String url, boolean isThumb) {
+		return getCachedFilename(url, isThumb) + "~";
+	}
+
 	public static File getFile(String url, boolean isThumb) {
 		File file = null;
 		try {
@@ -231,5 +235,23 @@ public class Utils {
 			e.printStackTrace();
 		}
 		return file;
+	}
+
+	public static File getTempFile(String url, boolean isThumb) {
+		File file = null;
+		try {
+			file = new File(getTempCachedFilename(url, isThumb));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return file;
+	}
+
+	public static boolean renameTempFile(String url, boolean isThumb) {
+		File file = new File(getTempCachedFilename(url, isThumb));
+		if (file.exists()) {
+			return file.renameTo(new File(getCachedFilename(url, isThumb)));
+		}
+		return false;
 	}
 }
