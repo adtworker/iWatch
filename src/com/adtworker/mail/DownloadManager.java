@@ -42,6 +42,24 @@ public class DownloadManager {
 		idTbList = new ArrayList<Integer>();
 	}
 
+	protected void dumpArrayLists() {
+		Log.d(TAG, "download list of full: " + idList.toString());
+		Log.d(TAG, "download list of tbns: " + idTbList.toString());
+	}
+
+	public String getDownloadsInfo() {
+		String string = "";
+		if (!idTbList.isEmpty())
+			string += "tbn: " + idTbList.toString() + "\n";
+		for (int i = 0; i < idList.size(); i++) {
+			int j = idList.get(i);
+			AdtImage img = WatchApp.getImageManager().mImageList.get(j);
+			string += String.format("[%d] %d/%d\n", j, img.byteLocal,
+					img.byteRemote);
+		}
+		return string;
+	}
+
 	public void addTask(DownloadItem item) {
 		if (item == null || item.image == null) {
 			Log.e(TAG, "failed to add null task.");
@@ -61,6 +79,7 @@ public class DownloadManager {
 				executorService.submit(new DownloadThread(item));
 			}
 		}
+		dumpArrayLists();
 	}
 
 	public void stop() {
@@ -166,16 +185,22 @@ public class DownloadManager {
 					HttpGet httpGet = new HttpGet(url);
 					HttpResponse httpResponse = httpClient.execute(httpGet);
 					HttpEntity httpEntity = httpResponse.getEntity();
+					fileLength = httpEntity.getContentLength();
 					InputStream inputStream = httpEntity.getContent();
 					FileOutputStream outputStream = new FileOutputStream(
 							downloadFile, false);
-					int len = 0;
+					finished = 0;
 					byte[] b = new byte[8 * 1024];
-					while ((len = inputStream.read(b)) != -1) {
+					while (finished < fileLength) {
+						int len = inputStream.read(b, 0, b.length);
 						outputStream.write(b, 0, len);
+						finished += len;
 					}
 					inputStream.close();
 					outputStream.close();
+					Log.d(TAG, "downloaded thumbnail " + fileId
+							+ ") fileLength=" + fileLength + ", finished="
+							+ finished);
 
 					Intent intent = new Intent(Constants.SET_PROGRESSBAR);
 					intent.putExtra("fileId", fileId);
@@ -186,7 +211,8 @@ public class DownloadManager {
 					e.printStackTrace();
 				}
 
-				DownloadManager.this.idTbList.remove(fileId);
+				idTbList.remove(idTbList.indexOf(fileId));
+				dumpArrayLists();
 				httpClient.getConnectionManager().shutdown();
 				return;
 
@@ -194,11 +220,10 @@ public class DownloadManager {
 				downloadFile = Utils.getTempFile(url, bThumb);
 			}
 
-			Log.v(TAG, fileId + ") " + image.getFullUrl() + ", byteLocal="
-					+ image.byteLocal);
+			Log.v(TAG, fileId + ") " + url + ", byteLocal=" + image.byteLocal);
 
 			try {
-				HttpGet httpGet = new HttpGet(image.getFullUrl());
+				HttpGet httpGet = new HttpGet(url);
 				HttpResponse httpResponse = httpClient.execute(httpGet);
 				HttpEntity httpEntity = httpResponse.getEntity();
 				fileLength = httpEntity.getContentLength();
@@ -225,15 +250,19 @@ public class DownloadManager {
 					InputStream inputStream = httpEntity.getContent();
 					while (finished < fileLength) {
 						if (DownloadManager.this.executorService.isShutdown()) {
+							Log.d(TAG, "Service is down, return.");
 							return;
 						}
-						count = inputStream.read(tmp);
+						count = inputStream.read(tmp, 0, tmp.length);
 						finished += count;
 						deltaCount += count;
 
 						// to support resuming from last break point
 						if (finished > image.byteLocal) {
 							outputStream.write(tmp, 0, count);
+							image.byteLocal = downloadFile.length();
+							Log.d(TAG, fileId + ") read " + count + ", write "
+									+ finished);
 						}
 
 						if (deltaCount / (float) fileLength > 0.02) {
@@ -253,6 +282,7 @@ public class DownloadManager {
 					Utils.renameTempFile(url, bThumb);
 
 				} catch (Exception e) {
+					Log.e(TAG, "download exception.");
 					e.printStackTrace();
 				}
 
@@ -260,13 +290,14 @@ public class DownloadManager {
 				intent.putExtra("fileId", fileId);
 				intent.putExtra("progress2", 100);
 				DownloadManager.this.mContext.sendBroadcast(intent);
-			}
-			image.byteLocal = finished;
-			Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
-					+ ", byteRemote=" + image.byteRemote);
 
-			DownloadManager.this.idList.remove(fileId);
-			httpClient.getConnectionManager().shutdown();
+				Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
+						+ ", byteRemote=" + image.byteRemote);
+
+				idList.remove(idList.indexOf(fileId));
+				dumpArrayLists();
+				httpClient.getConnectionManager().shutdown();
+			}
 		}
 	}
 }

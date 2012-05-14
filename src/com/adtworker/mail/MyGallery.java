@@ -42,6 +42,7 @@ public class MyGallery extends Activity {
 	private GridView mGridView;
 	private ImageAdapter mImageAdapter;
 	private SharedPreferences mSharedPref;
+	private BroadcastReceiver mBroadcastReceiver;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -91,7 +92,7 @@ public class MyGallery extends Activity {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		}
 
-		registerReceiver(new BroadcastReceiver() {
+		mBroadcastReceiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				int progress = intent.getIntExtra("progress3", -1);
@@ -102,13 +103,17 @@ public class MyGallery extends Activity {
 						Bitmap bitmap = mImageManager.getPosBitmap(pos, true);
 						mDataCache.remove(pos);
 						mDataCache.put(pos, new SoftReference<Bitmap>(bitmap));
+						// mImageAdapter.notifyDataSetInvalidated();
 						mImageAdapter.notifyDataSetChanged();
 					}
 				}
 			}
 
-		}, new IntentFilter(Constants.SET_PROGRESSBAR));
+		};
+		registerReceiver(mBroadcastReceiver, new IntentFilter(
+				Constants.SET_PROGRESSBAR));
 	}
+
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy()");
@@ -130,7 +135,7 @@ public class MyGallery extends Activity {
 			}
 		}
 		mDataCache.clear();
-
+		unregisterReceiver(mBroadcastReceiver);
 		super.onDestroy();
 	}
 
@@ -182,14 +187,14 @@ public class MyGallery extends Activity {
 			i.setImageBitmap(bitmap);
 
 			int width = displayMetrics.widthPixels * 5 / 12;
-			int height = width;
+			int height = width * 5 / 6;
 			if (bitmap != null) {
 				height = (int) (width / (float) bitmap.getWidth() * bitmap
 						.getHeight());
 			}
 			i.setLayoutParams(new AbsListView.LayoutParams(width, height));
 			i.setPadding(2, 2, 2, 2);
-			if (bitmap != null & bitmap.getWidth() < 100)
+			if (bitmap != null & bitmap.getWidth() < 75)
 				i.setScaleType(ImageView.ScaleType.CENTER);
 			else
 				i.setScaleType(ImageView.ScaleType.FIT_CENTER);

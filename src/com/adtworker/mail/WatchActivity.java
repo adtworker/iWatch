@@ -54,6 +54,7 @@ import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
 import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewInterface;
 import com.android.camera.CropImage;
+import com.android.camera.OnScreenHint;
 
 public class WatchActivity extends Activity implements AdViewInterface {
 
@@ -99,6 +100,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public ProgressBar mProgressBar2;
 	public ProgressBar mProgressIcon;
 	private SharedPreferences mSharedPref;
+	private OnScreenHint mScreenHint;
 
 	final static String PREFERENCES = "iWatch";
 	final static String PREF_CLOCK_FACE = "face";
@@ -157,6 +159,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mProgressBar2.setVisibility(View.GONE);
 		mProgressIcon = (ProgressBar) findViewById(R.id.prgIcon);
 		mProgressIcon.setVisibility(View.GONE);
+		mScreenHint = OnScreenHint.makeText(this, "Welcome");
 
 		mClockGestureDetector = new GestureDetector(this,
 				new MyClockGestureListener());
@@ -1186,8 +1189,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			int progress3 = intent.getIntExtra("progress3", -1);
 			int pos = intent.getIntExtra("fileId",
 					ImageManager.INVALID_PIC_INDEX);
-			Log.d(TAG, pos + ") prg1: " + progress1 + ", prg2 = " + progress2
-					+ ", prg3 = " + progress3);
+			// Log.d(TAG, pos + ") prg1: " + progress1 + ", prg2 = " + progress2
+			// + ", prg3 = " + progress3);
 
 			int tmp = intent.getIntExtra("prg_total", -1);
 			if (tmp >= 0)
@@ -1238,16 +1241,25 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					tmpString = tmpString.substring(0,
 							tmpString.lastIndexOf(" "));
 
-				if (progress2 != 100)
+				if (progress2 != 100) {
 					tmpString += String.format(" %d%%", progress2);
-
-				tv.setText(tmpString);
+					tv.setText(tmpString);
+				}
 
 				if (progress2 == 100) {
 					Bitmap bitmap = mImageManager.getPosBitmap(pos, false);
 					mImageViews[mImageViewCurrent].setImageBitmap(bitmap);
 					mImageManager.mImageList.get(mImageManager.getCurrent())
 							.setCached(true);
+
+					int width = 0, height = 0;
+					if (bitmap != null) {
+						width = bitmap.getWidth();
+						height = bitmap.getHeight();
+					}
+					tv.setText(String.format("%d/%d, %dx%d",
+							mImageManager.getCurrent() + 1,
+							mImageManager.getImageListSize(), width, height));
 				}
 
 				if (progress3 == 100) {
@@ -1282,6 +1294,10 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					imageAdapter.notifyDataSetChanged();
 				}
 			}
+
+			// mScreenHint.setText(WatchApp.getDownloadManager()
+			// .getDownloadsInfo());
+			// mScreenHint.show();
 		}
 	}
 }

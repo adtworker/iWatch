@@ -430,7 +430,7 @@ public class ImageManager {
 			if (!mInitListFailed) {
 				mImageListMap.put(IMAGE_PATH_TYPE.REMOTE_HTTP_URL, result);
 				mImageList = mImageListMap.get(mImagePathType);
-				new loadAllImageTask().execute();
+				// new loadAllImageTask().execute();
 			} else {
 				mImagePathType = mImagePathTypeLast;
 			}
