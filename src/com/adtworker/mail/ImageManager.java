@@ -217,17 +217,14 @@ public class ImageManager {
 					String tbUrl = getCurrentStrTb();
 					Bitmap bm = getBitmapFromSDCard(tbUrl, true);
 					if (bm == null) {
-						Log.d(TAG, "get thumbnail directly from internet.");
-						bm = getBitmapFromUrl(tbUrl);
+						// Log.d(TAG, "get thumbnail directly from internet.");
+						// bm = getBitmapFromUrl(tbUrl);
+
+						DownloadItem item = new DownloadItem(tbUrl, true);
+						WatchApp.getDownloadManager().addTask(item);
+						bm = null;
 					}
 
-					// for (int i = 0; i < mImageList.size(); i++) {
-					// if (mImageList.get(i).getFullUrl().equals(strImage)) {
-					// DownloadItem item = new DownloadItem(i,
-					// mImageList.get(i));
-					// WatchApp.getDownloadManager().addTask(item);
-					// }
-					// }
 					DownloadItem item = new DownloadItem(strImage, false);
 					WatchApp.getDownloadManager().addTask(item);
 
@@ -278,20 +275,30 @@ public class ImageManager {
 				if (tbFirst && img.hasThumb) {
 					bitmap = getBitmapFromSDCard(img.getTbnUrl(), true);
 					if (bitmap == null) {
-						bitmap = getBitmapFromUrl(img.getTbnUrl());
+						// bitmap = getBitmapFromUrl(img.getTbnUrl());
+						DownloadItem item = new DownloadItem(img.getTbnUrl(),
+								true);
+						WatchApp.getDownloadManager().addTask(item);
+						bitmap = BitmapFactory.decodeResource(
+								mContext.getResources(),
+								R.drawable.ic_launcher_alarmclock);
 					}
 				} else if (tbFirst && !img.hasThumb) {
 					bitmap = getBitmapFromSDCard(url, 4, false);
+
 				} else if (!tbFirst) {
 					bitmap = getBitmapFromSDCard(url, false);
 				} else {
 					// should not be here
 				}
+
 				if (bitmap == null) {
-					Log.d(TAG, "Download img directly from internet.");
-					bitmap = getBitmapFromUrl(url);
-					if (bitmap != null)
-						writeBitmap2AppCache(bitmap, url, false);
+					// Log.d(TAG, "Download img directly from internet.");
+					// bitmap = getBitmapFromUrl(url);
+
+					DownloadItem item = new DownloadItem(url, false);
+					WatchApp.getDownloadManager().addTask(item);
+					bitmap = null;
 				}
 			}
 		} catch (IOException e) {
@@ -423,7 +430,7 @@ public class ImageManager {
 			if (!mInitListFailed) {
 				mImageListMap.put(IMAGE_PATH_TYPE.REMOTE_HTTP_URL, result);
 				mImageList = mImageListMap.get(mImagePathType);
-				new loadAllImageTask().execute();
+				// new loadAllImageTask().execute();
 			} else {
 				mImagePathType = mImagePathTypeLast;
 			}
@@ -535,8 +542,11 @@ public class ImageManager {
 			}
 		}
 		try {
-			FileInputStream fis = new FileInputStream(Utils.getFile(url,
-					isThumb));
+			File file = Utils.getFile(url, isThumb);
+			if (!file.exists())
+				return null;
+
+			FileInputStream fis = new FileInputStream(file);
 			bitmap = BitmapFactory.decodeStream(fis);
 			fis.close();
 			fis = null;

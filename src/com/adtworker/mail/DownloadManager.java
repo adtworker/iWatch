@@ -27,6 +27,7 @@ public class DownloadManager {
 	private ExecutorService executorService;
 	private final Context mContext;
 	private final List<Integer> idList;
+	private final List<Integer> idTbList;
 
 	public static DownloadManager getInstance() {
 		if (null == mDownloadManager) {
@@ -38,15 +39,47 @@ public class DownloadManager {
 	public DownloadManager(Context context) {
 		mContext = context;
 		idList = new ArrayList<Integer>();
+		idTbList = new ArrayList<Integer>();
+	}
+
+	protected void dumpArrayLists() {
+		Log.d(TAG, "download list of full: " + idList.toString());
+		Log.d(TAG, "download list of tbns: " + idTbList.toString());
+	}
+
+	public String getDownloadsInfo() {
+		String string = "";
+		if (!idTbList.isEmpty())
+			string += "tbn: " + idTbList.toString() + "\n";
+		for (int i = 0; i < idList.size(); i++) {
+			int j = idList.get(i);
+			AdtImage img = WatchApp.getImageManager().mImageList.get(j);
+			string += String.format("[%d] %d/%d\n", j, img.byteLocal,
+					img.byteRemote);
+		}
+		return string;
 	}
 
 	public void addTask(DownloadItem item) {
-		Log.d(TAG, "addTask: " + item.id + ") " + item.image.getFullUrl());
-
-		if (!idList.contains(item.getFileId())) {
-			idList.add(item.getFileId());
-			executorService.submit(new DownloadThread(item));
+		if (item == null || item.image == null) {
+			Log.e(TAG, "failed to add null task.");
+			return;
 		}
+
+		Log.d(TAG, "addTask: " + item.getFileId() + ") " + item.getUrl());
+
+		if (item.isThumb()) {
+			if (!idTbList.contains(item.getFileId())) {
+				idTbList.add(item.getFileId());
+				executorService.submit(new DownloadThread(item));
+			}
+		} else {
+			if (!idList.contains(item.getFileId())) {
+				idList.add(item.getFileId());
+				executorService.submit(new DownloadThread(item));
+			}
+		}
+		dumpArrayLists();
 	}
 
 	public void stop() {
@@ -62,37 +95,39 @@ public class DownloadManager {
 	}
 
 	public static class DownloadItem {
-		private int id;
+		private int fileid;
 		private long length;
 		private AdtImage image = null;
 		private String url;
 		private boolean bThumb = false;
 
-		public DownloadItem(String url, boolean isThumb) {
-			this.url = url;
-			this.bThumb = isThumb;
-			this.length = 0;
+		public DownloadItem(String szUrl, boolean isThumb) {
+			url = szUrl;
+			bThumb = isThumb;
+			length = 0;
 
 			for (int i = 0; i < WatchApp.getImageManager().getImageListSize(); i++) {
 				AdtImage img = WatchApp.getImageManager().mImageList.get(i);
 				String urlTmp = bThumb ? img.getTbnUrl() : img.getFullUrl();
 				if (urlTmp.equals(url)) {
-					id = i;
+					Log.d(TAG, "new DownloadItem, id=" + i + ", url=" + url);
+					fileid = i;
 					image = img;
 					break;
 				}
 			}
+			assert (image != null);
 		}
 
 		public DownloadItem(int id, AdtImage adt) {
-			this.id = id;
-			this.image = adt;
-			this.length = 0;
-			this.bThumb = false;
+			fileid = id;
+			image = adt;
+			length = 0;
+			bThumb = false;
 		}
 
 		public int getFileId() {
-			return id;
+			return fileid;
 		}
 
 		public AdtImage getImage() {
@@ -101,7 +136,7 @@ public class DownloadManager {
 
 		public long getFileLength() {
 			if (!bThumb) {
-				File file = Utils.getFile(image.getFullUrl(), bThumb);
+				File file = Utils.getTempFile(image.getFullUrl(), bThumb);
 				if (file.exists()) {
 					length = file.length();
 				}
@@ -112,6 +147,10 @@ public class DownloadManager {
 
 		public boolean isThumb() {
 			return bThumb;
+		}
+
+		public String getUrl() {
+			return url;
 		}
 	}
 
@@ -135,43 +174,33 @@ public class DownloadManager {
 		@Override
 		public void run() {
 
-			// // Create and initialize HTTP parameters
-			// HttpParams params = new BasicHttpParams();
-			// ConnManagerParams.setMaxTotalConnections(params, 100);
-			// HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-			//
-			// // Create and initialize scheme registry
-			// SchemeRegistry schemeRegistry = new SchemeRegistry();
-			// schemeRegistry.register(new Scheme("http", PlainSocketFactory
-			// .getSocketFactory(), 80));
-			//
-			// // Create an HttpClient with the ThreadSafeClientConnManager.
-			// // This connection manager must be used if more than one thread
-			// will
-			// // be using the HttpClient.
-			// ClientConnectionManager cm = new ThreadSafeClientConnManager(
-			// params, schemeRegistry);
-			//
-			// HttpClient httpClient = new DefaultHttpClient(cm, params);
-
 			HttpClient httpClient = HttpUtils.getHttpClient();
+			String url = image.getFullUrl();
 
 			if (bThumb) {
-				downloadFile = Utils.getFile(image.getTbnUrl(), true);
+
+				url = image.getTbnUrl();
+				downloadFile = Utils.getFile(url, bThumb);
 				try {
-					HttpGet httpGet = new HttpGet(image.getTbnUrl());
+					HttpGet httpGet = new HttpGet(url);
 					HttpResponse httpResponse = httpClient.execute(httpGet);
 					HttpEntity httpEntity = httpResponse.getEntity();
+					fileLength = httpEntity.getContentLength();
 					InputStream inputStream = httpEntity.getContent();
 					FileOutputStream outputStream = new FileOutputStream(
 							downloadFile, false);
-					int len = 0;
-					byte[] b = new byte[inputStream.available()];
-					while ((len = inputStream.read(b)) != -1) {
+					finished = 0;
+					byte[] b = new byte[8 * 1024];
+					while (finished < fileLength) {
+						int len = inputStream.read(b, 0, b.length);
 						outputStream.write(b, 0, len);
+						finished += len;
 					}
 					inputStream.close();
 					outputStream.close();
+					Log.d(TAG, "downloaded thumbnail " + fileId
+							+ ") fileLength=" + fileLength + ", finished="
+							+ finished);
 
 					Intent intent = new Intent(Constants.SET_PROGRESSBAR);
 					intent.putExtra("fileId", fileId);
@@ -182,19 +211,19 @@ public class DownloadManager {
 					e.printStackTrace();
 				}
 
-				DownloadManager.this.idList.remove(fileId);
+				idTbList.remove(idTbList.indexOf(fileId));
+				dumpArrayLists();
 				httpClient.getConnectionManager().shutdown();
 				return;
 
 			} else {
-				downloadFile = Utils.getFile(image.getFullUrl(), false);
+				downloadFile = Utils.getTempFile(url, bThumb);
 			}
 
-			Log.v(TAG, fileId + ") " + image.getFullUrl() + ", byteLocal="
-					+ image.byteLocal);
+			Log.v(TAG, fileId + ") " + url + ", byteLocal=" + image.byteLocal);
 
 			try {
-				HttpGet httpGet = new HttpGet(image.getFullUrl());
+				HttpGet httpGet = new HttpGet(url);
 				HttpResponse httpResponse = httpClient.execute(httpGet);
 				HttpEntity httpEntity = httpResponse.getEntity();
 				fileLength = httpEntity.getContentLength();
@@ -208,7 +237,7 @@ public class DownloadManager {
 					+ ", byteRemote=" + image.byteRemote);
 			if (image.byteLocal < image.byteRemote) {
 				try {
-					HttpGet httpGet = new HttpGet(image.getFullUrl());
+					HttpGet httpGet = new HttpGet(url);
 					httpGet.addHeader("Range", "bytes=" + finished + "-"
 							+ (fileLength - 1));
 					HttpResponse httpResponse = httpClient.execute(httpGet);
@@ -217,19 +246,23 @@ public class DownloadManager {
 							downloadFile, true);
 					int count = 0;
 					int deltaCount = 0;
-					byte[] tmp = new byte[4 * 1024];
+					byte[] tmp = new byte[8 * 1024];
 					InputStream inputStream = httpEntity.getContent();
 					while (finished < fileLength) {
 						if (DownloadManager.this.executorService.isShutdown()) {
+							Log.d(TAG, "Service is down, return.");
 							return;
 						}
-						count = inputStream.read(tmp);
+						count = inputStream.read(tmp, 0, tmp.length);
 						finished += count;
 						deltaCount += count;
 
 						// to support resuming from last break point
 						if (finished > image.byteLocal) {
 							outputStream.write(tmp, 0, count);
+							image.byteLocal = downloadFile.length();
+							Log.d(TAG, fileId + ") read " + count + ", write "
+									+ finished);
 						}
 
 						if (deltaCount / (float) fileLength > 0.02) {
@@ -246,7 +279,10 @@ public class DownloadManager {
 						}
 					}
 					outputStream.close();
+					Utils.renameTempFile(url, bThumb);
+
 				} catch (Exception e) {
+					Log.e(TAG, "download exception.");
 					e.printStackTrace();
 				}
 
@@ -254,13 +290,14 @@ public class DownloadManager {
 				intent.putExtra("fileId", fileId);
 				intent.putExtra("progress2", 100);
 				DownloadManager.this.mContext.sendBroadcast(intent);
-			}
-			image.byteLocal = finished;
-			Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
-					+ ", byteRemote=" + image.byteRemote);
 
-			DownloadManager.this.idList.remove(fileId);
-			httpClient.getConnectionManager().shutdown();
+				Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
+						+ ", byteRemote=" + image.byteRemote);
+
+				idList.remove(idList.indexOf(fileId));
+				dumpArrayLists();
+				httpClient.getConnectionManager().shutdown();
+			}
 		}
 	}
 }
