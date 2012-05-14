@@ -57,11 +57,11 @@ public class DownloadManager {
 	public String getDownloadsInfo() {
 		String string = "";
 		if (!idTbList.isEmpty())
-			string += "tbn: " + idTbList.toString() + "\n";
+			string += "Thumbnails: " + idTbList.toString() + "\n";
 		for (int i = 0; i < idList.size(); i++) {
 			int j = idList.get(i);
 			AdtImage img = WatchApp.getImageManager().mImageList.get(j);
-			string += String.format("[%d]\t%d/%d\n", j, img.byteLocal,
+			string += String.format("[%d]\t%d / %d\n", j, img.byteLocal,
 					img.byteRemote);
 		}
 		return string;

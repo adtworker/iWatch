@@ -55,7 +55,6 @@ import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
 import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewInterface;
 import com.android.camera.CropImage;
-import com.android.camera.OnScreenHint;
 
 public class WatchActivity extends Activity implements AdViewInterface {
 
@@ -101,7 +100,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	public ProgressBar mProgressBar2;
 	public ProgressBar mProgressIcon;
 	private SharedPreferences mSharedPref;
-	private OnScreenHint mScreenHint;
 
 	final static String PREFERENCES = "iWatch";
 	final static String PREF_CLOCK_FACE = "face";
@@ -160,7 +158,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mProgressBar2.setVisibility(View.GONE);
 		mProgressIcon = (ProgressBar) findViewById(R.id.prgIcon);
 		mProgressIcon.setVisibility(View.GONE);
-		mScreenHint = OnScreenHint.makeText(this, "Welcome");
 
 		mClockGestureDetector = new GestureDetector(this,
 				new MyClockGestureListener());
@@ -1259,14 +1256,20 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				TextView tv = (TextView) findViewById(R.id.picName);
 				String tmpString = tv.getText().toString();
+				if (tmpString.contains("\n"))
+					tmpString = tmpString
+							.substring(tmpString.lastIndexOf("\n") + 1,
+									tmpString.length());
 				if (tmpString.contains("%"))
 					tmpString = tmpString.substring(0,
 							tmpString.lastIndexOf(" "));
 
-				if (progress2 != 100) {
+				if (progress2 != -1 && progress2 != 100) {
 					tmpString += String.format(" %d%%", progress2);
 					tv.setText(tmpString);
 				}
+				tv.setText(WatchApp.getDownloadManager().getDownloadsInfo()
+						+ tmpString);
 
 				if (progress2 == 100) {
 					Bitmap bitmap = mImageManager.getPosBitmap(pos, false);
@@ -1316,13 +1319,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					imageAdapter.notifyDataSetChanged();
 				}
 			}
-
-			String downInfo = WatchApp.getDownloadManager().getDownloadsInfo();
-			mScreenHint.setText(downInfo);
-			if (downInfo.isEmpty())
-				mScreenHint.cancel();
-			else
-				mScreenHint.show();
 		}
 	}
 }
