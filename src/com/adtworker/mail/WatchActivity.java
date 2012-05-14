@@ -1266,7 +1266,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				if (progress2 != -1 && progress2 != 100) {
 					tmpString += String.format(" %d%%", progress2);
-					tv.setText(tmpString);
 				}
 				tv.setText(WatchApp.getDownloadManager().getDownloadsInfo()
 						+ tmpString);
