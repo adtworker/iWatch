@@ -87,7 +87,7 @@ public class GoogleImage {
 			WatchApp.getInstance().sendBroadcast(intent);
 			int count = 0;
 			for (String imageDiv : imageDivs) {
-				// Log.d(Constants.TAG, imageDiv);
+				Log.d(Constants.TAG, imageDiv);
 
 				Intent intent0 = new Intent(Constants.SET_PROGRESSBAR);
 				intent0.putExtra("prg_item", ++count);
@@ -174,4 +174,76 @@ public class GoogleImage {
 		}
 		return imgList;
 	}
+
+        public static List<AdtImage> getImgListFromHtml(String keyword, int width, int height, int page, int start) {
+
+		String requestUrl = MessageFormat.format(GOOGLE_AJAX_URL_TEMPLATE,
+				keyword, page, start, page);
+		if (width != 0 && height != 0) {
+			requestUrl += String.format("&tbs=isz:ex,iszw:%d,iszh:%d", width,
+					height);
+		} else {
+			// requestUrl += "&tbs=isz:m";
+		}
+		Log.d(Constants.TAG, requestUrl);
+
+		List<AdtImage> imgList = new ArrayList<AdtImage>();
+		try {
+			String response = HttpUtils.executeGet(requestUrl).trim();
+			// Log.d(Constants.TAG, response);
+			String[] imageDivs = response.split("a href");
+			Log.d(Constants.TAG, "divs=" + imageDivs.length);
+			Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+			intent.putExtra("prg_items", imageDivs.length);
+			WatchApp.getInstance().sendBroadcast(intent);
+			int count = 0;
+			for (String imageDiv : imageDivs) {
+				// Log.d(Constants.TAG, imageDiv);
+				Intent intent0 = new Intent(Constants.SET_PROGRESSBAR);
+				intent0.putExtra("prg_item", ++count);
+				if (count % 10 == 0)
+					WatchApp.getInstance().sendBroadcast(intent0);
+
+				try {   AdtImage image = null;
+					Matcher m = Pattern.compile(".*imgurl=(.*.[png|jpg|jpeg])&amp.*").matcher(imageDiv);
+					if (m.matches() && m.groupCount() == 1) {
+						String url = m.group(1).trim();
+						// Log.d(Constants.TAG, imgList.size() + ") " + url);
+                                                image = new AdtImage(url);
+					}
+                                        m = Pattern.compile(".*tbnid=(.*):&amp.*").matcher(imageDiv);
+                                        if (m.matches() && m.groupCount() == 1) {
+                                                String tbnid = m.group(1).trim();
+                                                if (image != null)
+                                                        image.setThumbId(tbnid);
+                                        }
+                                        m = Pattern.compile(".*data-src=\"(.*)\" height=.*").matcher(imageDiv);
+                                        if (m.matches() && m.groupCount() == 1) {
+                                                String tbUrl = m.group(1).trim();
+                                                if (image != null)
+                                                        image.setThumbUrl(tbUrl);
+                                        }
+                                        m = Pattern.compile(".*imgrefurl=(.*)&amp.*").matcher(imageDiv);
+                                        if (m.matches() && m.groupCount() == 1) {
+                                                String url = m.group(1).trim();
+                                                if (image != null)
+                                                        image.setImgRefUrl(url);
+                                        }
+                                        if (image != null)
+                                                imgList.add(image);
+
+				} catch (Exception e) {
+					Log.e(Constants.TAG, "get img error", e);
+					continue;
+				}
+			}
+
+		} catch (Exception e) {
+			Log.e(Constants.TAG, "get img error", e);
+			return imgList;
+		}
+
+		return imgList;
+
+        }
 }

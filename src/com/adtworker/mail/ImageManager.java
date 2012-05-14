@@ -46,7 +46,7 @@ public class ImageManager {
 	private int mCurrentImageIndex = INVALID_PIC_INDEX;
 	private final int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
-	private final int mSearchPageNum = 4;
+	private int mSearchPageNum = 4;
 	private int mSearchImageWidth = 960;
 	private int mSearchImageHeight = 800;
 	private Bitmap mCurrentBitmap = null;
@@ -78,6 +78,7 @@ public class ImageManager {
 			mImageListMap.clear();
 			mImageManager = null;
 		}
+		WatchApp.getDownloadManager().recycle();
 	}
 
 	public ImageManager() {
@@ -138,6 +139,10 @@ public class ImageManager {
 		}
 	}
 
+	public void setSearchPages(int page) {
+		mSearchPageNum = page;
+	}
+
 	public void setQueryImgSize(int width, int height) {
 		mSearchImageWidth = width;
 		mSearchImageHeight = height;
@@ -185,6 +190,10 @@ public class ImageManager {
 	public String getImageStr(int step) {
 		mCurrentImageIndex = getNextSteppedIndex(step);
 		return getCurrentStr();
+	}
+
+	public String getCurrentStrRefUrl() {
+		return mImageList.get(mCurrentImageIndex).getImgRefUrl();
 	}
 
 	public int getCurrent() {

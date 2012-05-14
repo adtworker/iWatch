@@ -20,6 +20,7 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -291,6 +292,19 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						mImageManager.getCurrent() + 1,
 						mImageManager.getImageListSize(), bm.getWidth(),
 						bm.getHeight()));
+
+				String urlRef = mImageManager.getCurrentStrRefUrl();
+				tv = (TextView) findViewById(R.id.picRefs);
+				tv.setText(urlRef);
+				if (urlRef != null)
+					tv.setOnClickListener(new OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							Intent intent = new Intent(Intent.ACTION_VIEW, Uri
+									.parse(mImageManager.getCurrentStrRefUrl()));
+							startActivity(intent);
+						}
+					});
 			}
 
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
@@ -682,6 +696,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 					mImageManager.setQueryKeyword("美女");
 					mImageManager.setQueryImgSize(960, 800);
+					mImageManager.setSearchPages(2);
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
 					mHandler.postDelayed(mCheckingNetworkInit, 0);
@@ -1032,8 +1047,15 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		public boolean onScroll(MotionEvent e1, MotionEvent e2,
 				float distanceX, float distanceY) {
 			if (mScaleType == ScaleType.CENTER) {
-				mImageViews[mImageViewCurrent].scrollBy((int) distanceX,
-						(int) distanceY);
+				DisplayMetrics displayMetrics = getResources()
+						.getDisplayMetrics();
+				int screen_width = displayMetrics.widthPixels;
+				int screen_height = displayMetrics.heightPixels;
+
+				ImageView iv = mImageViews[mImageViewCurrent];
+
+				iv.scrollBy((int) distanceX, (int) distanceY);
+
 			}
 			return true;
 		}
@@ -1295,9 +1317,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				}
 			}
 
-			// mScreenHint.setText(WatchApp.getDownloadManager()
-			// .getDownloadsInfo());
-			// mScreenHint.show();
+			String downInfo = WatchApp.getDownloadManager().getDownloadsInfo();
+			mScreenHint.setText(downInfo);
+			if (downInfo.isEmpty())
+				mScreenHint.cancel();
+			else
+				mScreenHint.show();
 		}
 	}
 }

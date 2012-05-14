@@ -36,15 +36,22 @@ public class DownloadManager {
 		return mDownloadManager;
 	}
 
+	public void recycle() {
+		if (mDownloadManager != null) {
+			idList.clear();
+			idTbList.clear();
+
+			if (!mDownloadManager.isStop())
+				mDownloadManager.stop();
+
+			mDownloadManager = null;
+		}
+	}
+
 	public DownloadManager(Context context) {
 		mContext = context;
 		idList = new ArrayList<Integer>();
 		idTbList = new ArrayList<Integer>();
-	}
-
-	protected void dumpArrayLists() {
-		Log.d(TAG, "download list of full: " + idList.toString());
-		Log.d(TAG, "download list of tbns: " + idTbList.toString());
 	}
 
 	public String getDownloadsInfo() {
@@ -54,7 +61,7 @@ public class DownloadManager {
 		for (int i = 0; i < idList.size(); i++) {
 			int j = idList.get(i);
 			AdtImage img = WatchApp.getImageManager().mImageList.get(j);
-			string += String.format("[%d] %d/%d\n", j, img.byteLocal,
+			string += String.format("[%d]\t%d/%d\n", j, img.byteLocal,
 					img.byteRemote);
 		}
 		return string;
@@ -79,7 +86,6 @@ public class DownloadManager {
 				executorService.submit(new DownloadThread(item));
 			}
 		}
-		dumpArrayLists();
 	}
 
 	public void stop() {
@@ -198,9 +204,8 @@ public class DownloadManager {
 					}
 					inputStream.close();
 					outputStream.close();
-					Log.d(TAG, "downloaded thumbnail " + fileId
-							+ ") fileLength=" + fileLength + ", finished="
-							+ finished);
+					Log.d(TAG, fileId + ") downloaded thumbnail fileLength="
+							+ fileLength + ", finished=" + finished);
 
 					Intent intent = new Intent(Constants.SET_PROGRESSBAR);
 					intent.putExtra("fileId", fileId);
@@ -212,7 +217,6 @@ public class DownloadManager {
 				}
 
 				idTbList.remove(idTbList.indexOf(fileId));
-				dumpArrayLists();
 				httpClient.getConnectionManager().shutdown();
 				return;
 
@@ -261,8 +265,6 @@ public class DownloadManager {
 						if (finished > image.byteLocal) {
 							outputStream.write(tmp, 0, count);
 							image.byteLocal = downloadFile.length();
-							Log.d(TAG, fileId + ") read " + count + ", write "
-									+ finished);
 						}
 
 						if (deltaCount / (float) fileLength > 0.02) {
@@ -295,7 +297,6 @@ public class DownloadManager {
 						+ ", byteRemote=" + image.byteRemote);
 
 				idList.remove(idList.indexOf(fileId));
-				dumpArrayLists();
 				httpClient.getConnectionManager().shutdown();
 			}
 		}
