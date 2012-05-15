@@ -119,9 +119,10 @@ public class DownloadManager {
 					Log.d(TAG, "new DownloadItem, id=" + i + ", url=" + url);
 					fileid = i;
 					image = img;
-					break;
+					return;
 				}
 			}
+			Log.e(TAG, "Can't find url " + url);
 			assert (image != null);
 		}
 
@@ -239,7 +240,8 @@ public class DownloadManager {
 
 			Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
 					+ ", byteRemote=" + image.byteRemote);
-			if (image.byteLocal < image.byteRemote) {
+
+			if (image.byteLocal < image.byteRemote && image.byteRemote > 1000) {
 				try {
 					HttpGet httpGet = new HttpGet(url);
 					httpGet.addHeader("Range", "bytes=" + finished + "-"

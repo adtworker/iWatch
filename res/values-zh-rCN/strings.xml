@@ -61,4 +61,5 @@
     <string name="available_bufsize">可用缓存大小为</string>
     <string name="used_bufsize">您当前的缓存大小为</string>
     <string name="sure_to_clean">，是否清理？</string>
+    <string name="strRefs">查看来源网站</string>
 </resources>

@@ -20,6 +20,7 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -291,8 +292,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						bm.getHeight()));
 
 				String urlRef = mImageManager.getCurrentStrRefUrl();
-				tv = (TextView) findViewById(R.id.picRefs);
-				tv.setText(urlRef);
+				tv = (TextView) findViewById(R.id.btnRefs);
 				if (urlRef != null)
 					tv.setOnClickListener(new OnClickListener() {
 						@Override
@@ -302,6 +302,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 							startActivity(intent);
 						}
 					});
+				tv.setVisibility(urlRef != null ? View.VISIBLE : View.GONE);
 			}
 
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
@@ -692,7 +693,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
 
 					mImageManager.setQueryKeyword("美女");
-					mImageManager.setQueryImgSize(960, 800);
+					mImageManager.setQueryImgSize(1600, 1200);
 					mImageManager.setSearchPages(2);
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
@@ -1051,25 +1052,56 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				ImageView iv = mImageViews[mImageViewCurrent];
 
-				iv.scrollBy((int) distanceX, (int) distanceY);
+				int delta_w = (screen_width - mImageManager.getCurrentBitmap()
+						.getWidth()) / 2;
+				int delta_h = (screen_height - mImageManager.getCurrentBitmap()
+						.getHeight()) / 2;
 
+				Rect rc = new Rect();
+				iv.getDrawingRect(rc);
+
+				if ((rc.left + distanceX) > Math.min(-delta_w, delta_w)
+						&& (rc.left + distanceX) < Math.max(-delta_w, delta_w)
+						&& (rc.top + distanceY) > Math.min(-delta_h, delta_h)
+						&& (rc.top + distanceY) < Math.max(-delta_h, delta_h)) {
+
+				} else {
+					if ((rc.left + distanceX) < Math.min(-delta_w, delta_w))
+						distanceX = Math.min(-delta_w, delta_w) - rc.left;
+					if ((rc.left + distanceX) > Math.max(-delta_w, delta_w))
+						distanceX = Math.max(-delta_w, delta_w) - rc.left;
+					if ((rc.top + distanceY) < Math.min(-delta_h, delta_h))
+						distanceY = Math.min(-delta_h, delta_h) - rc.top;
+					if ((rc.top + distanceY) > Math.max(-delta_h, delta_h))
+						distanceY = Math.max(-delta_h, delta_h) - rc.top;
+				}
+
+				iv.scrollBy((int) distanceX, (int) distanceY);
 			}
 			return true;
 		}
 
 		@Override
 		public boolean onDoubleTap(MotionEvent e) {
+			ImageView iv = mImageViews[mImageViewCurrent];
 			if (mScaleType != DEFAULT_SCALETYPE) {
 				mScaleType = DEFAULT_SCALETYPE;
-				mImageViews[mImageViewCurrent].setScaleType(mScaleType);
-				mImageViews[mImageViewCurrent].scrollTo(0, 0);
+				iv.setScaleType(mScaleType);
+				iv.scrollTo(0, 0);
 			} else if (mScaleType == DEFAULT_SCALETYPE) {
 				if (bLargePicLoaded) {
 					mScaleType = ScaleType.CENTER;
 				} else {
 					mScaleType = ALTER_SCALETYPE;
 				}
-				mImageViews[mImageViewCurrent].setScaleType(mScaleType);
+				if (bLargePicLoaded) {
+					iv.setAdjustViewBounds(true);
+					Rect rc = iv.getDrawable().getBounds();
+					iv.setMaxWidth(rc.width());
+					iv.setMaxHeight(rc.height());
+				}
+				iv.setScaleType(mScaleType);
+
 			}
 			return true;
 		}
@@ -1281,9 +1313,17 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						width = bitmap.getWidth();
 						height = bitmap.getHeight();
 					}
-					tv.setText(String.format("%d/%d, %dx%d",
-							mImageManager.getCurrent() + 1,
-							mImageManager.getImageListSize(), width, height));
+
+					tmpString = tv.getText().toString();
+					if (tmpString.contains("\n"))
+						tmpString = tmpString.substring(
+								tmpString.lastIndexOf("\n") + 1,
+								tmpString.length());
+					tv.setText(tmpString
+							+ String.format("%d/%d, %dx%d",
+									mImageManager.getCurrent() + 1,
+									mImageManager.getImageListSize(), width,
+									height));
 				}
 
 				if (progress3 == 100) {

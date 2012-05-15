@@ -62,6 +62,7 @@
     <string name="available_bufsize">Usable buffer size is </string>
     <string name="used_bufsize">Your current used buffer size is </string>
     <string name="sure_to_clean">, are you sure to clean?</string>
+    <string name="strRefs">Goto Reference Site</string>
     <item name="tag_page" type="id"/>
     <item name="tag_id" type="id"/>
 </resources>
