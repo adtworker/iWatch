@@ -84,7 +84,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_INSIDE;
 	// private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_CROP;
 	private ImageView.ScaleType mScaleType = DEFAULT_SCALETYPE;
-	ImageManager mImageManager;
+	private ImageManager mImageManager = WatchApp.getImageManager();
 
 	private boolean bStarted = false;
 	private boolean bSetAPos = false;
@@ -115,6 +115,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	final static String PREF_PIC_FULL_FILL = "pic_fullfill";
 	final static String PREF_WP_FULL_FILL = "wp_fullfill";
 	final static String PREF_SLIDE_ANIM = "slide_anim";
+	final static String PREF_NETIMG_RES = "netimg_res";
 	final static String PREF_AUTO_ROTATE = "auto_rotate";
 
 	private final static int[] CLOCKS = {R.layout.clock_no_dial,
@@ -147,8 +148,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnClock = (TextView) findViewById(R.id.btnClock);
 		mBtnPrev.setVisibility(View.GONE);
 		mBtnDisp.setEnabled(false);
-
-		mImageManager = ImageManager.getInstance();
 
 		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
 		mAdLayout = (LinearLayout) findViewById(R.id.adLayout);
@@ -231,6 +230,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		Utils.setupAdLayout(this, mAdLayout, true);
 	}
+
 	@SuppressWarnings("unused")
 	private final Runnable mCheck2ShowAD = new Runnable() {
 		@Override
@@ -303,6 +303,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						}
 					});
 				tv.setVisibility(urlRef != null ? View.VISIBLE : View.GONE);
+
+				boolean bRemoteAlbum = mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL;
+
+				findViewById(R.id.btnNewSearch).setVisibility(
+						bRemoteAlbum ? View.VISIBLE : View.GONE);
+				findViewById(R.id.btnMoreSearch).setVisibility(
+						bRemoteAlbum ? View.VISIBLE : View.GONE);
 			}
 
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
@@ -470,10 +477,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 		}
 
-		if (mImageManager != null) {
-			mImageManager.recycle();
-			mImageManager = null;
-		}
+		WatchApp.getInstance().recycle();
 	}
 
 	@Override
@@ -600,6 +604,26 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				}
 			}
 		});
+
+		findViewById(R.id.btnNewSearch).setOnClickListener(
+				new OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						int width = 960, height = 800;
+						String imgres = mSharedPref.getString(PREF_NETIMG_RES,
+								"");
+						if (!imgres.isEmpty()) {
+							String[] results = imgres.split("x");
+							if (results.length == 2) {
+								width = Integer.parseInt(results[0]);
+								height = Integer.parseInt(results[1]);
+							}
+						}
+						mImageManager.setQueryImgSize(width, height);
+						mImageManager.setQueryKeyword("美女");
+						mImageManager.reinitImageList();
+					}
+				});
 	}
 
 	private void initStartIndex() {
@@ -692,8 +716,17 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
 
+					int width = 960, height = 800;
+					String imgres = mSharedPref.getString(PREF_NETIMG_RES, "");
+					if (!imgres.isEmpty()) {
+						String[] results = imgres.split("x");
+						if (results.length == 2) {
+							width = Integer.parseInt(results[0]);
+							height = Integer.parseInt(results[1]);
+						}
+					}
 					mImageManager.setQueryKeyword("美女");
-					mImageManager.setQueryImgSize(1600, 1200);
+					mImageManager.setQueryImgSize(width, height);
 					mImageManager.setSearchPages(2);
 					mImageManager
 							.setImagePathType(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
@@ -834,6 +867,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnDisp.setEnabled(enabled);
 		if (!bStarted)
 			mBtnDisp.setEnabled(false);
+
+		findViewById(R.id.btnNewSearch).setEnabled(enabled);
+		findViewById(R.id.btnMoreSearch).setEnabled(enabled);
 	}
 
 	private void setWallpaper() {
@@ -1314,12 +1350,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						height = bitmap.getHeight();
 					}
 
-					tmpString = tv.getText().toString();
-					if (tmpString.contains("\n"))
-						tmpString = tmpString.substring(
-								tmpString.lastIndexOf("\n") + 1,
-								tmpString.length());
-					tv.setText(tmpString
+					tv.setText(WatchApp.getDownloadManager().getDownloadsInfo()
 							+ String.format("%d/%d, %dx%d",
 									mImageManager.getCurrent() + 1,
 									mImageManager.getImageListSize(), width,

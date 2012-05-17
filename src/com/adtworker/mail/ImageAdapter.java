@@ -57,8 +57,8 @@ public class ImageAdapter extends BaseAdapter {
 		Bitmap bitmap = mImageManager.getPosBitmap(position, true);
 		DisplayMetrics displayMetrics = mContext.getResources()
 				.getDisplayMetrics();
-		int width = displayMetrics.widthPixels * 5 / 12;
-		int height = displayMetrics.heightPixels * 5 / 12;
+		int width = displayMetrics.widthPixels / 3;
+		int height = displayMetrics.heightPixels / 3;
 		if (bitmap != null) {
 			height = (int) (width / (float) bitmap.getWidth() * bitmap
 					.getHeight());
@@ -67,7 +67,7 @@ public class ImageAdapter extends BaseAdapter {
 		i.setImageBitmap(bitmap);
 		i.setLayoutParams(new CoverFlow.LayoutParams(width, height));
 
-		if (bitmap != null & bitmap.getWidth() < 75)
+		if (bitmap != null & bitmap.getWidth() < 100)
 			i.setScaleType(ImageView.ScaleType.CENTER);
 		else
 			i.setScaleType(ImageView.ScaleType.FIT_CENTER);

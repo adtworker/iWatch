@@ -19,7 +19,7 @@
     <string name="cancel">取消</string>
     <string name="exit_msg">确认退出？</string>
     <string name="ok">确定</string>
-    <string name="set_wallpaper_msg">正在设置中……</string>
+    <string name="set_wallpaper_msg">正在设置中...</string>
     <string name="set_wallpaper_title">壁纸设置</string>
     <string name="livewallpaper_desc">动感时钟壁纸</string>
     <string name="exit_toast">再按一次退出程序</string>
@@ -41,6 +41,8 @@
     <string name="pref_pic_fullfill_sum">设置默认放大图片以适应屏幕</string>
     <string name="pref_slide_anim">翻页动画</string>
     <string name="pref_slide_anim_sum">设置上一幅或下一幅的动画效果</string>
+    <string name="pref_netimg_res">网络壁纸分辨率</string>
+    <string name="pref_netimg_res_sum">设置搜索网络壁纸的分辨率</string>
     <string name="pref_auto_rotate">自动旋转屏幕</string>
     <string name="pref_auto_rotate_sum">设置看图时是否自动旋转屏幕</string>
     <string name="none">无</string>
@@ -51,15 +53,19 @@
     <string name="local_mode">本地壁纸</string>
     <string name="exit_full_screen">退出全屏</string>
     <string name="browse_all">浏览全部</string>
-    <string msgid="2293932204708167704" name="runningFaceDetection">"请稍候..."</string>
+    <string name="runningFaceDetection">"请稍候..."</string>
     <string name="wallpaper">设置壁纸，请等待\u2026</string>
     <string name="savingImage">保存壁纸\u2026</string>
     <string name="multiface_crop_help">点击脸部开始</string>
     <string name="crop_label">裁剪壁纸</string>
     <string name="failed_network">网络不可用，使用本地壁纸。</string>
     <string name="clean_buf">清除缓存</string>
+    <string name="clean_buf_msg">正在清理缓存...</string>
+    <string name="clean_buf_title">清理缓存</string>
     <string name="available_bufsize">可用缓存大小为</string>
     <string name="used_bufsize">您当前的缓存大小为</string>
     <string name="sure_to_clean">，是否清理？</string>
     <string name="strRefs">查看来源网站</string>
+    <string name="strNewSearch">重新搜索</string>
+    <string name="strMoreSearch">更多搜索</string>
 </resources>

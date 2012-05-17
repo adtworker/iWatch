@@ -186,7 +186,8 @@ public class MyGallery extends Activity {
 			}
 			i.setImageBitmap(bitmap);
 
-			int width = displayMetrics.widthPixels * 5 / 12;
+			mGridView.setNumColumns(3);
+			int width = displayMetrics.widthPixels / 3;
 			int height = width * 5 / 6;
 			if (bitmap != null) {
 				height = (int) (width / (float) bitmap.getWidth() * bitmap
@@ -194,7 +195,7 @@ public class MyGallery extends Activity {
 			}
 			i.setLayoutParams(new AbsListView.LayoutParams(width, height));
 			i.setPadding(2, 2, 2, 2);
-			if (bitmap != null & bitmap.getWidth() < 75)
+			if (bitmap != null & bitmap.getWidth() < 100)
 				i.setScaleType(ImageView.ScaleType.CENTER);
 			else
 				i.setScaleType(ImageView.ScaleType.FIT_CENTER);

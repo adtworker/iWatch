@@ -3,6 +3,7 @@ package com.adtworker.mail;
 import java.sql.Time;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -39,6 +40,7 @@ public class Settings extends PreferenceActivity
 	private CheckBoxPreference mWpFullFill;
 	private CheckBoxPreference mAutoRotate;
 	private ListPreference mSlideAnim;
+	private ListPreference mNetimgRes;
 	private Preference mStorageInfo;
 
 	@Override
@@ -59,6 +61,7 @@ public class Settings extends PreferenceActivity
 		mWpFullFill = (CheckBoxPreference) findPreference(WatchActivity.PREF_WP_FULL_FILL);
 		mAutoRotate = ((CheckBoxPreference) findPreference(WatchActivity.PREF_AUTO_ROTATE));
 		mSlideAnim = (ListPreference) findPreference(WatchActivity.PREF_SLIDE_ANIM);
+		mNetimgRes = (ListPreference) findPreference(WatchActivity.PREF_NETIMG_RES);
 
 		findPreference("version").setSummary(
 				getString(R.string.version) + " : "
@@ -151,6 +154,7 @@ public class Settings extends PreferenceActivity
 		}
 
 		if ("storage_info".equals(preference.getKey())) {
+
 			StringBuilder strBuilder = new StringBuilder();
 			strBuilder
 					.append(getString(R.string.used_bufsize))
@@ -159,7 +163,7 @@ public class Settings extends PreferenceActivity
 							(float) Utils.getFolderSize(Utils.getAppCacheDir()) / 1024 / 1024))
 					.append("M").append(getString(R.string.sure_to_clean));
 
-			new AlertDialog.Builder(this)
+			new AlertDialog.Builder(Settings.this)
 					.setTitle(getString(R.string.clean_buf))
 					.setMessage(strBuilder.toString())
 					.setPositiveButton(getString(R.string.ok),
@@ -168,8 +172,27 @@ public class Settings extends PreferenceActivity
 								@Override
 								public void onClick(DialogInterface dialog,
 										int which) {
-									Utils.delFolder(Utils.getAppCacheDir());
-									update_storage_sum();
+
+									final ProgressDialog prgDlg = ProgressDialog
+											.show(Settings.this,
+													getString(R.string.clean_buf_title),
+													getString(R.string.clean_buf_msg),
+													true);
+									new Thread() {
+										@Override
+										public void run() {
+											try {
+												Utils.delFolder(Utils
+														.getAppCacheDir());
+												update_storage_sum();
+											} catch (Exception e) {
+												e.printStackTrace();
+											} finally {
+												prgDlg.dismiss();
+											}
+										}
+									}.start();
+
 								}
 							})
 					.setNegativeButton(getString(R.string.cancel),
@@ -181,7 +204,6 @@ public class Settings extends PreferenceActivity
 
 								}
 							}).create().show();
-
 			return true;
 		}
 
@@ -211,6 +233,7 @@ public class Settings extends PreferenceActivity
 				WatchActivity.PREF_AUTO_ROTATE, false));
 
 		mSlideAnim.setOnPreferenceChangeListener(this);
+		mNetimgRes.setOnPreferenceChangeListener(this);
 	}
 
 	protected void update_ad_sum() {
@@ -259,6 +282,12 @@ public class Settings extends PreferenceActivity
 				int slideAnim = Integer.parseInt((String) newValue);
 				Editor ed = mSharedPref.edit();
 				ed.putInt(WatchActivity.PREF_SLIDE_ANIM, slideAnim).commit();
+			}
+
+			if (WatchActivity.PREF_NETIMG_RES.equals(preference.getKey())) {
+				String imgres = (String) newValue;
+				Editor ed = mSharedPref.edit();
+				ed.putString(WatchActivity.PREF_NETIMG_RES, imgres).commit();
 			}
 		}
 

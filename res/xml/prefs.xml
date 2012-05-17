@@ -45,6 +45,14 @@
         android:defaultValue="0"
     />
 
+    <ListPreference android:key="netimg_res"
+        android:title="@string/pref_netimg_res"
+        android:summary="@string/pref_netimg_res_sum"
+        android:entries="@array/netimg_resolution"
+        android:entryValues="@array/netimg_resolution"
+        android:defaultValue="960x800"
+    />
+
     <Preference android:key="storage_info"
         android:title="@string/clean_buf" />
 

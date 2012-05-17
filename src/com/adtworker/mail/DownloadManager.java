@@ -61,8 +61,9 @@ public class DownloadManager {
 		for (int i = 0; i < idList.size(); i++) {
 			int j = idList.get(i);
 			AdtImage img = WatchApp.getImageManager().mImageList.get(j);
-			string += String.format("[%d]\t%d / %d\n", j, img.byteLocal,
-					img.byteRemote);
+			String hashCode = Integer.toHexString(img.getFullUrl().hashCode());
+			string += String.format("[%04d] %07d / %07d %s\n", j,
+					img.byteLocal, img.byteRemote, hashCode);
 		}
 		return string;
 	}
@@ -123,7 +124,7 @@ public class DownloadManager {
 				}
 			}
 			Log.e(TAG, "Can't find url " + url);
-			assert (image != null);
+
 		}
 
 		public DownloadItem(int id, AdtImage adt) {

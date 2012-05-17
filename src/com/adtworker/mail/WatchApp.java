@@ -30,4 +30,9 @@ public class WatchApp extends Application {
 		mDownloadManager.start();
 	}
 
+	public void recycle() {
+		if (mImageManager != null)
+			mImageManager.recycle();
+	}
+
 }

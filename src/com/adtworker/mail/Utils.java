@@ -216,13 +216,17 @@ public class Utils {
 			if (!file.exists())
 				file.mkdirs();
 		}
-		path += File.separator + url.hashCode();
+		path += File.separator + Integer.toHexString(url.hashCode());
+
 		if (isThumb) {
-			path = path + ".jpg";
+			String ext = url.substring(url.lastIndexOf("."));
+			if (ext.startsWith("."))
+				path += ext;
+			else
+				path += ".jpg";
 		}
 		return path;
 	}
-
 	public static String getTempCachedFilename(String url, boolean isThumb) {
 		return getCachedFilename(url, isThumb) + "~";
 	}

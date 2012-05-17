@@ -43,6 +43,8 @@
     <string name="pref_wp_fullfill_sum">Picture will be scaled to fit screen, or use crop tool by default</string>
     <string name="pref_slide_anim">Slide Animation</string>
     <string name="pref_slide_anim_sum">Click to set slide animation.</string>
+    <string name="pref_netimg_res">Network Album Image Resolution</string>
+    <string name="pref_netimg_res_sum">Click to select the image resolution for network album.</string>
     <string name="pref_auto_rotate">Auto-rotate screen</string>
     <string name="pref_auto_rotate_sum">Set screen orientation to auto rotate when viewing images.</string>
     <string name="none">None</string>
@@ -59,10 +61,14 @@
     <string name="crop_label">Crop Image</string>
     <string name="failed_network">Network is not available, use local album instead.</string>
     <string name="clean_buf">Clean buffer</string>
+    <string name="clean_buf_msg">Now cleaning buffers...</string>
+    <string name="clean_buf_title">Clean Buffers</string>
     <string name="available_bufsize">Usable buffer size is </string>
     <string name="used_bufsize">Your current used buffer size is </string>
     <string name="sure_to_clean">, are you sure to clean?</string>
     <string name="strRefs">Goto Reference Site</string>
+    <string name="strNewSearch">New search</string>
+    <string name="strMoreSearch">More search</string>
     <item name="tag_page" type="id"/>
     <item name="tag_id" type="id"/>
 </resources>

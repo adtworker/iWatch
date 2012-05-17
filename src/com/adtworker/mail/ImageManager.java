@@ -316,6 +316,14 @@ public class ImageManager {
 
 		return bitmap;
 	}
+
+	public void reinitImageList() {
+		mImageList = mImageListMap.get(mImagePathType);
+		mImageList.clear();
+		mImageListMap.remove(mImagePathType);
+		initImageList();
+	}
+
 	private void initImageList() {
 		if (mImageListMap.get(mImagePathType) != null) {
 			mImageList = mImageListMap.get(mImagePathType);
