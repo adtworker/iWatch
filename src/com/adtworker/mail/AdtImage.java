@@ -11,30 +11,30 @@ public class AdtImage {
 
 	private String urlFull;
 	private String urlThumb;
-        private String urlImgRef;
+	private String urlImgRef;
 	private String idThumb;
 	private boolean bCached = false;
-        private static boolean bTbnidFirst = true;
+	private static boolean bTbnidFirst = true;
 
-        public static void setTbnIdFirst(boolean tbnidFirst) {
-                bTbnidFirst = tbnidFirst;
-        }
+	public static void setTbnIdFirst(boolean tbnidFirst) {
+		bTbnidFirst = tbnidFirst;
+	}
 
 	public AdtImage() {
 
 	}
 
 	public AdtImage(String url, boolean is_asset) {
-		urlFull = decode(url);
+		urlFull = removeTrashTail(decode(url));
 		isAsset = is_asset;
 	}
 
 	public AdtImage(String url) {
-		urlFull = decode(url);
+		urlFull = removeTrashTail(decode(url));
 	}
 
 	public AdtImage(String url, String urlTb) {
-                urlFull = removeTrashTail(decode(url));
+		urlFull = removeTrashTail(decode(url));
 		urlThumb = removeTrashTail(decode(urlTb));
 		hasThumb = true;
 	}
@@ -46,27 +46,27 @@ public class AdtImage {
 		hasThumb = true;
 	}
 
-        public void setThumbUrl(String url) {
-                if (url == null || url.isEmpty())
-                        return;
-                urlThumb = removeTrashTail(url);
-                hasThumb = true;
-        }
+	public void setThumbUrl(String url) {
+		if (url == null || url.isEmpty())
+			return;
+		urlThumb = removeTrashTail(url);
+		hasThumb = true;
+	}
 
-        public void setImgRefUrl(String url) {
-                if (url == null || url.isEmpty())
-                        return;
-                urlImgRef = removeTrashTail(decode(url));
-        }
+	public void setImgRefUrl(String url) {
+		if (url == null || url.isEmpty())
+			return;
+		urlImgRef = removeTrashTail(decode(url));
+	}
 
 	public String getTbnUrl() {
 		if (!hasThumb || isAsset)
 			return null;
 
-                String tbUrlTemplate = "http://images.google.com/images?q=tbn:%s:%s";
+		String tbUrlTemplate = "http://images.google.com/images?q=tbn:%s:%s";
 
-                if (bTbnidFirst && idThumb != null && !idThumb.isEmpty())
-                        return String.format(tbUrlTemplate, idThumb, urlFull);
+		if (bTbnidFirst && idThumb != null && !idThumb.isEmpty())
+			return String.format(tbUrlTemplate, idThumb, urlFull);
 
 		else if (urlThumb != null && !urlThumb.isEmpty())
 			return urlThumb;
@@ -84,12 +84,12 @@ public class AdtImage {
 			return null;
 	}
 
-        public String getImgRefUrl() {
-                if (urlImgRef != null && !urlImgRef.isEmpty())
-                        return urlImgRef;
-                else
-                        return null;
-        }
+	public String getImgRefUrl() {
+		if (urlImgRef != null && !urlImgRef.isEmpty())
+			return urlImgRef;
+		else
+			return null;
+	}
 
 	private String decode(String url) {
 		while (url.contains("%25") || url.contains("%")) {
@@ -98,12 +98,12 @@ public class AdtImage {
 		return url;
 	}
 
-        private String removeTrashTail(String url) {
-                int index = url.indexOf("&amp;");
-                if (index != -1)
-                        url = url.substring(0, index);
-                return url;
-        }
+	private String removeTrashTail(String url) {
+		int index = url.indexOf("&amp;");
+		if (index != -1)
+			url = url.substring(0, index);
+		return url;
+	}
 
 	public boolean isCached() {
 		return bCached;

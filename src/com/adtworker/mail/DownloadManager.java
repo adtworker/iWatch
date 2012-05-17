@@ -31,6 +31,7 @@ public class DownloadManager {
 
 	public static DownloadManager getInstance() {
 		if (null == mDownloadManager) {
+			Log.d(Constants.TAG, "Initizing an DownloadManager.");
 			mDownloadManager = new DownloadManager(WatchApp.getInstance());
 		}
 		return mDownloadManager;

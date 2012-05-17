@@ -140,7 +140,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mImageViews[1] = (ImageView) findViewById(R.id.picView2);
 		mCoverFlow = (CoverFlow) findViewById(R.id.gallery);
 		mCoverFlow.setVisibility(View.GONE);
-		mCoverFlow.setMaxRotationAngle(75);
+		// mCoverFlow.setMaxRotationAngle(75);
 
 		mBtnPrev = (TextView) findViewById(R.id.btnPrev);
 		mBtnNext = (TextView) findViewById(R.id.btnNext);
@@ -303,13 +303,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						}
 					});
 				tv.setVisibility(urlRef != null ? View.VISIBLE : View.GONE);
-
-				boolean bRemoteAlbum = mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL;
-
-				findViewById(R.id.btnNewSearch).setVisibility(
-						bRemoteAlbum ? View.VISIBLE : View.GONE);
-				findViewById(R.id.btnMoreSearch).setVisibility(
-						bRemoteAlbum ? View.VISIBLE : View.GONE);
 			}
 
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
@@ -624,6 +617,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						mImageManager.reinitImageList();
 					}
 				});
+
+		findViewById(R.id.btnMoreSearch).setOnClickListener(
+				new OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						mImageManager.appendImageList();
+					}
+				});
 	}
 
 	private void initStartIndex() {
@@ -743,6 +744,12 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						goNextorPrev(1);
 					}
 				}
+
+				boolean bRemoteAlbum = mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL;
+				findViewById(R.id.btnNewSearch).setVisibility(
+						bRemoteAlbum ? View.VISIBLE : View.GONE);
+				findViewById(R.id.btnMoreSearch).setVisibility(
+						bRemoteAlbum ? View.VISIBLE : View.GONE);
 
 				break;
 

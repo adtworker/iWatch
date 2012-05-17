@@ -43,6 +43,7 @@ public class ImageManager {
 	private final Context mContext;
 	private boolean mInitListFailed = false;
 	private boolean mInitInProcess = false;
+	private boolean mAppendImgList = false;
 	private int mCurrentImageIndex = INVALID_PIC_INDEX;
 	private final int[] mCurrentIndexArray = new int[IMAGE_PATH_TYPE.IMAGE_PATH_TYPE_LEN
 			.ordinal()];
@@ -53,7 +54,7 @@ public class ImageManager {
 
 	public final static int INVALID_PIC_INDEX = -1;
 
-	public IMAGE_PATH_TYPE mImagePathType;
+	private IMAGE_PATH_TYPE mImagePathType = IMAGE_PATH_TYPE.LOCAL_ASSETS;
 	private IMAGE_PATH_TYPE mImagePathTypeLast;
 	private final Map<IMAGE_PATH_TYPE, ArrayList<AdtImage>> mImageListMap = new HashMap<IMAGE_PATH_TYPE, ArrayList<AdtImage>>();
 	public ArrayList<AdtImage> mImageList = null;
@@ -63,7 +64,7 @@ public class ImageManager {
 	private static ImageManager mImageManager = null;
 	public static ImageManager getInstance() {
 		if (null == mImageManager) {
-			Log.d(TAG, "Initizing an ImageManager.");
+			Log.d(Constants.TAG, "Initizing an ImageManager.");
 			mImageManager = new ImageManager();
 		}
 		return mImageManager;
@@ -78,7 +79,6 @@ public class ImageManager {
 			mImageListMap.clear();
 			mImageManager = null;
 		}
-		WatchApp.getDownloadManager().recycle();
 	}
 
 	public ImageManager() {
@@ -318,14 +318,21 @@ public class ImageManager {
 	}
 
 	public void reinitImageList() {
+		mAppendImgList = false;
 		mImageList = mImageListMap.get(mImagePathType);
 		mImageList.clear();
 		mImageListMap.remove(mImagePathType);
 		initImageList();
 	}
 
+	public void appendImageList() {
+		mAppendImgList = true;
+		mCurrentIndexArray[mImagePathType.ordinal()] = mCurrentImageIndex;
+		initImageList();
+	}
+
 	private void initImageList() {
-		if (mImageListMap.get(mImagePathType) != null) {
+		if (mImageListMap.get(mImagePathType) != null && !mAppendImgList) {
 			mImageList = mImageListMap.get(mImagePathType);
 			mCurrentImageIndex = mCurrentIndexArray[mImagePathType.ordinal()];
 			return;
@@ -400,9 +407,13 @@ public class ImageManager {
 						intent1.putExtra("prg_page", i);
 						mContext.sendBroadcast(intent1);
 
+						int start = tempImageList.size();
+						if (mAppendImgList)
+							start = start + mImageList.size();
+
 						List<AdtImage> temp = ImageSearchAdapter.getImgList(
 								keyword, mSearchImageWidth, mSearchImageHeight,
-								i + 1, tempImageList.size());
+								i + 1, start);
 
 						for (int j = 0; j < temp.size(); j++) {
 							AdtImage img = temp.get(j);
@@ -445,12 +456,23 @@ public class ImageManager {
 			mContext.sendBroadcast(intent);
 
 			if (!mInitListFailed) {
-				mImageListMap.put(IMAGE_PATH_TYPE.REMOTE_HTTP_URL, result);
-				mImageList = mImageListMap.get(mImagePathType);
+				if (!mAppendImgList) {
+					mImageListMap.put(IMAGE_PATH_TYPE.REMOTE_HTTP_URL, result);
+					mImageList = mImageListMap.get(mImagePathType);
+				} else {
+					mImageList = mImageListMap
+							.get(IMAGE_PATH_TYPE.REMOTE_HTTP_URL);
+					for (int i = 0; i < result.size(); i++) {
+						mImageList.add(result.get(i));
+					}
+					mAppendImgList = false;
+				}
+
 				new loadAllImageTask().execute();
 			} else {
 				mImagePathType = mImagePathTypeLast;
 			}
+
 			mCurrentImageIndex = mCurrentIndexArray[mImagePathType.ordinal()];
 		}
 	}
@@ -458,6 +480,8 @@ public class ImageManager {
 	private class loadAllImageTask extends AsyncTask<Void, Void, Void> {
 		@Override
 		protected Void doInBackground(Void... params) {
+			Log.d(TAG, "preload all thumbnails in background.");
+
 			if (getImageListSize() == 0)
 				return null;
 
@@ -473,11 +497,15 @@ public class ImageManager {
 
 				Bitmap bitmap = getBitmapFromSDCard(url, img.hasThumb);
 				if (bitmap == null) {
-					bitmap = getBitmapFromUrl(url);
+					try {
+						bitmap = getBitmapFromUrl(url, true);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 					if (bitmap != null) {
 						writeBitmap2AppCache(bitmap, url, img.hasThumb);
 					} else {
-						Log.e(TAG, "thumbnail image " + i + " is null.");
+						// Log.e(TAG, "thumbnail image " + i + " is null.");
 					}
 				}
 
@@ -511,14 +539,9 @@ public class ImageManager {
 			throws IOException {
 
 		if (background) {
-			for (int i = 0; i < mImageList.size(); i++) {
-				AdtImage img = mImageList.get(i);
-				if (url.equals(img.getFullUrl())) {
-					DownloadItem item = new DownloadItem(i, mImageList.get(i));
-					WatchApp.getDownloadManager().addTask(item);
-					return null;
-				}
-			}
+			DownloadItem item = new DownloadItem(url, true);
+			WatchApp.getDownloadManager().addTask(item);
+			return null;
 		}
 
 		Bitmap bitmap = null;

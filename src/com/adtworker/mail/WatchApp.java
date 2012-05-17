@@ -1,6 +1,9 @@
 package com.adtworker.mail;
 
 import android.app.Application;
+import android.util.Log;
+
+import com.adtworker.mail.constants.Constants;
 
 public class WatchApp extends Application {
 
@@ -13,16 +16,23 @@ public class WatchApp extends Application {
 	}
 
 	public static ImageManager getImageManager() {
+		if (mImageManager == null)
+			mImageManager = ImageManager.getInstance();
+
 		return mImageManager;
 	}
 
 	public static DownloadManager getDownloadManager() {
+		if (mDownloadManager == null) {
+			mDownloadManager = DownloadManager.getInstance();
+			mDownloadManager.start();
+		}
 		return mDownloadManager;
 	}
 
 	@Override
 	public void onCreate() {
-		// TODO Auto-generated method stub
+		Log.d(Constants.TAG, "WatchApp onCreate()");
 		super.onCreate();
 		mWatchAppInstance = this;
 		mImageManager = ImageManager.getInstance();
@@ -31,8 +41,15 @@ public class WatchApp extends Application {
 	}
 
 	public void recycle() {
-		if (mImageManager != null)
+		if (mImageManager != null) {
 			mImageManager.recycle();
+			mImageManager = null;
+		}
+
+		// if (mDownloadManager != null) {
+		// mDownloadManager.recycle();
+		// mDownloadManager = null;
+		// }
 	}
 
 }
