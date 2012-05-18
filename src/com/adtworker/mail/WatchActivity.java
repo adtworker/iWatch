@@ -21,7 +21,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -41,8 +40,12 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
+import android.view.animation.ScaleAnimation;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
@@ -297,12 +300,36 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					tv.setOnClickListener(new OnClickListener() {
 						@Override
 						public void onClick(View v) {
-							Intent intent = new Intent(Intent.ACTION_VIEW, Uri
-									.parse(mImageManager.getCurrentStrRefUrl()));
-							startActivity(intent);
+							// Intent intent = new Intent(Intent.ACTION_VIEW,
+							// Uri
+							// .parse(mImageManager.getCurrentStrRefUrl()));
+							// startActivity(intent);
+
+							WebView wv = (WebView) findViewById(R.id.webView);
+							wv.loadUrl(mImageManager.getCurrentStrRefUrl());
+							wv.setVisibility(View.VISIBLE);
+							ScaleOutAnimation(wv);
 						}
 					});
 				tv.setVisibility(urlRef != null ? View.VISIBLE : View.GONE);
+
+				findViewById(R.id.btnSource).setOnClickListener(
+						new OnClickListener() {
+							@Override
+							public void onClick(View v) {
+								// Intent intent = new Intent(
+								// Intent.ACTION_VIEW,
+								// Uri.parse(mImageManager.getCurrentStr()));
+								// startActivity(intent);
+
+								WebView wv = (WebView) findViewById(R.id.webView);
+								wv.loadUrl(mImageManager.getCurrentStr());
+								wv.setVisibility(View.VISIBLE);
+								ScaleOutAnimation(wv);
+							}
+						});
+				findViewById(R.id.btnSource).setVisibility(
+						(urlRef != null) ? View.VISIBLE : View.GONE);
 			}
 
 			if (mSharedPref.getBoolean(PREF_PIC_FULL_FILL, true)) {
@@ -843,7 +870,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						this, R.anim.footer_appear) : AnimationUtils
 						.loadAnimation(this, R.anim.footer_disappear));
 
+		((LinearLayout) findViewById(R.id.mainLayoutTop))
+				.startAnimation(bVisibility ? AnimationUtils.loadAnimation(
+						this, R.anim.header_appear) : AnimationUtils
+						.loadAnimation(this, R.anim.header_disappear));
+
 		setLayoutVisibility(R.id.mainLayout, bVisibility);
+		setLayoutVisibility(R.id.mainLayoutTop, bVisibility);
 		if (mSharedPref.getBoolean(PREF_AUTOHIDE_SB, false)) {
 			bVisibility = false;
 		}
@@ -877,6 +910,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		findViewById(R.id.btnNewSearch).setEnabled(enabled);
 		findViewById(R.id.btnMoreSearch).setEnabled(enabled);
+
+		if (!enabled) {
+			findViewById(R.id.btnSource).setVisibility(View.GONE);
+			findViewById(R.id.btnRefs).setVisibility(View.GONE);
+		}
 	}
 
 	private void setWallpaper() {
@@ -1137,12 +1175,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				} else {
 					mScaleType = ALTER_SCALETYPE;
 				}
-				if (bLargePicLoaded) {
-					iv.setAdjustViewBounds(true);
-					Rect rc = iv.getDrawable().getBounds();
-					iv.setMaxWidth(rc.width());
-					iv.setMaxHeight(rc.height());
-				}
 				iv.setScaleType(mScaleType);
 
 			}
@@ -1150,29 +1182,36 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		}
 
 		@Override
-		public void onShowPress(MotionEvent e) {
-			if (mCoverFlow.getVisibility() == View.GONE) {
-				mCoverFlow
-						.startAnimation(makeInAnimation(R.anim.slide_in_vertical));
-				mCoverFlow.setVisibility(View.VISIBLE);
-			} else {
-				mCoverFlow.setVisibility(View.GONE);
-				mCoverFlow
-						.startAnimation(makeInAnimation(R.anim.slide_out_vertical_r));
+		public void onLongPress(MotionEvent e) {
+			if (!getMLVisibility()) {
+				if (mCoverFlow.getVisibility() == View.GONE) {
+					mCoverFlow
+							.startAnimation(makeInAnimation(R.anim.slide_in_vertical));
+					mCoverFlow.setVisibility(View.VISIBLE);
+				} else {
+					mCoverFlow.setVisibility(View.GONE);
+					mCoverFlow
+							.startAnimation(makeInAnimation(R.anim.slide_out_vertical_r));
+				}
 			}
 
-			super.onShowPress(e);
+			super.onLongPress(e);
 		}
 
 		@Override
 		public boolean onSingleTapConfirmed(MotionEvent e) {
 			if (!getMLVisibility()) {
 				setMLVisibility(true);
+				if (mCoverFlow.getVisibility() == View.VISIBLE) {
+					mCoverFlow.setVisibility(View.GONE);
+					mCoverFlow
+							.startAnimation(makeInAnimation(R.anim.slide_out_vertical_r));
+				}
 			} else {
 				setMLVisibility(!getMLVisibility());
 			}
 
-			return false;
+			return super.onSingleTapConfirmed(e);
 		}
 	}
 
@@ -1199,6 +1238,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				// int whichButton) {
 				// }
 				// }).create().show();
+
+				View v = findViewById(R.id.webView);
+				if (v.getVisibility() == View.VISIBLE) {
+					v.setVisibility(View.GONE);
+					ScaleInAnimation(v);
+					return false;
+				}
 
 				if (!bKeyBackIn2Sec) {
 					Toast.makeText(this, getString(R.string.exit_toast),
@@ -1255,6 +1301,30 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private Animation makeOutAnimation(int id) {
 		Animation outAnimation = AnimationUtils.loadAnimation(this, id);
 		return outAnimation;
+	}
+
+	private void ScaleOutAnimation(View view) {
+		ScaleAnimation myAnimation_Scale = new ScaleAnimation(0.1f, 1.0f, 0.1f,
+				1f, Animation.RELATIVE_TO_SELF, 0.5f,
+				Animation.RELATIVE_TO_SELF, 0.5f);
+		myAnimation_Scale.setInterpolator(new AccelerateInterpolator());
+		AnimationSet aa = new AnimationSet(true);
+		aa.addAnimation(myAnimation_Scale);
+		aa.setDuration(300);
+
+		view.startAnimation(aa);
+	}
+
+	private void ScaleInAnimation(View view) {
+		ScaleAnimation myAnimation_Scale = new ScaleAnimation(1.0f, 0.0f, 1.0f,
+				0.0f, Animation.RELATIVE_TO_SELF, 0.5f,
+				Animation.RELATIVE_TO_SELF, 0.5f);
+		myAnimation_Scale.setInterpolator(new AccelerateInterpolator());
+		AnimationSet aa = new AnimationSet(true);
+		aa.addAnimation(myAnimation_Scale);
+		aa.setDuration(300);
+
+		view.startAnimation(aa);
 	}
 
 	private class ButtonStateReceiver extends BroadcastReceiver {
@@ -1346,22 +1416,28 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						+ tmpString);
 
 				if (progress2 == 100) {
-					Bitmap bitmap = mImageManager.getPosBitmap(pos, false);
-					mImageViews[mImageViewCurrent].setImageBitmap(bitmap);
-					mImageManager.mImageList.get(mImageManager.getCurrent())
-							.setCached(true);
-
 					int width = 0, height = 0;
+					Bitmap bitmap = mImageManager.getPosBitmap(pos, false);
 					if (bitmap != null) {
 						width = bitmap.getWidth();
 						height = bitmap.getHeight();
+						DisplayMetrics displayMetrics = getResources()
+								.getDisplayMetrics();
+						if (width > displayMetrics.widthPixels
+								|| height > displayMetrics.heightPixels)
+							bLargePicLoaded = true;
+						else
+							bLargePicLoaded = false;
 					}
-
 					tv.setText(WatchApp.getDownloadManager().getDownloadsInfo()
 							+ String.format("%d/%d, %dx%d",
 									mImageManager.getCurrent() + 1,
 									mImageManager.getImageListSize(), width,
 									height));
+
+					mImageViews[mImageViewCurrent].setImageBitmap(bitmap);
+					mImageManager.mImageList.get(mImageManager.getCurrent())
+							.setCached(true);
 				}
 
 				if (progress3 == 100) {

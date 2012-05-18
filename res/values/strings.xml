@@ -53,7 +53,7 @@
     <string name="slide_anim_slide_vertical">Slide vertical</string>
     <string name="remote_mode">Remote Album</string>
     <string name="local_mode">Local Album</string>
-    <string name="browse_all">Browse All</string>
+    <string name="browse_all">Browse all</string>
     <string name="runningFaceDetection">Please wait\u2026</string>
     <string name="wallpaper">Setting wallpaper, please wait\u2026</string>
     <string name="savingImage">Saving picture\u2026</string>
@@ -66,9 +66,10 @@
     <string name="available_bufsize">Usable buffer size is </string>
     <string name="used_bufsize">Your current used buffer size is </string>
     <string name="sure_to_clean">, are you sure to clean?</string>
-    <string name="strRefs">Goto Reference Site</string>
-    <string name="strNewSearch">New search</string>
-    <string name="strMoreSearch">More search</string>
+    <string name="strRefs">Reference</string>
+    <string name="strSource">Source</string>
+    <string name="strNewSearch">Search</string>
+    <string name="strMoreSearch">More</string>
     <item name="tag_page" type="id"/>
     <item name="tag_id" type="id"/>
 </resources>

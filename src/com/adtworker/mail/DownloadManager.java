@@ -243,7 +243,7 @@ public class DownloadManager {
 			Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
 					+ ", byteRemote=" + image.byteRemote);
 
-			if (image.byteLocal < image.byteRemote && image.byteRemote > 1000) {
+			if (image.byteLocal < image.byteRemote && image.byteRemote > 5000) {
 				try {
 					HttpGet httpGet = new HttpGet(url);
 					httpGet.addHeader("Range", "bytes=" + finished + "-"
