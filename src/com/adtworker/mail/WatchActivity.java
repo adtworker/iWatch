@@ -629,7 +629,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				new OnClickListener() {
 					@Override
 					public void onClick(View v) {
-						int width = 960, height = 800;
+						DisplayMetrics display = getResources()
+								.getDisplayMetrics();
+						int width = display.widthPixels, height = display.heightPixels;
 						String imgres = mSharedPref.getString(PREF_NETIMG_RES,
 								"");
 						if (!imgres.isEmpty()) {
@@ -653,7 +655,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					}
 				});
 	}
-
 	private void initStartIndex() {
 		if (mImageManager.getCurrent() != ImageManager.INVALID_PIC_INDEX)
 			return;
@@ -744,7 +745,8 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				if (mImageManager.getImagePathType() == IMAGE_PATH_TYPE.LOCAL_ASSETS) {
 
-					int width = 960, height = 800;
+					DisplayMetrics display = getResources().getDisplayMetrics();
+					int width = display.widthPixels, height = display.heightPixels;
 					String imgres = mSharedPref.getString(PREF_NETIMG_RES, "");
 					if (!imgres.isEmpty()) {
 						String[] results = imgres.split("x");
@@ -1037,18 +1039,19 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private class MyClockGestureListener
 			extends
 				GestureDetector.SimpleOnGestureListener {
-		private final int LARGE_MOVE = 80;
+		private final int LARGE_MOVE = 0;
 
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 				float velocityY) {
 			if (e1.getX() - e2.getX() > LARGE_MOVE) {
-				Log.d(TAG, "ClockGesture Fling Left with velocity " + velocityX);
+				// Log.d(TAG, "ClockGesture Fling Left with velocity " +
+				// velocityX);
 				ChangeClockFace(1);
 				return true;
 			} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
-				Log.d(TAG, "ClockGesture Fling Right with velocity "
-						+ velocityX);
+				// Log.d(TAG, "ClockGesture Fling Right with velocity " +
+				// velocityX);
 				ChangeClockFace(-1);
 				return true;
 			}
@@ -1084,7 +1087,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private class MyGestureListener
 			extends
 				GestureDetector.SimpleOnGestureListener {
-		private final int LARGE_MOVE = 80;
+		private final int LARGE_MOVE = 0;
 
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
@@ -1099,21 +1102,21 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			if (mAnimationIndex == 1) { // slide horizontal
 				if (e1.getX() - e2.getX() > LARGE_MOVE) {
-					Log.d(TAG, "Fling Left with velocity " + velocityX);
+					// Log.d(TAG, "Fling Left with velocity " + velocityX);
 					goNextorPrev(1);
 					return true;
 				} else if (e2.getX() - e1.getX() > LARGE_MOVE) {
-					Log.d(TAG, "Fling Right with velocity " + velocityX);
+					// Log.d(TAG, "Fling Right with velocity " + velocityX);
 					goNextorPrev(-1);
 					return true;
 				}
 			} else if (mAnimationIndex == 2) { // slide vertical
 				if (e1.getY() - e2.getY() > LARGE_MOVE) {
-					Log.d(TAG, "Fling Up with velocity " + velocityY);
+					// Log.d(TAG, "Fling Up with velocity " + velocityY);
 					goNextorPrev(1);
 					return true;
 				} else if (e2.getY() - e1.getY() > LARGE_MOVE) {
-					Log.d(TAG, "Fling Down with velocity " + velocityY);
+					// Log.d(TAG, "Fling Down with velocity " + velocityY);
 					goNextorPrev(-1);
 					return true;
 				}
@@ -1133,10 +1136,9 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				ImageView iv = mImageViews[mImageViewCurrent];
 
-				int delta_w = (screen_width - mImageManager.getCurrentBitmap()
-						.getWidth()) / 2;
-				int delta_h = (screen_height - mImageManager.getCurrentBitmap()
-						.getHeight()) / 2;
+				Rect rcBounds = iv.getDrawable().getBounds();
+				int delta_w = (screen_width - rcBounds.width()) / 2;
+				int delta_h = (screen_height - rcBounds.height()) / 2;
 
 				Rect rc = new Rect();
 				iv.getDrawingRect(rc);
@@ -1435,6 +1437,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 									mImageManager.getImageListSize(), width,
 									height));
 
+					mImageViews[mImageViewCurrent].setScaleType(mScaleType);
 					mImageViews[mImageViewCurrent].setImageBitmap(bitmap);
 					mImageManager.mImageList.get(mImageManager.getCurrent())
 							.setCached(true);

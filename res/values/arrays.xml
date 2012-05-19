@@ -15,14 +15,24 @@
      </string-array>
 
      <string-array name="netimg_resolution" translatable="false">
+         <item>240x320</item>
+         <item>480x320</item>
+         <item>320x480</item>
+         <item>640x480</item>
          <item>480x800</item>
+         <item>960x800</item>
          <item>540x960</item>
+         <item>1080x960</item>
          <item>640x960</item>
          <item>720x1280</item>
-         <item>960x800</item>
-         <item>1080x960</item>
-         <item>1280x1024</item>
          <item>1440x1280</item>
+         <item>1024x768</item>
+         <item>1280x800</item>
+         <item>1280x1024</item>
          <item>1600x1200</item>
+         <item>1920x1080</item>
+         <item>1920x1200</item>
+         <item>1920x1440</item>
+         <item>2464x1632</item>
      </string-array>
 </resources>
