@@ -513,11 +513,12 @@ public class ImageManager {
 					}
 				}
 
-				int progress = (i + 1) * 100 / mImageList.size();
-				Intent intent = new Intent(Constants.SET_PROGRESSBAR);
-				intent.putExtra("progress", progress);
-				WatchApp.getInstance().sendBroadcast(intent);
-
+				if (mImageList != null && mImageList.size() > 0) {
+					int progress = (i + 1) * 100 / mImageList.size();
+					Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+					intent.putExtra("progress", progress);
+					WatchApp.getInstance().sendBroadcast(intent);
+				}
 			}
 			return null;
 		}
