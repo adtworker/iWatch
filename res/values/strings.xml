@@ -68,7 +68,7 @@
     <string name="sure_to_clean">, are you sure to clean?</string>
     <string name="strRefs">Reference</string>
     <string name="strSource">Source</string>
-    <string name="strNewSearch">Search</string>
+    <string name="strNewSearch">Refresh</string>
     <string name="strMoreSearch">More</string>
     <item name="tag_page" type="id"/>
     <item name="tag_id" type="id"/>

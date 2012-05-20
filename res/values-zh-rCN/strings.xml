@@ -67,6 +67,6 @@
     <string name="sure_to_clean">，是否清理？</string>
     <string name="strRefs">来源网站</string>
     <string name="strSource">原始文件</string>
-    <string name="strNewSearch">重新搜索</string>
-    <string name="strMoreSearch">更多搜索</string>
+    <string name="strNewSearch">刷新</string>
+    <string name="strMoreSearch">更多</string>
 </resources>
