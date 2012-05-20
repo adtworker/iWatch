@@ -21,81 +21,6 @@ import com.google.ads.AdView;
 public class Utils {
 
 	/**
-	 * Delete a specified folder and its contents
-	 * 
-	 * @param folderPath
-	 * @return void
-	 */
-	public static void delFolder(String folderPath) {
-		try {
-			delAllFileinFolder(folderPath);
-			String filePath = folderPath;
-			filePath = filePath.toString();
-			java.io.File myFilePath = new java.io.File(filePath);
-			myFilePath.delete();
-
-		} catch (Exception e) {
-			System.out.println("Error in deleting fold " + folderPath);
-			e.printStackTrace();
-
-		}
-	}
-
-	protected static void delAllFileinFolder(String path) {
-		File file = new File(path);
-		if (!file.exists()) {
-			return;
-		}
-		if (!file.isDirectory()) {
-			return;
-		}
-		String[] tempList = file.list();
-		File temp = null;
-		for (int i = 0; i < tempList.length; i++) {
-			if (path.endsWith(File.separator)) {
-				temp = new File(path + tempList[i]);
-			} else {
-				temp = new File(path + File.separator + tempList[i]);
-			}
-			if (temp.isFile()) {
-				temp.delete();
-			}
-			if (temp.isDirectory()) {
-				delAllFileinFolder(path + "/" + tempList[i]);
-				delFolder(path + "/" + tempList[i]);
-			}
-		}
-	}
-
-	/**
-	 * get total size of specified folder
-	 * 
-	 * @param path
-	 * @return long
-	 */
-	public static long getFolderSize(String path) {
-		File file = new File(path);
-		if (!file.exists())
-			return 0;
-
-		if (!file.isDirectory()) {
-			return file.length();
-		}
-		String[] tempList = file.list();
-		String tempStr = null;
-		long totalSize = 0;
-		for (int i = 0; i < tempList.length; i++) {
-			if (path.endsWith(File.separator)) {
-				tempStr = path + tempList[i];
-			} else {
-				tempStr = path + File.separator + tempList[i];
-			}
-			totalSize += getFolderSize(tempStr);
-		}
-		return totalSize;
-	}
-
-	/**
 	 * get available size of specified mount partition
 	 * 
 	 * @param path
@@ -162,8 +87,7 @@ public class Utils {
 			// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
 
 			FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-					LayoutParams.FILL_PARENT,
-					LayoutParams.WRAP_CONTENT);
+					LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
 			params.gravity = Gravity.TOP | Gravity.CENTER;
 
 			AdViewLayout adViewLayout = new AdViewLayout(context,

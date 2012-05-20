@@ -22,6 +22,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 
 import com.adtworker.mail.constants.Constants;
+import com.adtworker.mail.util.FileUtils;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
 import com.adview.AdViewTargeting.RunMode;
@@ -159,9 +160,9 @@ public class Settings extends PreferenceActivity
 			StringBuilder strBuilder = new StringBuilder();
 			strBuilder
 					.append(getString(R.string.used_bufsize))
-					.append(String.format(
-							"%.1f",
-							(float) Utils.getFolderSize(Utils.getAppCacheDir()) / 1024 / 1024))
+					.append(String.format("%.1f",
+							(float) FileUtils.getFolderSize(Utils
+									.getAppCacheDir()) / 1024 / 1024))
 					.append("M").append(getString(R.string.sure_to_clean));
 
 			new AlertDialog.Builder(Settings.this)
@@ -183,7 +184,7 @@ public class Settings extends PreferenceActivity
 										@Override
 										public void run() {
 											try {
-												Utils.delFolder(Utils
+												FileUtils.delFloder(Utils
 														.getAppCacheDir());
 												update_storage_sum();
 											} catch (Exception e) {
@@ -299,8 +300,7 @@ public class Settings extends PreferenceActivity
 		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
 
 			FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-					LayoutParams.FILL_PARENT,
-					LayoutParams.WRAP_CONTENT);
+					LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
 			params.gravity = Gravity.TOP | Gravity.CENTER;
 			/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
 			// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
