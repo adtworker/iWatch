@@ -88,7 +88,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_INSIDE;
 	// private final ScaleType ALTER_SCALETYPE = ScaleType.CENTER_CROP;
 	private ImageView.ScaleType mScaleType = DEFAULT_SCALETYPE;
-	private ImageManager mImageManager = WatchApp.getImageManager();
+	private final ImageManager mImageManager = WatchApp.getImageManager();
 
 	private boolean bStarted = false;
 	private boolean bSetAPos = false;
@@ -1393,12 +1393,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				mProgressBar.setProgress(progress1);
 			}
 			if (progress2 != 0 && progress2 != -1) {
+
 				int current = mImageManager.getCurrent();
 				if (current != ImageManager.INVALID_PIC_INDEX
-						&& mImageManager.mImageList.get(current).isCached()) {
-					mProgressBar2.setVisibility(View.GONE);
-				} else {
+						&& current < mImageManager.mImageList.size()
+						&& !mImageManager.mImageList.get(current).isCached()) {
 					mProgressBar2.setVisibility(View.VISIBLE);
+				} else {
+					mProgressBar2.setVisibility(View.GONE);
 				}
 			}
 
