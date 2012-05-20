@@ -38,6 +38,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Images;
+import android.provider.MediaStore.Images.ImageColumns;
+import android.provider.MediaStore.MediaColumns;
 import android.util.Log;
 
 import com.android.camera.gallery.BaseImageList;
@@ -230,20 +232,20 @@ public class ImageManager {
 		}
 
 		ContentValues values = new ContentValues(7);
-		values.put(Images.Media.TITLE, title);
+		values.put(MediaColumns.TITLE, title);
 
 		// That filename is what will be handed to Gmail when a user shares a
 		// photo. Gmail gets the name of the picture attachment from the
 		// "DISPLAY_NAME" field.
-		values.put(Images.Media.DISPLAY_NAME, filename);
-		values.put(Images.Media.DATE_TAKEN, dateTaken);
-		values.put(Images.Media.MIME_TYPE, "image/jpeg");
-		values.put(Images.Media.ORIENTATION, degree[0]);
-		values.put(Images.Media.DATA, filePath);
+		values.put(MediaColumns.DISPLAY_NAME, filename);
+		values.put(ImageColumns.DATE_TAKEN, dateTaken);
+		values.put(MediaColumns.MIME_TYPE, "image/jpeg");
+		values.put(ImageColumns.ORIENTATION, degree[0]);
+		values.put(MediaColumns.DATA, filePath);
 
 		if (location != null) {
-			values.put(Images.Media.LATITUDE, location.getLatitude());
-			values.put(Images.Media.LONGITUDE, location.getLongitude());
+			values.put(ImageColumns.LATITUDE, location.getLatitude());
+			values.put(ImageColumns.LONGITUDE, location.getLongitude());
 		}
 
 		return cr.insert(STORAGE_URI, values);

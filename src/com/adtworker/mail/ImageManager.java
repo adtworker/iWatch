@@ -149,6 +149,9 @@ public class ImageManager {
 	}
 
 	public int getImageListSize() {
+		if (mImageList == null) {
+			return 0;
+		}
 		return mImageList.size();
 	}
 

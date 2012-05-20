@@ -22,6 +22,7 @@ import android.os.Handler;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
 import android.widget.TextView;
 
@@ -69,8 +70,8 @@ public class OnScreenHint {
 		mY = context.getResources()
 				.getDimensionPixelSize(R.dimen.hint_y_offset);
 
-		mParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
-		mParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
+		mParams.height = LayoutParams.WRAP_CONTENT;
+		mParams.width = LayoutParams.WRAP_CONTENT;
 		mParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
 				| WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
 		mParams.format = PixelFormat.TRANSLUCENT;

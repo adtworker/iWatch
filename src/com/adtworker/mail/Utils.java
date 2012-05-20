@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.os.Environment;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 
 import com.adtworker.mail.constants.Constants;
@@ -161,8 +162,8 @@ public class Utils {
 			// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
 
 			FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-					FrameLayout.LayoutParams.FILL_PARENT,
-					FrameLayout.LayoutParams.WRAP_CONTENT);
+					LayoutParams.FILL_PARENT,
+					LayoutParams.WRAP_CONTENT);
 			params.gravity = Gravity.TOP | Gravity.CENTER;
 
 			AdViewLayout adViewLayout = new AdViewLayout(context,

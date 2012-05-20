@@ -19,6 +19,7 @@ package com.android.camera.gallery;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.provider.MediaStore.Images.ImageColumns;
 import android.provider.MediaStore.Images.Media;
 
 import java.util.HashMap;
@@ -35,14 +36,15 @@ public class ImageList extends BaseImageList implements IImageList {
     private static final String[] ACCEPTABLE_IMAGE_TYPES =
             new String[] { "image/jpeg", "image/png", "image/gif" };
 
-    public HashMap<String, String> getBucketIds() {
+    @Override
+	public HashMap<String, String> getBucketIds() {
         Uri uri = mBaseUri.buildUpon()
                 .appendQueryParameter("distinct", "true").build();
         Cursor cursor = Media.query(
                 mContentResolver, uri,
                 new String[] {
-                    Media.BUCKET_DISPLAY_NAME,
-                    Media.BUCKET_ID},
+                    ImageColumns.BUCKET_DISPLAY_NAME,
+                    ImageColumns.BUCKET_ID},
                 whereClause(), whereClauseArgs(), null);
         try {
             HashMap<String, String> hash = new HashMap<String, String>();

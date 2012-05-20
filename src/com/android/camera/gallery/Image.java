@@ -67,12 +67,14 @@ public class Image extends BaseImage implements IImage {
         // ((BaseImageList) getContainer()).invalidateCursor();
     }
 
-    public boolean isReadonly() {
+    @Override
+	public boolean isReadonly() {
         String mimeType = getMimeType();
         return !"image/jpeg".equals(mimeType) && !"image/png".equals(mimeType);
     }
 
-    public boolean isDrm() {
+    @Override
+	public boolean isDrm() {
         return false;
     }
 
@@ -136,7 +138,8 @@ public class Image extends BaseImage implements IImage {
      * Save the rotated image by updating the Exif "Orientation" tag.
      * @param degrees
      */
-    public boolean rotateImageBy(int degrees) {
+    @Override
+	public boolean rotateImageBy(int degrees) {
         int newDegrees = (getDegreesRotated() + degrees) % 360;
         setExifRotation(newDegrees);
         setDegreesRotated(newDegrees);
@@ -148,7 +151,8 @@ public class Image extends BaseImage implements IImage {
         BaseColumns._ID,
     };
 
-    public Bitmap thumbBitmap(boolean rotateAsNeeded) {
+    @Override
+	public Bitmap thumbBitmap(boolean rotateAsNeeded) {
         Bitmap bitmap = null;
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inDither = false;
