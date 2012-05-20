@@ -25,6 +25,7 @@ import android.util.Log;
 
 import com.adtworker.mail.DownloadManager.DownloadItem;
 import com.adtworker.mail.constants.Constants;
+import com.adtworker.mail.util.FileUtils;
 import com.adtworker.mail.util.HttpUtils;
 
 public class ImageManager {
@@ -186,7 +187,7 @@ public class ImageManager {
 	}
 
 	public String getCurrentStrLocal() {
-		return Utils.getCachedFilename(mImageList.get(mCurrentImageIndex)
+		return FileUtils.getCachedFilename(mImageList.get(mCurrentImageIndex)
 				.getFullUrl(), false);
 	}
 
@@ -585,7 +586,7 @@ public class ImageManager {
 			}
 		}
 		try {
-			File file = Utils.getFile(url, isThumb);
+			File file = FileUtils.getFile(url, isThumb);
 			if (!file.exists())
 				return null;
 
@@ -603,7 +604,7 @@ public class ImageManager {
 			boolean isThumb) {
 		Bitmap bitmap = null;
 		try {
-			FileInputStream fis = new FileInputStream(Utils.getFile(url,
+			FileInputStream fis = new FileInputStream(FileUtils.getFile(url,
 					isThumb));
 			BitmapFactory.Options opt = new BitmapFactory.Options();
 			opt.inSampleSize = inSampleSize;
@@ -619,7 +620,7 @@ public class ImageManager {
 	private void writeInputStream2AppCache(InputStream is, String url,
 			boolean isThumb) {
 		try {
-			FileOutputStream fos = new FileOutputStream(Utils.getFile(url,
+			FileOutputStream fos = new FileOutputStream(FileUtils.getFile(url,
 					isThumb), false);
 			int len = 0;
 			byte[] b = new byte[is.available()];
@@ -644,7 +645,7 @@ public class ImageManager {
 			return;
 
 		try {
-			FileOutputStream fos = new FileOutputStream(Utils.getFile(url,
+			FileOutputStream fos = new FileOutputStream(FileUtils.getFile(url,
 					isThumb), false);
 			byte[] bitmapByte = Bitmap2Byte(bitmap);
 			ByteArrayInputStream bis = new ByteArrayInputStream(bitmapByte);

@@ -22,6 +22,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 
 import com.adtworker.mail.constants.Constants;
+import com.adtworker.mail.util.AdUtils;
 import com.adtworker.mail.util.FileUtils;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
@@ -74,17 +75,17 @@ public class Settings extends PreferenceActivity
 		StringBuilder strBuilder = new StringBuilder();
 		strBuilder
 				.append(getString(R.string.available_bufsize))
-				.append(Utils.getAvailableSize(Utils.getAppCacheDir()) / 1024 / 1024)
+				.append(FileUtils.getAvailableSize(FileUtils.getAppCacheDir()) / 1024 / 1024)
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
-		Utils.setupAdmobAdView(this, adLayout);
+		AdUtils.setupAdmobAdView(this, adLayout);
 		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTOHIDE_SB, false)) {
 			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout1);
-			Utils.setupSuizongAdView(this, adLayout);
+			AdUtils.setupSuizongAdView(this, adLayout);
 			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
-			Utils.setupAdLayout(this, adLayout, false);
+			AdUtils.setupAdLayout(this, adLayout, false);
 		}
 	}
 
@@ -161,7 +162,7 @@ public class Settings extends PreferenceActivity
 			strBuilder
 					.append(getString(R.string.used_bufsize))
 					.append(String.format("%.1f",
-							(float) FileUtils.getFolderSize(Utils
+							(float) FileUtils.getFolderSize(FileUtils
 									.getAppCacheDir()) / 1024 / 1024))
 					.append("M").append(getString(R.string.sure_to_clean));
 
@@ -184,7 +185,7 @@ public class Settings extends PreferenceActivity
 										@Override
 										public void run() {
 											try {
-												FileUtils.delFloder(Utils
+												FileUtils.delFloder(FileUtils
 														.getAppCacheDir());
 												update_storage_sum();
 											} catch (Exception e) {
@@ -268,7 +269,7 @@ public class Settings extends PreferenceActivity
 		StringBuilder strBuilder = new StringBuilder();
 		strBuilder
 				.append(getResources().getString(R.string.available_bufsize))
-				.append(Utils.getAvailableSize(Utils.getAppCacheDir()) / 1024 / 1024)
+				.append(FileUtils.getAvailableSize(FileUtils.getAppCacheDir()) / 1024 / 1024)
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
 	}

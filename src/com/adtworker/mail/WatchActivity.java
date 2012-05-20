@@ -57,6 +57,7 @@ import android.widget.Toast;
 
 import com.adtworker.mail.ImageManager.IMAGE_PATH_TYPE;
 import com.adtworker.mail.constants.Constants;
+import com.adtworker.mail.util.AdUtils;
 import com.adview.AdViewInterface;
 import com.android.camera.CropImage;
 
@@ -231,7 +232,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 
-		Utils.setupAdLayout(this, mAdLayout, true);
+		AdUtils.setupAdLayout(this, mAdLayout, true);
 	}
 
 	@SuppressWarnings("unused")

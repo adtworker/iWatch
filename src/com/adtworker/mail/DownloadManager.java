@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.adtworker.mail.constants.Constants;
+import com.adtworker.mail.util.FileUtils;
 import com.adtworker.mail.util.HttpUtils;
 
 public class DownloadManager {
@@ -145,7 +146,7 @@ public class DownloadManager {
 
 		public long getFileLength() {
 			if (!bThumb) {
-				File file = Utils.getTempFile(image.getFullUrl(), bThumb);
+				File file = FileUtils.getTempFile(image.getFullUrl(), bThumb);
 				if (file.exists()) {
 					length = file.length();
 				}
@@ -189,7 +190,7 @@ public class DownloadManager {
 			if (bThumb) {
 
 				url = image.getTbnUrl();
-				downloadFile = Utils.getFile(url, bThumb);
+				downloadFile = FileUtils.getFile(url, bThumb);
 				try {
 					HttpGet httpGet = new HttpGet(url);
 					HttpResponse httpResponse = httpClient.execute(httpGet);
@@ -224,7 +225,7 @@ public class DownloadManager {
 				return;
 
 			} else {
-				downloadFile = Utils.getTempFile(url, bThumb);
+				downloadFile = FileUtils.getTempFile(url, bThumb);
 			}
 
 			Log.v(TAG, fileId + ") " + url + ", byteLocal=" + image.byteLocal);
@@ -286,7 +287,7 @@ public class DownloadManager {
 						}
 					}
 					outputStream.close();
-					Utils.renameTempFile(url, bThumb);
+					FileUtils.renameTempFile(url, bThumb);
 
 				} catch (Exception e) {
 					Log.e(TAG, "download exception.");

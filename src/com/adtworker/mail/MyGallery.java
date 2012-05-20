@@ -29,6 +29,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 
 import com.adtworker.mail.constants.Constants;
+import com.adtworker.mail.util.AdUtils;
 
 /**
  * MyGallery.java
@@ -93,7 +94,7 @@ public class MyGallery extends Activity {
 		}
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adLayout);
-		Utils.setupAdLayout(this, adLayout, false);
+		AdUtils.setupAdLayout(this, adLayout, false);
 	}
 	@Override
 	public void onStart() {
