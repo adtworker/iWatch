@@ -303,6 +303,12 @@ public class DownloadManager {
 
 				idList.remove(idList.indexOf(fileId));
 				httpClient.getConnectionManager().shutdown();
+			} else {
+				if (image.byteRemote < 20 * 1024) {
+					// the remote image may not be available
+					idList.remove(idList.indexOf(fileId));
+					httpClient.getConnectionManager().shutdown();
+				}
 			}
 		}
 	}

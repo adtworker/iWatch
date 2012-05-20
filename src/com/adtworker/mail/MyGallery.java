@@ -44,6 +44,8 @@ public class MyGallery extends Activity {
 	private SharedPreferences mSharedPref;
 	private BroadcastReceiver mBroadcastReceiver;
 
+	private int img_w, img_h;
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -77,10 +79,22 @@ public class MyGallery extends Activity {
 		}
 		setResult(pos);
 
+		String tmpString = mSharedPref.getString(WatchActivity.PREF_NETIMG_RES,
+				"");
+		if (tmpString.isEmpty()) {
+			DisplayMetrics displayMetrics = WatchApp.getInstance()
+					.getResources().getDisplayMetrics();
+			img_w = displayMetrics.widthPixels;
+			img_h = displayMetrics.widthPixels;
+		} else {
+			String[] results = tmpString.split("x");
+			img_w = Integer.parseInt(results[0]);
+			img_h = Integer.parseInt(results[1]);
+		}
+
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adLayout);
 		Utils.setupAdLayout(this, adLayout, false);
 	}
-
 	@Override
 	public void onStart() {
 		Log.v(TAG, "onStart()");
@@ -188,7 +202,7 @@ public class MyGallery extends Activity {
 
 			mGridView.setNumColumns(3);
 			int width = displayMetrics.widthPixels / 3;
-			int height = width * 5 / 6;
+			int height = width * img_w / img_h;
 			if (bitmap != null) {
 				height = (int) (width / (float) bitmap.getWidth() * bitmap
 						.getHeight());
