@@ -1248,6 +1248,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 					return false;
 				}
 
+				if (!getMLVisibility()) {
+					setMLVisibility(true);
+					return false;
+				}
+
 				if (!bKeyBackIn2Sec) {
 					Toast.makeText(this, getString(R.string.exit_toast),
 							Toast.LENGTH_SHORT).show();
