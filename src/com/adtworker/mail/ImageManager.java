@@ -486,10 +486,10 @@ public class ImageManager {
 		protected Void doInBackground(Void... params) {
 			Log.d(TAG, "preload all thumbnails in background.");
 
-			if (getImageListSize() == 0)
+			int size = getImageListSize();
+			if (size == 0)
 				return null;
-
-			for (int i = 0; i < mImageList.size(); i++) {
+			for (int i = 0; i < size; i++) {
 
 				AdtImage img = mImageList.get(i);
 				String url;
@@ -514,15 +514,11 @@ public class ImageManager {
 				}
 
 				if (mImageList != null) {
-					int size = mImageList.size();
-					if (size > 0) {
-						int progress = (i + 1) * 100 / size;
-						if (progress % 5 == 0) {
-							Intent intent = new Intent(
-									Constants.SET_PROGRESSBAR);
-							intent.putExtra("progress", progress);
-							WatchApp.getInstance().sendBroadcast(intent);
-						}
+					int progress = (i + 1) * 100 / size;
+					if (progress % 5 == 0) {
+						Intent intent = new Intent(Constants.SET_PROGRESSBAR);
+						intent.putExtra("progress", progress);
+						WatchApp.getInstance().sendBroadcast(intent);
 					}
 				}
 			}
