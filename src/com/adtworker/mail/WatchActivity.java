@@ -45,6 +45,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.view.animation.ScaleAnimation;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -213,6 +214,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 			}
 		});
+
+		WebView wv = (WebView) findViewById(R.id.webView);
+		wv.getSettings().setSupportZoom(true);
+		wv.getSettings().setBuiltInZoomControls(true);
+		wv.getSettings().setDefaultZoom(WebSettings.ZoomDensity.FAR);
 
 		setupButtons();
 
