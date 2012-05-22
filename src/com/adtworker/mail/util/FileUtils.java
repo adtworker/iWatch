@@ -15,18 +15,18 @@ public class FileUtils {
 	 */
 	public static void clearAdCache() {
 		delApkFile("/sdcard/Download");
-		delFloder("/sdcard/ad");
-		delFloder("/sdcard/adwo");
-		delFloder("/sdcard/logger");
-		delFloder("/sdcard/Tencent/MobWIN");
-		delFloder("/sdcard/DomobAppDownload");
-		delFloder("/sdcard/youmicache");
-		delFloder("/sdcard/logger");
-		delFloder("/sdcard/app_dump");
-		delFloder("/sdcard/UCDownloads");
+		delFolder("/sdcard/ad");
+		delFolder("/sdcard/adwo");
+		delFolder("/sdcard/logger");
+		delFolder("/sdcard/Tencent/MobWIN");
+		delFolder("/sdcard/DomobAppDownload");
+		delFolder("/sdcard/youmicache");
+		delFolder("/sdcard/logger");
+		delFolder("/sdcard/app_dump");
+		delFolder("/sdcard/UCDownloads");
 
 	}
-	public static void delFloder(String floder) {
+	public static void delFolder(String floder) {
 		File f = new File(floder);
 		File[] fl = f.listFiles();
 		if (fl == null) {
@@ -35,7 +35,7 @@ public class FileUtils {
 		for (int i = 0; i < fl.length; i++) {
 			Log.d(Constants.TAG, "del file path: " + fl[i].toString());
 			if (fl[i].isDirectory()) {
-				delFloder(fl[i].getAbsolutePath());
+				delFolder(fl[i].getAbsolutePath());
 			} else {
 				fl[i].delete();
 				Log.d(Constants.TAG, fl[i].toString() + " is del");

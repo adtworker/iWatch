@@ -1479,14 +1479,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			if (pos != ImageManager.INVALID_PIC_INDEX && progress3 == 100) {
 				ImageAdapter imageAdapter = (ImageAdapter) mCoverFlow
 						.getAdapter();
-				SoftReference<ImageView> imgView = imageAdapter.mCached
-						.get(pos);
-				if (imgView != null && imgView.get() != null) {
-					imgView.get().setImageBitmap(
-							mImageManager.getPosBitmap(pos, true));
-					imageAdapter.mCached.remove(pos);
-					imageAdapter.mCached.put(pos, imgView);
-					imageAdapter.notifyDataSetChanged();
+				if (imageAdapter != null) {
+					SoftReference<ImageView> imgView = imageAdapter.mCached
+							.get(pos);
+					if (imgView != null && imgView.get() != null) {
+						imgView.get().setImageBitmap(
+								mImageManager.getPosBitmap(pos, true));
+						imageAdapter.mCached.remove(pos);
+						imageAdapter.mCached.put(pos, imgView);
+						imageAdapter.notifyDataSetChanged();
+					}
 				}
 			}
 		}

@@ -78,7 +78,7 @@
             style="@style/button_style"
             android:visibility="gone"
             android:text="@string/strRefs" />
-        
+
         <com.adtworker.mail.ColorButton
             android:id="@+id/btnSource"
             android:layout_width="80dp"
@@ -97,7 +97,7 @@
             android:visibility="gone"
             android:text="@string/strMoreSearch" />
     </LinearLayout>
-    
+
     <LinearLayout
         android:id="@+id/mainLayout"
         android:layout_width="fill_parent"
@@ -177,13 +177,13 @@
                 android:progressDrawable="@drawable/progressbar_darkstyle"
                 style="@android:style/Widget.ProgressBar.Horizontal" />
     </LinearLayout>
-    
+
     <WebView
         android:id="@+id/webView"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_margin="0dp"
         android:visibility="gone"
-	/>
+    />
 
 </FrameLayout>

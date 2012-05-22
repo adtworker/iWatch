@@ -185,7 +185,7 @@ public class Settings extends PreferenceActivity
 										@Override
 										public void run() {
 											try {
-												FileUtils.delFloder(FileUtils
+												FileUtils.delFolder(FileUtils
 														.getAppCacheDir());
 												update_storage_sum();
 											} catch (Exception e) {

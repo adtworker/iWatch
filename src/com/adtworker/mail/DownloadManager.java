@@ -3,6 +3,7 @@ package com.adtworker.mail;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -15,11 +16,13 @@ import org.apache.http.client.methods.HttpGet;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.adtworker.mail.constants.Constants;
 import com.adtworker.mail.util.FileUtils;
 import com.adtworker.mail.util.HttpUtils;
+import com.adtworker.mail.util.Notifications;
 
 public class DownloadManager {
 
@@ -29,6 +32,7 @@ public class DownloadManager {
 	private final Context mContext;
 	private final List<Integer> idList;
 	private final List<Integer> idTbList;
+	private final int DOWNLOAD_NOTIFICATION_ID = 1000;
 
 	public static DownloadManager getInstance() {
 		if (null == mDownloadManager) {
@@ -46,6 +50,7 @@ public class DownloadManager {
 			if (!mDownloadManager.isStop())
 				mDownloadManager.stop();
 
+			Notifications.clearAllNotifications(mContext);
 			mDownloadManager = null;
 		}
 	}
@@ -246,6 +251,7 @@ public class DownloadManager {
 
 			if (image.byteLocal < image.byteRemote
 					&& image.byteRemote > 20 * 1024) {
+
 				try {
 					HttpGet httpGet = new HttpGet(url);
 					httpGet.addHeader("Range", "bytes=" + finished + "-"
@@ -283,6 +289,14 @@ public class DownloadManager {
 								intent.putExtra("progress2", progress);
 								DownloadManager.this.mContext
 										.sendBroadcast(intent);
+
+								Notifications.showDownloadingNotification(
+										mContext, MessageFormat.format(
+												"Downloading #{0}: {2} of {3}",
+												fileId + 1, progress, finished,
+												fileLength), 100, progress,
+										DOWNLOAD_NOTIFICATION_ID + fileId,
+										false);
 							}
 						}
 					}
@@ -299,11 +313,18 @@ public class DownloadManager {
 				intent.putExtra("progress2", 100);
 				DownloadManager.this.mContext.sendBroadcast(intent);
 
+				Notifications.showDownloadCompletedNotification(mContext,
+						MessageFormat.format("Download #{0} completed",
+								fileId + 1), DOWNLOAD_NOTIFICATION_ID + fileId);
+
 				Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
 						+ ", byteRemote=" + image.byteRemote);
 
 				idList.remove(idList.indexOf(fileId));
 				httpClient.getConnectionManager().shutdown();
+				SystemClock.sleep(1000);
+				Notifications.clearNotification(mContext,
+						DOWNLOAD_NOTIFICATION_ID + fileId);
 			} else {
 				if (image.byteRemote < 20 * 1024) {
 					// the remote image may not be available
