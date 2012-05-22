@@ -239,7 +239,17 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 
 		AdUtils.setupAdLayout(this, mAdLayout, true);
+		mHandler.postDelayed(mShowAndHideAds, 20000);
 	}
+
+	private final Runnable mShowAndHideAds = new Runnable() {
+		@Override
+		public void run() {
+			boolean bVisible = getLayoutVisibility(R.id.adLayout);
+			setLayoutVisibility(R.id.adLayout, !bVisible);
+			mHandler.postDelayed(mShowAndHideAds, 20000);
+		}
+	};
 
 	@SuppressWarnings("unused")
 	private final Runnable mCheck2ShowAD = new Runnable() {

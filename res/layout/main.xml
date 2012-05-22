@@ -55,7 +55,7 @@
     <LinearLayout
         android:id="@+id/mainLayoutTop"
         android:layout_width="fill_parent"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:background="@color/black"
         android:gravity="center"
         android:layout_gravity="top"
@@ -64,7 +64,7 @@
         <com.adtworker.mail.ColorButton
             android:id="@+id/btnNewSearch"
             android:layout_width="80dp"
-            android:layout_height="fill_parent"
+            android:layout_height="50dp"
             android:gravity="center"
             style="@style/button_style"
             android:visibility="gone"
@@ -73,7 +73,7 @@
         <com.adtworker.mail.ColorButton
             android:id="@+id/btnRefs"
             android:layout_width="80dp"
-            android:layout_height="fill_parent"
+            android:layout_height="50dp"
             android:gravity="center"
             style="@style/button_style"
             android:visibility="gone"
@@ -82,7 +82,7 @@
         <com.adtworker.mail.ColorButton
             android:id="@+id/btnSource"
             android:layout_width="80dp"
-            android:layout_height="fill_parent"
+            android:layout_height="50dp"
             android:gravity="center"
             style="@style/button_style"
             android:visibility="gone"
@@ -91,7 +91,7 @@
         <com.adtworker.mail.ColorButton
             android:id="@+id/btnMoreSearch"
             android:layout_width="80dp"
-            android:layout_height="fill_parent"
+            android:layout_height="50dp"
             android:gravity="center"
             style="@style/button_style"
             android:visibility="gone"
@@ -183,7 +183,6 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_margin="0dp"
-        android:visibility="gone"
-    />
+        android:visibility="gone" />
 
 </FrameLayout>
