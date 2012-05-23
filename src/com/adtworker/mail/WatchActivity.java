@@ -415,6 +415,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						goNextorPrev(1);
 					}
 				}
+
+				boolean bRemoteAlbum = mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL;
+				findViewById(R.id.btnNewSearch).setVisibility(
+						bRemoteAlbum ? View.VISIBLE : View.GONE);
+				findViewById(R.id.btnMoreSearch).setVisibility(
+						bRemoteAlbum ? View.VISIBLE : View.GONE);
+
 			} else {
 				mHandler.removeCallbacks(mCheckingNetworkInit);
 				mHandler.postDelayed(mCheckingNetworkInit, 500);
@@ -795,13 +802,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 								.setCurrent(mImageManager.getCurrent() - 1);
 						goNextorPrev(1);
 					}
-				}
 
-				boolean bRemoteAlbum = mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL;
-				findViewById(R.id.btnNewSearch).setVisibility(
-						bRemoteAlbum ? View.VISIBLE : View.GONE);
-				findViewById(R.id.btnMoreSearch).setVisibility(
-						bRemoteAlbum ? View.VISIBLE : View.GONE);
+					boolean bRemoteAlbum = mImageManager.getImagePathType() == IMAGE_PATH_TYPE.REMOTE_HTTP_URL;
+					findViewById(R.id.btnNewSearch).setVisibility(
+							bRemoteAlbum ? View.VISIBLE : View.GONE);
+					findViewById(R.id.btnMoreSearch).setVisibility(
+							bRemoteAlbum ? View.VISIBLE : View.GONE);
+				}
 
 				break;
 
@@ -1272,6 +1279,11 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				}
 
 				if (!getMLVisibility()) {
+					if (mCoverFlow.getVisibility() == View.VISIBLE) {
+						mCoverFlow.setVisibility(View.GONE);
+						mCoverFlow
+								.startAnimation(makeInAnimation(R.anim.slide_out_vertical_r));
+					}
 					setMLVisibility(true);
 					return false;
 				}
@@ -1383,6 +1395,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			int progress3 = intent.getIntExtra("progress3", -1);
 			int pos = intent.getIntExtra("fileId",
 					ImageManager.INVALID_PIC_INDEX);
+			int current = mImageManager.getCurrent();
 			// Log.d(TAG, pos + ") prg1: " + progress1 + ", prg2 = " + progress2
 			// + ", prg3 = " + progress3);
 
@@ -1416,7 +1429,6 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 			if (progress2 != 0 && progress2 != -1) {
 
-				int current = mImageManager.getCurrent();
 				if (current != ImageManager.INVALID_PIC_INDEX
 						&& current < mImageManager.mImageList.size()
 						&& !mImageManager.mImageList.get(current).isCached()) {
@@ -1426,8 +1438,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 				}
 			}
 
-			if (pos != ImageManager.INVALID_PIC_INDEX
-					&& pos == mImageManager.getCurrent()) {
+			if (pos != ImageManager.INVALID_PIC_INDEX && pos == current) {
 
 				mProgressBar2.setSecondaryProgress(progress2);
 
