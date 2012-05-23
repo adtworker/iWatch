@@ -267,10 +267,13 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mImageViews[mImageViewCurrent].setImageBitmap(bm);
 		mImageViews[mImageViewCurrent].setScaleType(mScaleType);
 
-		TextView tv = (TextView) findViewById(R.id.picName);
-		tv.setText(String.format("%d/%d, %dx%d",
-				mImageManager.getCurrent() + 1,
-				mImageManager.getImageListSize(), bm.getWidth(), bm.getHeight()));
+		if (Constants.DEBUG) {
+			TextView tv = (TextView) findViewById(R.id.picName);
+			tv.setText(String.format("%d/%d, %dx%d",
+					mImageManager.getCurrent() + 1,
+					mImageManager.getImageListSize(), bm.getWidth(),
+					bm.getHeight()));
+		}
 	}
 
 	private final Runnable mUpdateImageView = new Runnable() {
@@ -305,11 +308,14 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 
 			if (bm != null) {
-				TextView tv = (TextView) findViewById(R.id.picName);
-				tv.setText(String.format("%d/%d, %dx%d",
-						mImageManager.getCurrent() + 1,
-						mImageManager.getImageListSize(), bm.getWidth(),
-						bm.getHeight()));
+				TextView tv;
+				if (Constants.DEBUG) {
+					tv = (TextView) findViewById(R.id.picName);
+					tv.setText(String.format("%d/%d, %dx%d",
+							mImageManager.getCurrent() + 1,
+							mImageManager.getImageListSize(), bm.getWidth(),
+							bm.getHeight()));
+				}
 
 				String urlRef = mImageManager.getCurrentStrRefUrl();
 				tv = (TextView) findViewById(R.id.btnRefs);
@@ -1425,21 +1431,25 @@ public class WatchActivity extends Activity implements AdViewInterface {
 
 				mProgressBar2.setSecondaryProgress(progress2);
 
-				TextView tv = (TextView) findViewById(R.id.picName);
-				String tmpString = tv.getText().toString();
-				if (tmpString.contains("\n"))
-					tmpString = tmpString
-							.substring(tmpString.lastIndexOf("\n") + 1,
-									tmpString.length());
-				if (tmpString.contains("%"))
-					tmpString = tmpString.substring(0,
-							tmpString.lastIndexOf(" "));
+				TextView tv;
+				if (Constants.DEBUG) {
+					tv = (TextView) findViewById(R.id.picName);
+					String tmpString = tv.getText().toString();
+					if (tmpString.contains("\n"))
+						tmpString = tmpString.substring(
+								tmpString.lastIndexOf("\n") + 1,
+								tmpString.length());
+					if (tmpString.contains("%"))
+						tmpString = tmpString.substring(0,
+								tmpString.lastIndexOf(" "));
 
-				if (progress2 != -1 && progress2 != 100) {
-					tmpString += String.format(" %d%%", progress2);
+					if (progress2 != -1 && progress2 != 100) {
+						tmpString += String.format(" %d%%", progress2);
+					}
+
+					tv.setText(WatchApp.getDownloadManager().getDownloadsInfo()
+							+ tmpString);
 				}
-				tv.setText(WatchApp.getDownloadManager().getDownloadsInfo()
-						+ tmpString);
 
 				if (progress2 == 100) {
 					int width = 0, height = 0;
@@ -1455,11 +1465,16 @@ public class WatchActivity extends Activity implements AdViewInterface {
 						else
 							bLargePicLoaded = false;
 					}
-					tv.setText(WatchApp.getDownloadManager().getDownloadsInfo()
-							+ String.format("%d/%d, %dx%d",
-									mImageManager.getCurrent() + 1,
-									mImageManager.getImageListSize(), width,
-									height));
+
+					if (Constants.DEBUG) {
+						tv = (TextView) findViewById(R.id.picName);
+						tv.setText(WatchApp.getDownloadManager()
+								.getDownloadsInfo()
+								+ String.format("%d/%d, %dx%d",
+										mImageManager.getCurrent() + 1,
+										mImageManager.getImageListSize(),
+										width, height));
+					}
 
 					mImageViews[mImageViewCurrent].setScaleType(mScaleType);
 					mImageViews[mImageViewCurrent].setImageBitmap(bitmap);
