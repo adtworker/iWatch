@@ -22,7 +22,7 @@
         android:layout_marginLeft="15dp" />
     <TextView
         android:id="@+id/content_view_percentage"
-        android:layout_width="wrap_content"
+        android:layout_width="40dp"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@id/content_view_image"
         android:layout_below="@id/content_view_image"
