@@ -75,6 +75,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private TextView mBtnNext;
 	private TextView mBtnDisp;
 	private TextView mBtnClock;
+	private LinearLayout mAdLayoutTop;
 	private LinearLayout mAdLayout;
 	private ViewGroup mClockLayout;
 	private View mClock = null;
@@ -94,6 +95,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private boolean bStarted = false;
 	private boolean bSetAPos = false;
 	private boolean bClickCoverFlow = false;
+	private boolean bAdLayoutOnTop = false;
 	private int mFace = -1;
 	private int mStep = 1;
 	private int iAdClick = 0;
@@ -155,6 +157,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mBtnDisp.setEnabled(false);
 
 		mSharedPref = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+		mAdLayoutTop = (LinearLayout) findViewById(R.id.adLayoutTop);
 		mAdLayout = (LinearLayout) findViewById(R.id.adLayout);
 		mClockLayout = (ViewGroup) findViewById(R.id.clockLayout);
 		mProgressBar = (ProgressBar) findViewById(R.id.prgbar1);
@@ -245,8 +248,19 @@ public class WatchActivity extends Activity implements AdViewInterface {
 	private final Runnable mShowAndHideAds = new Runnable() {
 		@Override
 		public void run() {
-			boolean bVisible = getLayoutVisibility(R.id.adLayout);
-			setLayoutVisibility(R.id.adLayout, !bVisible);
+			if (!bAdLayoutOnTop) {
+				mAdLayout.setVisibility(View.GONE);
+				mAdLayout.removeAllViewsInLayout();
+				AdUtils.setupAdLayout(WatchActivity.this, mAdLayoutTop, true);
+				mAdLayoutTop.setVisibility(View.VISIBLE);
+			} else {
+				mAdLayoutTop.setVisibility(View.GONE);
+				mAdLayoutTop.removeAllViewsInLayout();
+				AdUtils.setupAdLayout(WatchActivity.this, mAdLayout, true);
+				mAdLayout.setVisibility(View.VISIBLE);
+			}
+
+			bAdLayoutOnTop = !bAdLayoutOnTop;
 			mHandler.postDelayed(mShowAndHideAds, 20000);
 		}
 	};
