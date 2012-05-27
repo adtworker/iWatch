@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -17,9 +18,11 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import com.adtworker.mail.constants.Constants;
 import com.adtworker.mail.util.AdUtils;
@@ -34,6 +37,10 @@ public class Settings extends PreferenceActivity
 
 	final static String TAG = "Settings";
 	SharedPreferences mSharedPref;
+	private boolean bAdLayoutOnTop = false;
+	private LinearLayout mAdLayoutTop;
+	private LinearLayout mAdLayout;
+	private final Handler mHandler = new Handler();
 
 	private CheckBoxPreference mAutoHideClock;
 	private CheckBoxPreference mAutoHideAD;
@@ -79,15 +86,50 @@ public class Settings extends PreferenceActivity
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
 
-		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adPrefLayout);
-		AdUtils.setupAdmobAdView(this, adLayout);
+		mAdLayoutTop = (LinearLayout) findViewById(R.id.adPrefLayoutTop);
+		mAdLayout = (LinearLayout) findViewById(R.id.adPrefLayout);
+
+		AdUtils.setupAdmobAdView(this, mAdLayout);
+		mHandler.postDelayed(mShowAndHideAds, 20000);
+
 		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTOHIDE_SB, false)) {
+			ViewGroup adLayout;
 			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout1);
 			AdUtils.setupSuizongAdView(this, adLayout);
 			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
 			AdUtils.setupAdLayout(this, adLayout, false);
 		}
 	}
+
+	private final Runnable mShowAndHideAds = new Runnable() {
+		@Override
+		public void run() {
+			if (!bAdLayoutOnTop) {
+				mAdLayout.setVisibility(View.GONE);
+				mAdLayout.removeAllViewsInLayout();
+				AdUtils.setupAdLayout(Settings.this, mAdLayoutTop, false);
+				mAdLayoutTop.setVisibility(View.VISIBLE);
+			} else {
+				mAdLayoutTop.setVisibility(View.GONE);
+				mAdLayoutTop.removeAllViewsInLayout();
+				AdUtils.setupAdLayout(Settings.this, mAdLayout, false);
+				mAdLayout.setVisibility(View.VISIBLE);
+			}
+
+			if (mSharedPref.getBoolean(WatchActivity.PREF_AUTOHIDE_SB, false)) {
+				ViewGroup adLayout;
+				adLayout = (ViewGroup) findViewById(R.id.adPrefLayout1);
+				adLayout.removeAllViewsInLayout();
+				AdUtils.setupSuizongAdView(Settings.this, adLayout);
+				adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
+				adLayout.removeAllViewsInLayout();
+				AdUtils.setupAdLayout(Settings.this, adLayout, false);
+			}
+
+			bAdLayoutOnTop = !bAdLayoutOnTop;
+			mHandler.postDelayed(mShowAndHideAds, 20000);
+		}
+	};
 
 	@Override
 	public void onStart() {

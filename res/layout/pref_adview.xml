@@ -4,6 +4,13 @@
               android:layout_height="fill_parent"
               android:orientation="vertical">
 
+    <LinearLayout
+            android:id="@+id/adPrefLayoutTop"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity= "center"
+            android:background="@color/black" />
+
     <ListView android:id="@android:id/list"
               android:layout_width="fill_parent"
               android:layout_height="0dip"
