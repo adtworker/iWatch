@@ -107,12 +107,12 @@ public class Settings extends PreferenceActivity
 			if (!bAdLayoutOnTop) {
 				mAdLayout.setVisibility(View.GONE);
 				mAdLayout.removeAllViewsInLayout();
-				AdUtils.setupAdLayout(Settings.this, mAdLayoutTop, false);
+				AdUtils.setupAdmobAdView(Settings.this, mAdLayoutTop);
 				mAdLayoutTop.setVisibility(View.VISIBLE);
 			} else {
 				mAdLayoutTop.setVisibility(View.GONE);
 				mAdLayoutTop.removeAllViewsInLayout();
-				AdUtils.setupAdLayout(Settings.this, mAdLayout, false);
+				AdUtils.setupAdmobAdView(Settings.this, mAdLayout);
 				mAdLayout.setVisibility(View.VISIBLE);
 			}
 
