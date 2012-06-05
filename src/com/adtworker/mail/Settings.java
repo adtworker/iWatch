@@ -81,7 +81,7 @@ public class Settings extends PreferenceActivity
 
 		StringBuilder strBuilder = new StringBuilder();
 		strBuilder
-				.append(getString(R.string.available_bufsize))
+				.append(getString(R.string.available_bufsize)+" ")
 				.append(FileUtils.getAvailableSize(FileUtils.getAppCacheDir()) / 1024 / 1024)
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
@@ -310,7 +310,7 @@ public class Settings extends PreferenceActivity
 	protected void update_storage_sum() {
 		StringBuilder strBuilder = new StringBuilder();
 		strBuilder
-				.append(getResources().getString(R.string.available_bufsize))
+				.append(getString(R.string.available_bufsize)+" ")
 				.append(FileUtils.getAvailableSize(FileUtils.getAppCacheDir()) / 1024 / 1024)
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
