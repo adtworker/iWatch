@@ -46,10 +46,10 @@ public class WatchApp extends Application {
 			mImageManager = null;
 		}
 
-		// if (mDownloadManager != null) {
-		// mDownloadManager.recycle();
-		// mDownloadManager = null;
-		// }
+		if (mDownloadManager != null) {
+			mDownloadManager.recycle();
+			mDownloadManager = null;
+		}
 	}
 
 }
