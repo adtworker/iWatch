@@ -11,6 +11,7 @@ import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.adtworker.mail.R;
+import com.adtworker.mail.WatchApp;
 
 public class Notifications {
 	final static String TAG = "iWatch-Notifications";
@@ -41,6 +42,20 @@ public class Notifications {
 				.getSystemService(Context.NOTIFICATION_SERVICE);
 		mNM.notify(id, msg);
 	}
+
+	public static void showNotification(Context context, String title, String content, int id) {
+
+		PendingIntent contentIntent = PendingIntent.getActivity(context, 0, new Intent(context, WatchApp.class), 0);
+		Notification msg = new Notification(
+				android.R.drawable.stat_sys_download, null,
+				System.currentTimeMillis());
+		msg.setLatestEventInfo(context, title, content, contentIntent);
+
+		NotificationManager mNM = (NotificationManager) context
+				.getSystemService(Context.NOTIFICATION_SERVICE);
+		mNM.notify(id, msg);
+	}
+
 	public static void showDownloadCompletedNotification(Context context,
 			String title, int id) {
 		Log.d(TAG, "showUploadCompletedNotification");

@@ -290,13 +290,17 @@ public class DownloadManager {
 								DownloadManager.this.mContext
 										.sendBroadcast(intent);
 
-								Notifications.showDownloadingNotification(
-										mContext, MessageFormat.format(
-												"Downloading #{0}: {2} of {3}",
-												fileId + 1, progress, finished,
-												fileLength), 100, progress,
-										DOWNLOAD_NOTIFICATION_ID + fileId,
-										false);
+								// Notifications.showDownloadingNotification(
+								// mContext, MessageFormat.format(
+								// "Downloading #{0}: {2} of {3}",
+								// fileId + 1, progress, finished,
+								// fileLength), 100, progress,
+								// DOWNLOAD_NOTIFICATION_ID + fileId,
+								// false);
+								Notifications.showNotification(mContext,
+										MessageFormat.format("Downloading #{0} ...", fileId + 1),
+										MessageFormat.format("{0}%, {1} of {2}", progress, finished, fileLength),
+										DOWNLOAD_NOTIFICATION_ID + fileId);
 							}
 						}
 					}
@@ -313,9 +317,11 @@ public class DownloadManager {
 				intent.putExtra("progress2", 100);
 				DownloadManager.this.mContext.sendBroadcast(intent);
 
-				Notifications.showDownloadCompletedNotification(mContext,
-						MessageFormat.format("Download #{0} completed",
-								fileId + 1), DOWNLOAD_NOTIFICATION_ID + fileId);
+				//Notifications.showDownloadCompletedNotification(mContext,
+				//		MessageFormat.format("Download #{0} completed",
+				//				fileId + 1), DOWNLOAD_NOTIFICATION_ID + fileId);
+				Notifications.showNotification(mContext, MessageFormat.format(
+						"Download #{0} Completed", fileId + 1), "", DOWNLOAD_NOTIFICATION_ID + fileId);
 
 				Log.v(TAG, fileId + ") byteLocal=" + image.byteLocal
 						+ ", byteRemote=" + image.byteRemote);
