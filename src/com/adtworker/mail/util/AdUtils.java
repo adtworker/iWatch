@@ -6,7 +6,6 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 
-import com.adtworker.mail.constants.Constants;
 import com.adview.AdViewInterface;
 import com.adview.AdViewLayout;
 import com.adview.AdViewTargeting;
@@ -28,29 +27,25 @@ public class AdUtils {
 	 */
 	public static void setupAdLayout(Activity context, ViewGroup parent,
 			boolean setAdInterface) {
-		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
 
-			/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
-			// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
-			// 保证每次都从服务器取配置
-			AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
-			/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
-			// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
+		/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
+		// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
+		// 保证每次都从服务器取配置
+		AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
+		/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
+		// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
 
-			FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-					LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
-			params.gravity = Gravity.TOP | Gravity.CENTER;
+		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+				LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		params.gravity = Gravity.TOP | Gravity.CENTER;
 
-			AdViewLayout adViewLayout = new AdViewLayout(context,
-					"SDK20122309480217x9sp4og4fxrj2ur");
-			if (setAdInterface) {
-				adViewLayout.setAdViewInterface((AdViewInterface) context);
-			}
-			parent.addView(adViewLayout);
-			parent.invalidate();
-		} else if (android.os.Build.VERSION.SDK_INT >= 12) {
-			setupAdmobAdView(context, parent);
+		AdViewLayout adViewLayout = new AdViewLayout(context,
+				"SDK20122309480217x9sp4og4fxrj2ur");
+		if (setAdInterface) {
+			adViewLayout.setAdViewInterface((AdViewInterface) context);
 		}
+		parent.addView(adViewLayout);
+		parent.invalidate();
 	}
 
 	/**
@@ -60,6 +55,7 @@ public class AdUtils {
 	 * @param parent
 	 * @return void
 	 */
+	@SuppressWarnings("unused")
 	public static void setupAdmobAdView(Activity context, ViewGroup parent) {
 		AdView adView = new AdView(context, AdSize.BANNER, "a14fab3d9421605");
 		parent.addView(adView);
@@ -74,14 +70,16 @@ public class AdUtils {
 	 * @return void
 	 */
 	public static void setupSuizongAdView(Activity context, ViewGroup parent) {
-		if (android.os.Build.VERSION.SDK_INT < 12 /* || Constants.ALWAYS_SHOW_AD */) {
-			com.suizong.mobplate.ads.AdView adView = new com.suizong.mobplate.ads.AdView(
-					context, com.suizong.mobplate.ads.AdSize.BANNER,
-					"4f46e9bc7c6e1848b8d48e61");
-			parent.addView(adView);
-			com.suizong.mobplate.ads.AdRequest adRequest = new com.suizong.mobplate.ads.AdRequest();
-			adView.loadAd(adRequest);
-		}
+		// if (android.os.Build.VERSION.SDK_INT < 12 ||
+		// Constants.ALWAYS_SHOW_AD) {
+		com.suizong.mobplate.ads.AdView adView = new com.suizong.mobplate.ads.AdView(
+				context, com.suizong.mobplate.ads.AdSize.BANNER,
+				"4f46e9bc7c6e1848b8d48e61");
+		parent.addView(adView);
+		com.suizong.mobplate.ads.AdRequest adRequest = new com.suizong.mobplate.ads.AdRequest();
+		adRequest.setTesting(false);
+		adView.loadAd(adRequest);
+		// }
 	}
 
 }

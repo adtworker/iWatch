@@ -242,12 +242,21 @@ public class WatchActivity extends Activity implements AdViewInterface {
 		mAnimationIndex = mSharedPref.getInt(PREF_SLIDE_ANIM, 0);
 
 		AdUtils.setupAdLayout(this, mAdLayout, true);
-		mHandler.postDelayed(mShowAndHideAds, 20000);
+		mHandler.postDelayed(mShowAndHideAds, Constants.AD_REFRESH_DELAY);
 	}
 
+	private final boolean bAdPosChange = false;
 	private final Runnable mShowAndHideAds = new Runnable() {
 		@Override
 		public void run() {
+			if (!bAdPosChange) {
+				mAdLayout.removeAllViewsInLayout();
+				AdUtils.setupAdLayout(WatchActivity.this, mAdLayout, true);
+				mHandler.postDelayed(mShowAndHideAds,
+						Constants.AD_REFRESH_DELAY);
+				return;
+			}
+
 			if (!bAdLayoutOnTop) {
 				mAdLayout.setVisibility(View.GONE);
 				mAdLayout.removeAllViewsInLayout();
@@ -261,7 +270,7 @@ public class WatchActivity extends Activity implements AdViewInterface {
 			}
 
 			bAdLayoutOnTop = !bAdLayoutOnTop;
-			mHandler.postDelayed(mShowAndHideAds, 20000);
+			mHandler.postDelayed(mShowAndHideAds, Constants.AD_REFRESH_DELAY);
 		}
 	};
 

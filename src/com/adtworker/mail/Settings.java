@@ -17,19 +17,11 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import com.adtworker.mail.constants.Constants;
 import com.adtworker.mail.util.AdUtils;
 import com.adtworker.mail.util.FileUtils;
-import com.adview.AdViewLayout;
-import com.adview.AdViewTargeting;
-import com.adview.AdViewTargeting.RunMode;
 
 public class Settings extends PreferenceActivity
 		implements
@@ -37,7 +29,6 @@ public class Settings extends PreferenceActivity
 
 	final static String TAG = "Settings";
 	SharedPreferences mSharedPref;
-	private boolean bAdLayoutOnTop = false;
 	private LinearLayout mAdLayoutTop;
 	private LinearLayout mAdLayout;
 	private final Handler mHandler = new Handler();
@@ -81,7 +72,7 @@ public class Settings extends PreferenceActivity
 
 		StringBuilder strBuilder = new StringBuilder();
 		strBuilder
-				.append(getString(R.string.available_bufsize)+" ")
+				.append(getString(R.string.available_bufsize) + " ")
 				.append(FileUtils.getAvailableSize(FileUtils.getAppCacheDir()) / 1024 / 1024)
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
@@ -89,45 +80,26 @@ public class Settings extends PreferenceActivity
 		mAdLayoutTop = (LinearLayout) findViewById(R.id.adPrefLayoutTop);
 		mAdLayout = (LinearLayout) findViewById(R.id.adPrefLayout);
 
-		AdUtils.setupAdmobAdView(this, mAdLayout);
-		mHandler.postDelayed(mShowAndHideAds, 20000);
+		AdUtils.setupAdLayout(this, mAdLayout, false);
+		mHandler.postDelayed(mShowAndHideAds, Constants.AD_REFRESH_DELAY);
 
 		if (mSharedPref.getBoolean(WatchActivity.PREF_AUTOHIDE_SB, false)) {
-			ViewGroup adLayout;
-			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout1);
-			AdUtils.setupSuizongAdView(this, adLayout);
-			adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
-			AdUtils.setupAdLayout(this, adLayout, false);
+			AdUtils.setupSuizongAdView(this, mAdLayoutTop);
 		}
 	}
 
 	private final Runnable mShowAndHideAds = new Runnable() {
 		@Override
 		public void run() {
-			if (!bAdLayoutOnTop) {
-				mAdLayout.setVisibility(View.GONE);
-				mAdLayout.removeAllViewsInLayout();
-				AdUtils.setupAdmobAdView(Settings.this, mAdLayoutTop);
-				mAdLayoutTop.setVisibility(View.VISIBLE);
-			} else {
-				mAdLayoutTop.setVisibility(View.GONE);
-				mAdLayoutTop.removeAllViewsInLayout();
-				AdUtils.setupAdmobAdView(Settings.this, mAdLayout);
-				mAdLayout.setVisibility(View.VISIBLE);
-			}
+			mAdLayout.removeAllViewsInLayout();
+			AdUtils.setupAdLayout(Settings.this, mAdLayout, false);
 
 			if (mSharedPref.getBoolean(WatchActivity.PREF_AUTOHIDE_SB, false)) {
-				ViewGroup adLayout;
-				adLayout = (ViewGroup) findViewById(R.id.adPrefLayout1);
-				adLayout.removeAllViewsInLayout();
-				AdUtils.setupSuizongAdView(Settings.this, adLayout);
-				adLayout = (ViewGroup) findViewById(R.id.adPrefLayout2);
-				adLayout.removeAllViewsInLayout();
-				AdUtils.setupAdLayout(Settings.this, adLayout, false);
+				mAdLayoutTop.removeAllViewsInLayout();
+				AdUtils.setupSuizongAdView(Settings.this, mAdLayoutTop);
 			}
 
-			bAdLayoutOnTop = !bAdLayoutOnTop;
-			mHandler.postDelayed(mShowAndHideAds, 20000);
+			mHandler.postDelayed(mShowAndHideAds, Constants.AD_REFRESH_DELAY);
 		}
 	};
 
@@ -310,7 +282,7 @@ public class Settings extends PreferenceActivity
 	protected void update_storage_sum() {
 		StringBuilder strBuilder = new StringBuilder();
 		strBuilder
-				.append(getString(R.string.available_bufsize)+" ")
+				.append(getString(R.string.available_bufsize) + " ")
 				.append(FileUtils.getAvailableSize(FileUtils.getAppCacheDir()) / 1024 / 1024)
 				.append("M");
 		mStorageInfo.setSummary(strBuilder.toString());
@@ -337,24 +309,5 @@ public class Settings extends PreferenceActivity
 		}
 
 		return true;
-	}
-
-	protected void setupAdLayout(ViewGroup parent) {
-		if (android.os.Build.VERSION.SDK_INT < 12 || Constants.ALWAYS_SHOW_AD) {
-
-			FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-					LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
-			params.gravity = Gravity.TOP | Gravity.CENTER;
-			/* 下面两行只用于测试,完成后一定要去掉,参考文挡说明 */
-			// AdViewTargeting.setUpdateMode(UpdateMode.EVERYTIME); //
-			// 保证每次都从服务器取配置
-			AdViewTargeting.setRunMode(RunMode.NORMAL); // 保证所有选中的广告公司都为测试状态
-			/* 下面这句方便开发者进行发布渠道统计,详细调用可以参考java doc */
-			// AdViewTargeting.setChannel(Channel.GOOGLEMARKET);
-			AdViewLayout adViewLayout = new AdViewLayout(this,
-					"SDK20122309480217x9sp4og4fxrj2ur");
-			parent.addView(adViewLayout, params);
-			parent.invalidate();
-		}
 	}
 }
