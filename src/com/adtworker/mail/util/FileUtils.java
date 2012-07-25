@@ -24,6 +24,8 @@ public class FileUtils {
 		delFolder("/sdcard/logger");
 		delFolder("/sdcard/app_dump");
 		delFolder("/sdcard/UCDownloads");
+		delFolder("/sdcard/Suizong");
+		delFolder("/sdcard/moji/");
 
 	}
 	public static void delFolder(String floder) {

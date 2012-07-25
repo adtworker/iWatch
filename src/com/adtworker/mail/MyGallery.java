@@ -94,7 +94,7 @@ public class MyGallery extends Activity {
 		}
 
 		ViewGroup adLayout = (ViewGroup) findViewById(R.id.adLayout);
-		AdUtils.setupAdLayout(this, adLayout, false);
+		AdUtils.setupAdmobAdView(this, adLayout);
 	}
 	@Override
 	public void onStart() {
